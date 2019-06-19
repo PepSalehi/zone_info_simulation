@@ -9,3 +9,4 @@ Outputs/
 .spyproject/
 Data/taxi_zones/taxi_zones.shp
 /Data/taxi_zones/taxi_zones.shp
+./lib/__pycache__/*
