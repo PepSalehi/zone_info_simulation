@@ -1,11 +1,7 @@
 import numpy as np 
 import pandas as pd 
 from collections import defaultdict
-<<<<<<< HEAD
-from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE
-=======
 from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE, BETA
->>>>>>> first
 from lib.Requests import Req
 # from lib.rl_policy import DQNAgent
 driver_id = 0
