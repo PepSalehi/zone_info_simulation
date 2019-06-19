@@ -1,0 +1,7 @@
+Data/
+Outputs/
+*.csv
+outputs/
+./Data/
+./Outputs/
+./*.csv

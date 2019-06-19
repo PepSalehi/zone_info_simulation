@@ -1,0 +1,23 @@
+what is the state shape? Is it okay if it's a list of of 4 matrices?
+
+(1,3,5,5)
+
+
+model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+
+        state = np.reshape(state, [1, state_size])
+
+
+
+Problems: 
+state size 
+action space: zones are random numbers not ordered integers 
+The simulation and DQN interplay. If want to use DQNAGENT/keras-rl, then need to modify the current codebase. 
+The alternative seems to be that I make the training process more explicit. I think this is a better, more generalizable approach.
+
+Reward description is vague. 
+
+
+
+Flow: model with a dqn -> dispatch -> run dqn 
+how to get rewards?
