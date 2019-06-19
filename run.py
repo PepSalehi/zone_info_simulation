@@ -35,13 +35,7 @@ def main():
                         help='number of times to run the simulation'   )
     args = parser.parse_args()
     if args.fleet:
-<<<<<<< HEAD
-               
         fleet_sizes = [int(x) for x in args.fleet.split(',')]
-#        fleet_sizes = args.fleet
-=======
-        fleet_sizes = [int(x) for x in args.fleet.split(',')]
->>>>>>> first
     else:
         fleet_sizes = FLEET_SIZE
 

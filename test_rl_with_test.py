@@ -97,8 +97,4 @@ print('Average score over 100 test games:{}'.format(np.mean(scores.history['epis
     
     
     
-<<<<<<< HEAD
     
-=======
-    
->>>>>>> first
