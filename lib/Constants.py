@@ -19,11 +19,7 @@ print("The number of requests over all days is  ", DEMAND_SOURCE.size)
 
 # Operators commission  
 PHI = 0.25
-<<<<<<< HEAD
-
-=======
 BETA = 0.001
->>>>>>> first
 # fleet size and its breakdown
 
 FLEET_SIZE = [1500]
