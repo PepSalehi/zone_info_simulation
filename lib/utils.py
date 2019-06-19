@@ -26,7 +26,11 @@ class Model():
                  AV_share = AV_SHARE, RL_engine = None):
         
         print("calling init function of Model")
+<<<<<<< HEAD
         seed1 = np.random.randint(0,1000000)
+=======
+        seed1 = 10 #np.random.randint(0,1000000)
+>>>>>>> first
         self.rs1 = np.random.RandomState(seed1)
         # 
         self.zone_ids = zone_ids
@@ -173,15 +177,24 @@ class Model():
     def act(self, t, action):
         for veh in self.vehilcs:
             if  veh.is_AV: 
+<<<<<<< HEAD
                 self.targets.append(veh.move(t, self.zones, self.WARMUP_PHASE))
+=======
+                veh.move(t, self.zones, self.WARMUP_PHASE)
+>>>>>>> first
 
     def move_fleet(self,t, WARMUP_PHASE, action):
         for veh in self.vehilcs:
             if not veh.is_AV: # AV is already being moved by the engine 
                 _=veh.move(t, self.zones, WARMUP_PHASE)
             if veh.is_AV: 
+<<<<<<< HEAD
                 if veh.should_move():
                     self.targets.append(veh.move(t, self.zones, WARMUP_PHASE, action)) 
+=======
+                # if veh.should_move(): this causes errors, since move is not just moving, but also rebalancing, waiting, etc.
+                veh.move(t, self.zones, WARMUP_PHASE, action)
+>>>>>>> first
     
     def assign_zone_veh(self,t, WARMUP_PHASE, penalty):
         

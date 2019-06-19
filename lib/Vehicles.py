@@ -1,7 +1,11 @@
 import numpy as np 
 import pandas as pd 
 from collections import defaultdict
+<<<<<<< HEAD
 from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE
+=======
+from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE, BETA
+>>>>>>> first
 from lib.Requests import Req
 # from lib.rl_policy import DQNAgent
 driver_id = 0
@@ -271,21 +275,36 @@ class Veh():
         if not self.professional:
             match_prob = 1 # what?
             # the problem here is that p*q is way
+<<<<<<< HEAD
             beta = 0.001 # coefficient to make calculation work out  
             beta = 1 # remove this 
+=======
+            
+            # beta = 0.001 # coefficient to make calculation work out  
+            # beta = 0.01 # remove this 
+>>>>>>> first
         
         else:
             try:
                 match_prob = a.prob_of_s
+<<<<<<< HEAD
                 beta = 1 # 0.001 # change it to 0.01
+=======
+                # beta = 0.01 # change it to 0.01
+>>>>>>> first
             except:
                 print(df)
                 print("that was df")
                 print(a)
                 print("that was a")
                 print(self.professional)
+<<<<<<< HEAD
             
         expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * beta + a.bonus
+=======
+
+        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * BETA + a.bonus
+>>>>>>> first
         expected_cost = a.trip_distance_meter * self.rebl_cost # doesn't take into account the distance travelled once the demand is picked up
         
         a['prof'] = expected_profit - expected_cost

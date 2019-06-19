@@ -1,10 +1,8 @@
 Data/
 Outputs/
 *.csv
-<<<<<<< HEAD
-outputs/
-=======
->>>>>>> first
 ./Data/
 ./Outputs/
 ./*.csv
+./*.pyc
+./lib/*.pyc
