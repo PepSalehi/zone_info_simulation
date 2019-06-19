@@ -88,23 +88,11 @@ class RebalancingEnv(gym.Env):
         total_new_income = np.sum(veh.profits) - self.old_income 
         self.old_income = np.sum(veh.profits)
         reward += total_new_income
-<<<<<<< HEAD
-        # total_new_income = np.sum(model.operator.revenues) - self.old_income 
-        # self.old_income = np.sum(model.operator.revenues)
-        # reward += total_new_income
-        # report = self.model.get_service_rate_per_zone()
-        # system_LOS = report.served.sum()/report.total.sum()
-        # reward += system_LOS 
-        # self.T = self.T+INT_ASSIGN
-        self.update_state()
-
-=======
  
         self.update_state()
 
         # print("T_TOTAL_SECONDS",T_TOTAL_SECONDS)
         # print("self.T", self.T)
->>>>>>> first
         if self.T >= T_TOTAL_SECONDS: 
             flag = True 
             print("Episode is done!")
@@ -113,18 +101,6 @@ class RebalancingEnv(gym.Env):
     def update_state(self, vid=-1):
         veh = self.model.vehilcs[vid]
         self.state = self.model.get_state(veh)
-<<<<<<< HEAD
-
- 
-    # def act(self, action, vid=-1):
-    #     veh = self.model.vehilcs[vid]
-    #     assert veh.should_move()
-    #     veh.move(model.zones, WARMUP_PHASE, action)
-
-        
-
-=======
->>>>>>> first
     
     def reset(self):
         print("Calling the reset method! ")

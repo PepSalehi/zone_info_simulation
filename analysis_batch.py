@@ -21,13 +21,10 @@ def get_operation_cost(pro_share, fleet):
     "hourly cost of Via driver: $30"
     return (fleet * 30)
 
-<<<<<<< HEAD
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 template = "./Outputs/report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
 
-=======
 template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
->>>>>>> first
 op_rev = []
 op_cost = []
 los_list = []
@@ -36,11 +33,7 @@ los_median = []
 denied_w = []
 ff = []
 fleet = 2000
-<<<<<<< HEAD
 for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
-=======
-for av_share in [0, 0.2, 0.4, 0.6, 0.8, 1.0]:
->>>>>>> first
     for repl in range(5):
         report = pd.read_csv(template.format(av_share, repl))
 

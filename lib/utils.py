@@ -26,11 +26,7 @@ class Model():
                  AV_share = AV_SHARE, RL_engine = None):
         
         print("calling init function of Model")
-<<<<<<< HEAD
-        seed1 = np.random.randint(0,1000000)
-=======
         seed1 = 10 #np.random.randint(0,1000000)
->>>>>>> first
         self.rs1 = np.random.RandomState(seed1)
         # 
         self.zone_ids = zone_ids
