@@ -297,8 +297,9 @@ class Veh():
         a['prof'] -= np.max(a['prof'])
         a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
 
-        # with open('./Outputs/somefile.csv', 'a') as f:
-        #     a.to_csv(f, header = True, mode='a', index = False)
+        if self.id == 1:
+            with open('./Outputs/somefile.csv', 'a') as f:
+                a.to_csv(f, header = True, mode='a', index = False)
 #            print("df")
 #            print(df)
          
