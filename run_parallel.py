@@ -60,7 +60,7 @@ def main():
     else:
         bonus = BONUS
     if args.beta:
-        beta = args.beta
+        beta = float(args.beta)
     else:
         beta = BETA 
 
