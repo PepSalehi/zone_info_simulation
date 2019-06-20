@@ -288,7 +288,7 @@ class Veh():
 
         expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * BETA + a.bonus
         expected_cost = a.trip_distance_meter * self.rebl_cost # doesn't take into account the distance travelled once the demand is picked up
-        
+        a["cost"] = expected_cost
         a['prof'] = expected_profit - expected_cost
    
 
