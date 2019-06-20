@@ -15,9 +15,6 @@ from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_S
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR, BETA
 from lib.Constants import PERCE_KNOW
 
-output_path = "./Outputs/avg_fare_info/"
-if not os.path.exists(output_path):
-    os.makedirs(output_path)
 
 def main():
     
@@ -79,6 +76,11 @@ def main():
     else:
         n_rep = 1 
        
+
+    output_path = "./Outputs/avg_fare_info/"+ str(beta) + "/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     for fleet_size in fleet_sizes:
         for surge in surges: 
             for perc_k in perc_know:
