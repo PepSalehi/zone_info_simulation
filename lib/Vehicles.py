@@ -1,13 +1,13 @@
 import numpy as np 
 import pandas as pd 
 from collections import defaultdict
-from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE, BETA
+from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE
 from lib.Requests import Req
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
 class Veh():
-    def __init__(self, rs, operator, true_demand=True, professional=False, ini_loc=None, 
+    def __init__(self, rs, operator, beta, true_demand=True, professional=False, ini_loc=None, 
     know_fare=False, is_AV=False, DIST_MAT = DIST_MAT):
         global driver_id  
         driver_id += 1
@@ -25,6 +25,7 @@ class Veh():
         self.operator = operator
         self.locations = []
         self.req = None 
+        self.beta = beta
         if ini_loc is None:
             self.ozone = rs.choice(ZONE_IDS)
 #            self.ozone = 186
@@ -286,7 +287,7 @@ class Veh():
                 print("that was a")
                 print(self.professional)
 
-        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * BETA + a.bonus
+        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * self.beta + a.bonus
         expected_cost = a.trip_distance_meter * self.rebl_cost # doesn't take into account the distance travelled once the demand is picked up
         a["cost"] = expected_cost
         a['prof'] = expected_profit - expected_cost

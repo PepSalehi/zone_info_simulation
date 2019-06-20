@@ -7,7 +7,7 @@ from collections import Counter
 from lib.Zones import Zone
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE,SURGE_MULTIPLIER, BONUS,PERCENT_FALSE_DEMAND
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
-from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE
+from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE, BETA
 from lib.Operator import Operator
 from lib.Vehicles import Veh
 from lib.AV_model import DQNAgent
@@ -23,7 +23,7 @@ class Model():
     def __init__(self, zone_ids, daily_demand, WARMUP_TIME_HOUR, ANALYSIS_TIME_HOUR, 
                  FLEET_SIZE=FLEET_SIZE, PRO_SHARE=PRO_SHARE, SURGE_MULTIPLIER=SURGE_MULTIPLIER,
                  BONUS=BONUS, percent_false_demand =PERCENT_FALSE_DEMAND, percentage_know_fare=PERCE_KNOW,
-                 AV_share = AV_SHARE, RL_engine = None):
+                 AV_share = AV_SHARE, RL_engine = None, beta=BETA):
         
         print("calling init function of Model")
         seed1 = 10 #np.random.randint(0,1000000)
@@ -69,7 +69,7 @@ class Model():
         self.fleet_DONT_know_fare = int((1-self.percentage_know_fare ) * self.FLEET_SIZE )
         self.fleet_AV = int(self.AV_SHARE * self.FLEET_SIZE)
         
-        self._create_vehicles()
+        self._create_vehicles(beta)
         
         print(Counter(v.ozone for v in self.vehilcs))
         # debug, delete this 
@@ -99,10 +99,10 @@ class Model():
             Z.read_daily_demand(self.daily_demand)
             self.zones.append(Z)
             
-    def _create_vehicles(self):
+    def _create_vehicles(self, beta):
         '''
         '''
-        self.vehilcs = [Veh(self.rs1, self.operator) for i in range(self.FLEET_SIZE)]
+        self.vehilcs = [Veh(self.rs1, self.operator, beta) for i in range(self.FLEET_SIZE)]
         # None of the below ones are mutually exclusive; a vehicle might be pro and don't know fare (which is wrong)
         if self.fleet_pro_size >0:
             print("fleet pro size", self.fleet_pro_size )

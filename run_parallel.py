@@ -12,7 +12,7 @@ import pickle
 import os 
 from lib.utils import Model 
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE, SURGE_MULTIPLIER, BONUS, PERCENT_FALSE_DEMAND
-from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
+from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR, BETA
 from lib.Constants import PERCE_KNOW
 
 output_path = "./Outputs/avg_fare_info/"
@@ -36,6 +36,8 @@ def main():
 						help='Percent pro drivers, formatted as comma-separated list (i.e. "-m 1,1.5,2") ')
     parser.add_argument('-r', '--replications',
                         help='number of times to run the simulation'   )
+    parser.add_argument('-bb', '--beta',
+                        help='BETA'   )
     args = parser.parse_args()
     if args.fleet:
         fleet_sizes  = [int(args.fleet)]
@@ -57,7 +59,12 @@ def main():
         bonus = args.bonus
     else:
         bonus = BONUS
-        
+    if args.beta:
+        beta = args.beta
+    else:
+        beta = BETA 
+
+
     if args.pro:
         pro_share = [float(x) for x in args.pro.split(',')]
     else:
@@ -84,7 +91,7 @@ def main():
                         print('Percentage of professional drivers {}'.format(pro_s))
             
                         m = Model(ZONE_IDS, DEMAND_SOURCE, WARMUP_TIME_HOUR, ANALYSIS_TIME_HOUR, FLEET_SIZE=fleet_size, PRO_SHARE=pro_s,
-                                SURGE_MULTIPLIER=surge, BONUS=bonus, percent_false_demand=percent_false_demand, percentage_know_fare = perc_k)
+                                SURGE_MULTIPLIER=surge, BONUS=bonus, percent_false_demand=percent_false_demand, percentage_know_fare = perc_k, beta=beta)
                         
                         # start time
                         stime = time.time()
