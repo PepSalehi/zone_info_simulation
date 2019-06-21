@@ -40,7 +40,6 @@ class Model():
         self.WARMUP_PHASE = True
         self.ANALYSIS_TIME_HOUR = ANALYSIS_TIME_HOUR
         self.ANALYSIS_TIME_SECONDS = ANALYSIS_TIME_HOUR * 3600
-        self.output_path = output_path
         self.PRO_SHARE = PRO_SHARE
         self.AV_SHARE = AV_share
         self.SURGE_MULTIPLIER = SURGE_MULTIPLIER
