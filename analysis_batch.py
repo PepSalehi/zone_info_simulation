@@ -42,7 +42,7 @@ for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
         report = pd.read_csv(template.format(av_share, repl))
         m = pickle.load(open(pickle_template.format(av_share, repl),'rb'))
         op_rev.append(np.sum(m.operator.revenues))
-        driver_revenue.append([np.sum(v.collected_fares) for v in a.vehilcs])
+        driver_revenue.append([np.sum(v.collected_fares) for v in m.vehilcs])
         # op_cost.append(get_operation_cost(fleet,pro_share ))
         op_cost.append(fleet * 30 )
         system_LOS = report.served.sum()/report.total.sum()
