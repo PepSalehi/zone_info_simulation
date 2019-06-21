@@ -264,6 +264,7 @@ class Veh():
         df = self.get_data_from_operator(t, self.true_demand) # just for now 
         a = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
         
+        
         if self.is_AV: 
             # if it's an AV
             return 
@@ -288,11 +289,14 @@ class Veh():
                 print("that was a")
                 print(self.professional)
 
-        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * self.beta + a.bonus
+        a["relative_demand"] = a["total_pickup"]/ a["total_pickup"].sum()
+        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * self.beta * a["relative_demand"] + a.bonus
         expected_cost = a.trip_distance_meter * self.rebl_cost # doesn't take into account the distance travelled once the demand is picked up
         a["cost"] = expected_cost
         a['prof'] = expected_profit - expected_cost
-   
+        a['expected_revenue'] = expected_profit 
+        a['expected_profit'] = expected_profit - expected_cost
+        
 
         # http://cs231n.github.io/linear-classify/#softmax
         # for numerical stability

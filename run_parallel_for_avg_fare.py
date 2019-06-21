@@ -12,8 +12,9 @@ import pickle
 import os 
 from lib.utils import Model 
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE, SURGE_MULTIPLIER, BONUS, PERCENT_FALSE_DEMAND
-from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR, BETA
+from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
 from lib.Constants import PERCE_KNOW
+from lib.configs import configs
 
 
 def main():
@@ -59,7 +60,7 @@ def main():
     if args.beta:
         beta = float(args.beta)
     else:
-        beta = BETA 
+        beta = configs["BETA"] 
 
 
     if args.pro:

@@ -5,9 +5,10 @@ import random
 import pickle 
 from collections import Counter
 from lib.Zones import Zone
+from lib.configs import configs
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE,SURGE_MULTIPLIER, BONUS,PERCENT_FALSE_DEMAND
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
-from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE, BETA
+from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE
 from lib.Operator import Operator
 from lib.Vehicles import Veh
 from lib.AV_model import DQNAgent
@@ -23,7 +24,7 @@ class Model():
     def __init__(self, zone_ids, daily_demand, WARMUP_TIME_HOUR, ANALYSIS_TIME_HOUR, 
                  FLEET_SIZE=FLEET_SIZE, PRO_SHARE=PRO_SHARE, SURGE_MULTIPLIER=SURGE_MULTIPLIER,
                  BONUS=BONUS, percent_false_demand =PERCENT_FALSE_DEMAND, percentage_know_fare=PERCE_KNOW,
-                 AV_share = AV_SHARE, RL_engine = None, beta=BETA):
+                 AV_share = AV_SHARE, RL_engine = None, beta=configs["BETA"]):
         
         print("calling init function of Model")
         seed1 = 10 #np.random.randint(0,1000000)
