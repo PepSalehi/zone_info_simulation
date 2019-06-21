@@ -297,8 +297,8 @@ class Veh():
         a['numerator'] = (expected_revenue - expected_cost) *  a["total_pickup"]
         a['expected_revenue'] = expected_revenue 
         a['expected_profit'] = expected_revenue - expected_cost
-        # a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
-        a['prof'] = np.max(0, expected_revenue - expected_cost) * a["total_pickup"]
+        a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
+        a['prof'] = a['prof'].clip_lower(0)
         
         
 
