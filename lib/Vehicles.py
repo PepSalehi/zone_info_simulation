@@ -300,7 +300,7 @@ class Veh():
         a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
 
         path_to_write = configs['output_path']
-        with open(path_to_write +'driver ' + self.id+ '.csv', 'a') as f:
+        with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
             a.to_csv(f, header = True, mode='a', index = False)
 #            print("df")
 #            print(df)
