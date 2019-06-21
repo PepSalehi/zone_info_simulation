@@ -298,7 +298,7 @@ class Veh():
         a['expected_revenue'] = expected_revenue 
         a['expected_profit'] = expected_revenue - expected_cost
         a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
-        a['prof'] = a['prof'].clip_lower(0)
+        a['prof'] = a['prof'].clip(lower=0)
         
         
 
