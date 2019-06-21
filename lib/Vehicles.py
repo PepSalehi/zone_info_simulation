@@ -310,13 +310,12 @@ class Veh():
         # so that probability doesn't end up being negative 
         
         a['prob'] = a['prof']/a['prof'].sum()
-        # a['prob'] = np.max(a['prob'],0)
+        
 
-        path_to_write = configs['output_path']
-        with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
-            a.to_csv(f, header = True, mode='a', index = False)
-#            print("df")
-#            print(df)
+        # path_to_write = configs['output_path']
+        # with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
+        #     a.to_csv(f, header = True, mode='a', index = False)
+
          
         try:
             selected = a.sample(n=1, weights='prob', replace=True)
