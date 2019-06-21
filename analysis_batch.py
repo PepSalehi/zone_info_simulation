@@ -25,6 +25,7 @@ def get_operation_cost(pro_share, fleet):
 directory = "./Outputs/avg_fare_info/1/"
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 template = directory+"report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
+pickle_template = directory+"model for fleet size 1500 surge 2fdemand 0.0perc_k {}pro_s 0 repl{}.csv"
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 op_rev = []
 op_cost = []
@@ -39,7 +40,7 @@ n_repl = 10
 for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
     for repl in range(n_repl):
         report = pd.read_csv(template.format(av_share, repl))
-
+        m = pickle.load(open(pickle_template.format(av_share, repl),'rb'))
         op_rev.append(np.sum(m.operator.revenues))
         driver_revenue.append([np.sum(v.collected_fares) for v in a.vehilcs])
         # op_cost.append(get_operation_cost(fleet,pro_share ))
