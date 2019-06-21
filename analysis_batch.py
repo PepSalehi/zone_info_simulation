@@ -33,13 +33,15 @@ los_mean = []
 los_median = []
 denied_w = []
 ff = []
+driver_revenue = []
 fleet = 1500
 n_repl = 10
 for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
     for repl in range(n_repl):
         report = pd.read_csv(template.format(av_share, repl))
 
-        # op_rev.append(np.sum(m.operator.revenues))
+        op_rev.append(np.sum(m.operator.revenues))
+        driver_revenue.append([np.sum(v.collected_fares) for v in a.vehilcs])
         # op_cost.append(get_operation_cost(fleet,pro_share ))
         op_cost.append(fleet * 30 )
         system_LOS = report.served.sum()/report.total.sum()
@@ -63,7 +65,8 @@ data = pd.DataFrame.from_records([los_list, los_mean])
 df = data.transpose()
 df.columns = columns=["LOS", "mean"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
-sns_plot = sns.lineplot(data=df, palette="tab10", linewidth=2.5)
+df["Ratio"] = df.index
+sns_plot = sns.boxplot(x="Ratio",y="LOS",data=df, palette="tab10", linewidth=2.5)
 plt.savefig("{}/los.png".format(directory))
 plt.clf()
 # visualized denied/waiting 
@@ -77,4 +80,24 @@ plt.savefig("{}/denied.png".format(directory))
 plt.clf()
 
 # df.loc[:,"Percent hired"] = [0.0, 0.2,0.4, 0.6, 0.8, 1.0]
+# visualized LOS 
+op_rev = np.array(op_rev)
+data = pd.DataFrame.from_records([op_rev])
+df = data.transpose()
+df.columns = columns=["op_rev"]
+df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
+df["Ratio"] = df.index
+sns_plot = sns.boxplot(x="Ratio",y="op_rev",data=df, palette="tab10", linewidth=2.5)
+plt.savefig("{}/op_rev.png".format(directory))
+plt.clf()
+
+driver_revenue = np.array(driver_revenue)
+data = pd.DataFrame.from_records([driver_revenue])
+df = data.transpose()
+df.columns = columns=["op_rev"]
+df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
+df["Ratio"] = df.index
+sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
+plt.savefig("{}/driver_revenue.png".format(directory))
+plt.clf()
 
