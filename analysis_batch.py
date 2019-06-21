@@ -25,7 +25,7 @@ def get_operation_cost(pro_share, fleet):
 directory = "./Outputs/avg_fare_info/1/"
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 template = directory+"report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
-pickle_template = directory+"model for fleet size 1500 surge 2fdemand 0.0perc_k {}pro_s 0 repl{}.csv"
+pickle_template = directory+"model for fleet size 1500 surge 2fdemand 0.0perc_k {}pro_s 0 repl{}.p"
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 op_rev = []
 op_cost = []
