@@ -305,6 +305,8 @@ class Veh():
         # a['prof'] -= np.max(a['prof'])
         # a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
         
+        # so that probability doesn't end up being negative 
+        a['prob'] = np.max(a['prob'],0)
         a['prob'] = a['prof']/a['prof'].sum()
 
 
