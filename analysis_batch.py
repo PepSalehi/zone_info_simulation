@@ -21,10 +21,11 @@ def get_operation_cost(pro_share, fleet):
     "hourly cost of Via driver: $30"
     return (fleet * 30)
 
-#template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
-template = "./Outputs/report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
 
-template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
+directory = "./Outputs/avg_fare_info/1/"
+#template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
+template = directory+"report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
+#template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
 op_rev = []
 op_cost = []
 los_list = []
@@ -32,9 +33,10 @@ los_mean = []
 los_median = []
 denied_w = []
 ff = []
-fleet = 2000
+fleet = 1500
+n_repl = 10
 for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
-    for repl in range(5):
+    for repl in range(n_repl):
         report = pd.read_csv(template.format(av_share, repl))
 
         # op_rev.append(np.sum(m.operator.revenues))
@@ -50,7 +52,7 @@ for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
 
 print("los_list", los_list)
 
-directory = "./Outputs/av"
+directory = "./Outputs/avg_fare_info/1/"
 if not os.path.exists(directory):
     os.makedirs(directory)
 # plot revenue vs cost vs profit 
@@ -60,7 +62,7 @@ los_list = np.array(los_list)
 data = pd.DataFrame.from_records([los_list, los_mean])
 df = data.transpose()
 df.columns = columns=["LOS", "mean"]
-df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],5)
+df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 sns_plot = sns.lineplot(data=df, palette="tab10", linewidth=2.5)
 plt.savefig("{}/los.png".format(directory))
 plt.clf()
@@ -69,7 +71,7 @@ denied_w = np.array(denied_w)
 data = pd.DataFrame.from_records([denied_w])
 df = data.transpose()
 df.columns = columns=["Denied"]
-df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],5)
+df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 sns_plot = sns.lineplot(data=df, palette="tab10", linewidth=2.5)
 plt.savefig("{}/denied.png".format(directory))
 plt.clf()
