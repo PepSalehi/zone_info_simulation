@@ -304,11 +304,11 @@ class Veh():
         # for numerical stability
         # a['prof'] -= np.max(a['prof'])
         # a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
-        
-        # so that probability doesn't end up being negative 
-        a['prob'] = np.max(a['prob'],0)
-        a['prob'] = a['prof']/a['prof'].sum()
 
+        # so that probability doesn't end up being negative 
+        
+        a['prob'] = a['prof']/a['prof'].sum()
+        a['prob'] = np.max(a['prob'],0)
 
         path_to_write = configs['output_path']
         with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
