@@ -290,19 +290,23 @@ class Veh():
                 print(self.professional)
 
         a["relative_demand"] = a["total_pickup"]/ a["total_pickup"].sum()
-        expected_profit = (1-PHI) * a.avg_fare * a.surge * match_prob * self.beta  + a.bonus
+        expected_revenue = (1-PHI) * a.avg_fare * a.surge * match_prob * self.beta  + a.bonus
         expected_cost = a.trip_distance_meter * self.rebl_cost # doesn't take into account the distance travelled once the demand is picked up
-        a["cost"] = expected_cost
-        a['numerator'] = (expected_profit - expected_cost) *  a["relative_demand"]
-        a['prof'] = (expected_profit - expected_cost) *  a["relative_demand"]
-        a['expected_revenue'] = expected_profit 
-        a['expected_profit'] = expected_profit - expected_cost
+        
+        a["expected_cost"] = expected_cost
+        a['numerator'] = (expected_revenue - expected_cost) *  a["total_pickup"]
+        a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
+        a['expected_revenue'] = expected_revenue 
+        a['expected_profit'] = expected_revenue - expected_cost
         
 
         # http://cs231n.github.io/linear-classify/#softmax
         # for numerical stability
-        a['prof'] -= np.max(a['prof'])
-        a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
+        # a['prof'] -= np.max(a['prof'])
+        # a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
+        
+        a['prob'] = a['prof']/a['prof'].sum()
+
 
         path_to_write = configs['output_path']
         with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
