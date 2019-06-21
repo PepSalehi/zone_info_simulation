@@ -95,7 +95,7 @@ plt.clf()
 driver_revenue = np.array(driver_revenue)
 data = pd.DataFrame.from_records([driver_revenue])
 df = data.transpose()
-df.columns = columns=["op_rev"]
+df.columns = columns=["driver_revenue"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 df["Ratio"] = df.index
 sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
