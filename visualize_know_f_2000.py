@@ -10,7 +10,7 @@ def get_operation_cost(pro_share, fleet):
     "hourly cost of Via driver: $30"
     return (fleet * 30)
 #template = "./Outputs/RL/report for fleet size 2000 surge 2fdemand= 0.0perc_k 0pro_s 0 perc_av {} repl{}.csv"
-template = "./Outputs/avg_fare_info/report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
+template = "./Outputs/avg_fare_info/0.1/report for fleet size 1500 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
 #template = "./Outputs/report for fleet size 2000 surge 2fdemand= 0.0perc_k {}pro_s 0 repl{}.csv"
 op_rev = []
 op_cost = []
