@@ -3,6 +3,7 @@ import pandas as pd
 from collections import defaultdict
 from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE
 from lib.Requests import Req
+from lib.configs import configs
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
@@ -298,9 +299,9 @@ class Veh():
         a['prof'] -= np.max(a['prof'])
         a['prob'] = np.exp(a['prof'])/np.sum(np.exp(a['prof'])) 
 
-        if self.id == 1:
-            with open('./Outputs/somefile.csv', 'a') as f:
-                a.to_csv(f, header = True, mode='a', index = False)
+        path_to_write = configs['output_path']
+        with open(path_to_write +'driver ' + self.id+ '.csv', 'a') as f:
+            a.to_csv(f, header = True, mode='a', index = False)
 #            print("df")
 #            print(df)
          
