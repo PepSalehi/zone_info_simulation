@@ -295,9 +295,11 @@ class Veh():
         
         a["expected_cost"] = expected_cost
         a['numerator'] = (expected_revenue - expected_cost) *  a["total_pickup"]
-        a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
         a['expected_revenue'] = expected_revenue 
         a['expected_profit'] = expected_revenue - expected_cost
+        # a['prof'] = (expected_revenue - expected_cost) *  a["total_pickup"]
+        a['prof'] = np.max(0, expected_revenue - expected_cost) * a["total_pickup"]
+        
         
 
         # http://cs231n.github.io/linear-classify/#softmax
@@ -308,7 +310,7 @@ class Veh():
         # so that probability doesn't end up being negative 
         
         a['prob'] = a['prof']/a['prof'].sum()
-        a['prob'] = np.max(a['prob'],0)
+        # a['prob'] = np.max(a['prob'],0)
 
         path_to_write = configs['output_path']
         with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
