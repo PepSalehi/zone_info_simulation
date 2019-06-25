@@ -4,7 +4,7 @@ import geopandas as gpd
 from collections import deque
 
 from lib.Requests import Req
-from lib.Constants import WARMUP_TIME_SECONDS, BONUS
+from lib.Constants import WARMUP_TIME_SECONDS, BONUS, zones_w_neighbors
 
 """
 

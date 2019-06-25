@@ -5,8 +5,9 @@ import pandas as pd
 DIST_MAT = pd.read_csv("./Data/dist_mat.csv")
 
 
-temp = pd.read_csv( "./Data/zones.csv", header=None, names=["zone_id"])
-ZONE_IDS = temp.zone_id.values
+# temp = pd.read_csv( "./Data/zones.csv", header=None, names=["zone_id"])
+zones_w_neighbors = pd.read_csv( "./Data/zones_w_neighbors.csv")
+ZONE_IDS = zones_w_neighbors.LocationID.values
 
 ZONE_IDS = list(set(ZONE_IDS).intersection(DIST_MAT.PULocationID.unique()))
 print("The number of zones is ", len(ZONE_IDS))
@@ -39,7 +40,7 @@ CONSTANT_SPEED = 8 # meters per second
 INI_WAIT = 400
 INI_DETOUR = 1.25
 
-MAX_IDLE = 5 *60
+MAX_IDLE = 5 * 60
 # intervals for vehicle-request assignment and rebalancing
 INT_ASSIGN = 30
 INT_REBL = 150
