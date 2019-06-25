@@ -1,7 +1,7 @@
 import numpy as np 
 import pandas as pd 
 from collections import defaultdict
-from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE
+from lib.Constants import ZONE_IDS, PHI, DIST_MAT, CONSTANT_SPEED, INT_ASSIGN, MAX_IDLE, FUEL_COST, CONST_FARE, zones_neighbors
 from lib.Requests import Req
 from lib.configs import configs
 # from lib.rl_policy import DQNAgent
@@ -126,6 +126,13 @@ class Veh():
     def keep_waiting(self):
         self.time_idled += INT_ASSIGN
         self.total_waited += INT_ASSIGN
+
+    def get_neighboring_zone_ids(self):
+        ''' 
+        a list of ids of the neighboring zones 
+        '''
+        neighbors_list = zones_neighbors[str(self.ozone)]
+        return neighbors_list
         
     def is_busy(self):
         return (not self.idle and not self.rebalancing)
@@ -261,9 +268,13 @@ class Veh():
         '''
             
         dist = self._get_dist_to_all_zones()
-        df = self.get_data_from_operator(t, self.true_demand) # just for now 
+        df = self.get_data_from_operator(t, self.true_demand) 
         a = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
         
+        neighbors_list = self.get_neighboring_zone_ids()
+        # so that it can only choose from its neighboring zones
+        a = a[a["Origin"].isin(neighbors_list)]
+
         
         if self.is_AV: 
             # if it's an AV
