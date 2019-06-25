@@ -329,9 +329,9 @@ class Veh():
         a['prob'] = a['prof']/a['prof'].sum()
         
 
-        path_to_write = configs['output_path']
-        with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
-            a.to_csv(f, header = True, mode='a', index = False)
+        # path_to_write = configs['output_path']
+        # with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
+        #     a.to_csv(f, header = True, mode='a', index = False)
 
   
 
