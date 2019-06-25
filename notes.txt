@@ -1,6 +1,14 @@
-what is the state shape? Is it okay if it's a list of of 4 matrices?
+For deterministic case (i.e., driver knowledge of fare and supply), explore the following formulations when it comes to drivers' decision makings 
 
-(1,3,5,5)
+1. use total demand * avg fare
+1.1 How effective is chaning avg fare in this situation? 
+
+2. use relative demand * relative fare
+2.1 unclear how it would work 
+
+
+
+
 
 
 model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
