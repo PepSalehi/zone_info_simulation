@@ -6,6 +6,10 @@ For deterministic case (i.e., driver knowledge of fare and supply), explore the 
 2. use relative demand * relative fare
 2.1 unclear how it would work 
 
+I think I should move to just choosing adjacent zones. it seems it's common in the literature as well. The problem with inclusion of non-neighboring zones is that the probabilities tend to get really small, which I think is causing issues for the driver behavior 
+
+what is the best way to store the information about neighboring zones? just a dictionary? {zone_id : [neighboring zones ]} then filter the df based on this? 
+
 
 
 
