@@ -269,26 +269,32 @@ class Veh():
             
         dist = self._get_dist_to_all_zones()
         df = self.get_data_from_operator(t, self.true_demand) 
-        a = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
+        b = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
         
         neighbors_list = self.get_neighboring_zone_ids()
+        assert len(neighbors_list) > 0
         # so that it can only choose from its neighboring zones
-        a = a[a["Origin"].isin(neighbors_list)]
+        a = b[b["Origin"].isin(neighbors_list)]
 
+
+        
         
         if self.is_AV: 
             # if it's an AV
             return 
 
         if not self.know_fare: # they don't know the average fare for an area, they use one for all
+            # print("They don't know the fare")
             a.avg_fare = CONST_FARE
+        
         if not self.professional:
             match_prob = 1 # what?
-            # the problem here is that p*q is way
+            # the problem here is that p*q is way  
             
             # beta = 0.001 # coefficient to make calculation work out  
             # beta = 0.01 # remove this 
-        
+        # TODO : round up the fare 
+
         else:
             try:
                 match_prob = a.prob_of_s
@@ -323,9 +329,13 @@ class Veh():
         a['prob'] = a['prof']/a['prof'].sum()
         
 
-        # path_to_write = configs['output_path']
-        # with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
-        #     a.to_csv(f, header = True, mode='a', index = False)
+        path_to_write = configs['output_path']
+        with open(path_to_write +'driver ' + str(self.id)+ '.csv', 'a') as f:
+            a.to_csv(f, header = True, mode='a', index = False)
+
+  
+
+
 
          
         try:

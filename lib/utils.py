@@ -66,6 +66,7 @@ class Model():
         self.percent_false_demand = percent_false_demand
         self.fleet_deceived_size= int(self.percent_false_demand  * self.FLEET_SIZE )
         self.percentage_know_fare = np.minimum(self.PRO_SHARE + percentage_know_fare, 1) 
+        self.fleet_know_fare = int(percentage_know_fare * self.FLEET_SIZE )
         self.fleet_DONT_know_fare = int((1-self.percentage_know_fare ) * self.FLEET_SIZE )
         self.fleet_AV = int(self.AV_SHARE * self.FLEET_SIZE)
         
@@ -124,15 +125,27 @@ class Model():
             remaining_veh = list(set(remaining_veh)-set(vs))   
 
                 
-        if self.fleet_DONT_know_fare > 0:
-            print("fleet Don't know fare", self.fleet_DONT_know_fare )
+        # if self.fleet_DONT_know_fare > 0:
+        #     print("fleet Don't know fare", self.fleet_DONT_know_fare )
+        #     if not ('remaining_veh' in locals()):
+        #         remaining_veh = self.vehilcs
+            
+
+        #     vs = np.random.choice(remaining_veh, self.fleet_DONT_know_fare, replace=False)
+        #     for v in vs:
+        #         v.know_fare = False
+                
+        #     remaining_veh = list(set(remaining_veh)-set(vs))
+
+        if self.fleet_know_fare > 0:
+            print("fleet know fare", self.fleet_know_fare )
             if not ('remaining_veh' in locals()):
                 remaining_veh = self.vehilcs
             
 
-            vs = np.random.choice(remaining_veh, self.fleet_DONT_know_fare, replace=False)
+            vs = np.random.choice(remaining_veh, self.fleet_know_fare, replace=False)
             for v in vs:
-                v.know_fare = False
+                v.know_fare = True
                 
             remaining_veh = list(set(remaining_veh)-set(vs))
             
