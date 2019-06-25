@@ -1,13 +1,18 @@
 import numpy as np
 import pandas as pd
+import json 
+# zone neighbors dict 
+# keys are strings 
+with open('./Data/zones_neighbors.json', 'r') as f:
+    zones_neighbors = json.load(f)
 
 # distance matrix 
 DIST_MAT = pd.read_csv("./Data/dist_mat.csv")
 
 
 # temp = pd.read_csv( "./Data/zones.csv", header=None, names=["zone_id"])
-zones_w_neighbors = pd.read_csv( "./Data/zones_w_neighbors.csv")
-ZONE_IDS = zones_w_neighbors.LocationID.values
+zone_ids_file = pd.read_csv( "./Data/zones_w_neighbors.csv")
+ZONE_IDS = zone_ids_file.LocationID.values
 
 ZONE_IDS = list(set(ZONE_IDS).intersection(DIST_MAT.PULocationID.unique()))
 print("The number of zones is ", len(ZONE_IDS))
