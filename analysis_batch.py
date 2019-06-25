@@ -67,6 +67,7 @@ df = data.transpose()
 df.columns = columns=["LOS", "mean"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 df["Ratio"] = df.index
+df.to_csv(directory + "los.csv")
 sns_plot = sns.boxplot(x="Ratio",y="LOS",data=df, palette="tab10", linewidth=2.5)
 plt.savefig("{}/los.png".format(directory))
 plt.clf()
@@ -76,6 +77,7 @@ data = pd.DataFrame.from_records([denied_w])
 df = data.transpose()
 df.columns = columns=["Denied"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
+df.to_csv(directory + "denied.csv")
 sns_plot = sns.lineplot(data=df, palette="tab10", linewidth=2.5)
 plt.savefig("{}/denied.png".format(directory))
 plt.clf()
@@ -88,9 +90,10 @@ df = data.transpose()
 df.columns = columns=["op_rev"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 df["Ratio"] = df.index
-sns_plot = sns.boxplot(x="Ratio",y="op_rev",data=df, palette="tab10", linewidth=2.5)
-plt.savefig("{}/op_rev.png".format(directory))
-plt.clf()
+df.to_csv(directory + "op_revenue.csv")
+# sns_plot = sns.boxplot(x="Ratio",y="op_rev",data=df, palette="tab10", linewidth=2.5)
+# plt.savefig("{}/op_rev.png".format(directory))
+# plt.clf()
 
 driver_revenue = np.array(driver_revenue)
 data = pd.DataFrame.from_records([driver_revenue])
@@ -98,7 +101,8 @@ df = data.transpose()
 df.columns = columns=["driver_revenue"]
 df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
 df["Ratio"] = df.index
-sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
-plt.savefig("{}/driver_revenue.png".format(directory))
-plt.clf()
+df.to_csv(directory + "driver_revenue.csv")
+# sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
+# plt.savefig("{}/driver_revenue.png".format(directory))
+# plt.clf()
 
