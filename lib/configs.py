@@ -1,5 +1,2 @@
-configs = {
-"output_path" : "./Outputs/",
-"BETA": 1
+configs = {"output_path": "./Outputs/", "BETA": 1}
 
-}
