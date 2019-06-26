@@ -11,7 +11,7 @@ sns.set(style="whitegrid")
 
 m = pickle.load(
     open(
-        "./Outputs/avg_fare_info/1/model for fleet size 1500 surge 2fdemand 0.0perc_k 0.2pro_s 0 repl9.p",
+        "./Outputs/avg_fare_info/1/model for fleet size 1500 surge 2fdemand 0.0perc_k 0.2pro_s 0 repl0.p",
         "rb",
     )
 )
