@@ -72,6 +72,11 @@ class Veh():
         dists = self.DIST_MAT.query("PULocationID=={o}".format(o=self.ozone))
         
         return dists 
+
+    def _get_dist_to_only_neighboring_zones(self):
+        neighbors_list = self.get_neighboring_zone_ids() 
+        dists = self.DIST_MAT.query("PULocationID=={o} & DOLocationID.isin({destinations})".format(o=self.ozone, destinations = neighbors_list))
+        return dists 
     
     def _get_time_to_destination(self, dest):
         dist = self._get_distance_to_destination(dest)
@@ -269,12 +274,21 @@ class Veh():
             
         dist = self._get_dist_to_all_zones()
         df = self.get_data_from_operator(t, self.true_demand) 
-        b = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
+        a = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
         
         neighbors_list = self.get_neighboring_zone_ids()
-        assert len(neighbors_list) > 0
+        # assert len(neighbors_list) > 0
         # so that it can only choose from its neighboring zones
-        a = b[b["Origin"].isin(neighbors_list)]
+        # TODO : this line bumped the running time of the code from 5 to 63 minutes! 
+        # a = b[b["Origin"].isin(neighbors_list)]
+        a = a[a["Origin"].isin(neighbors_list)]
+        
+        # TODO: this should be a very interesting pandas question. In the above, if I use 
+        # b = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
+        # a = b[b["Origin"].isin(neighbors_list)] 
+        # it will take 63 minutes!!!
+        # if it's just a all along, it's 14 minutes. 
+        # none of this (i.e. isin(list)) and it's 5 minutes. OMG!
 
 
         

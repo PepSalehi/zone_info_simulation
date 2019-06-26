@@ -1,6 +1,6 @@
 import numpy as np 
 import pandas as pd 
-import geopandas as gpd
+# import geopandas as gpd
 from collections import deque
 
 from lib.Requests import Req
@@ -58,12 +58,12 @@ class Zone():
         self._serverd_demand_history = []
         self._supply_history = [] 
         self._incoming_supply_history = []
-        self.neighbors = self.get_neighboring_zone_ids()
+        # self.neighbors = self.get_neighboring_zone_ids()
 
         
-    def get_neighboring_zone_ids(self):
-        neighbors_list = zones_neighbors[str(self.id)]
-        return neighbors_list
+    # def get_neighboring_zone_ids(self):
+    #     neighbors_list = zones_neighbors[str(self.id)]
+    #     return neighbors_list
 
     def read_daily_demand(self, demand_df):
         self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))

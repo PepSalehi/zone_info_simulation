@@ -92,9 +92,6 @@ def main():
                         
                         # # dispatch the system for T_TOTAL seconds, at the interval of INT_ASSIGN
                         for T in range(WARMUP_TIME_SECONDS, T_TOTAL_SECONDS, INT_ASSIGN):
-                            if T % (25200 + 3600) == 0 :
-                                pass 
-                        
                             
                             m.dispatch_at_time(T)
                     

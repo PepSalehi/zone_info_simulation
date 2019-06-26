@@ -1,6 +1,5 @@
 import numpy as np 
 import pandas as pd
-import pickle
 from lib.Constants import ZONE_IDS, DEMAND_UPDATE_INTERVAL, POLICY_UPDATE_INTERVAL, MIN_DEMAND, SURGE_MULTIPLIER, BONUS
 
 
