@@ -61,19 +61,12 @@ class Zone:
         self._serverd_demand_history = []
         self._supply_history = []
         self._incoming_supply_history = []
-        # self.neighbors = self.get_neighboring_zone_ids()
 
-    # def get_neighboring_zone_ids(self):
-    #     neighbors_list = zones_neighbors[str(self.id)]
-    #     return neighbors_list
 
     def read_daily_demand(self, demand_df):
         self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
 
-    #        print (self.DD.shape) # there are zones with no daily demand
-    # self._set_demand_rate()
-    # self.mid = 0
-
+   
     def calculate_demand_function(self, surge):
         """ 
         This should be a decreasing function of price 
@@ -99,7 +92,7 @@ class Zone:
             print(veh.idle)
             print(veh.rebalancing)
             print(veh.time_to_be_available)
-        #            return veh
+       
 
         self.incoming_vehicles.append(veh)
 
@@ -175,7 +168,7 @@ class Zone:
         dt = np.int(self.rs1.exponential(scale))
         try:
             destination = self.DD.iloc[self.mid]["DOLocationID"]
-            distance = self.DD.iloc[self.mid]["trip_distance_meter"]
+            # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
             fare = self.DD.iloc[self.mid]["fare_amount"] * self.surge + self.bonus
         except:
             # if there are no more rows in the data
@@ -205,24 +198,14 @@ class Zone:
         while d != 0 and self.reqs[-1].Tr <= T:  # self.N <= self.D:
             req = self._generate_request(d)
             if req is not None:
-                self.demand.append(self.reqs[-1])
+                # self.demand.append(self.reqs[-1]) # hmm, what? 
+                self.demand.append(req) 
                 self.reqs.append(req)
                 self.N += 1
             else:
                 break
 
 
-#        assert self.N == len(self.reqs)
-
-
-# if __name__ == "__main__":
-#     z = Zone(4)
-#     z.generate_demand()
-#     z.generate_requests_to_time(3600)
-#     len(z.demand)
-#     z.demand[0].Tr
-#     z.demand[-1].Tr
-#     pass
 
 # TODO: df_hourly_stats_over_days is what a professional driver knows
 # TODO: df_hourly_stats is stats per hour per day. Can be the true information provided by the operator (although how are they gonna know it in advance?)

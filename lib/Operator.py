@@ -32,7 +32,6 @@ class Operator:
         self.SHOULD_SURGE = True
         self.SHOULD_BONUS = False
         self.SHOULD_LIE_DEMAND = False
-        self.SURGE_RATIO = 3  # q/idle+incoming_veh
         self.SURGE_MULTIPLIER = SURGE_MULTIPLIER
         self.BONUS = BONUS
 
@@ -67,7 +66,7 @@ class Operator:
         df = df.assign(bonus=0)
         df = df.assign(match_prob=1)
         # df = df.assign(match_prob=df['total_pickup']/60)  # pax/min just the default
-        #        df = df.assign(match_prob=df['total_pickup']/df.total_pickup.sum())  # pax/min just the default
+        # df = df.assign(match_prob=df['total_pickup']/df.total_pickup.sum())  # pax/min just the default
         if self.report is not None:
             # get the avg # of drivers per zone per price
             df = pd.merge(df, self.report, left_on="Origin", right_on="zone_id")
@@ -108,7 +107,7 @@ class Operator:
             return self.live_data_false
 
     def get_zonal_info(self, t):
-        #        if self.live_data is None:
+        
         hour = int(np.floor(t / 3600))
         self.true_zonal_info_over_t(hour)
         self.false_zonal_info_over_t(hour)
