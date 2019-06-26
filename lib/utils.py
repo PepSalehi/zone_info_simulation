@@ -26,7 +26,6 @@ from lib.Constants import (
 from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE
 from lib.Operator import Operator
 from lib.Vehicles import Veh
-from lib.AV_model import DQNAgent
 
 # models creates all the zones. initializes the daily demand. this should be later be confined to hourly/15 mins demand
 # Zones must then create Requests from the matrix row by row
