@@ -11,7 +11,7 @@ sns.set(style="whitegrid")
 
 m = pickle.load(
     open(
-        "./Outputs/avg_fare_info/1/model for fleet size 1500 surge 2fdemand 0.0perc_k 0.2pro_s 0 repl0.p",
+        "./Outputs/avg_fare_info/1/model for fleet size 1500 surge 2fdemand 0.0perc_k 0pro_s 0 repl0.p",
         "rb",
     )
 )
@@ -57,13 +57,10 @@ for z in m.zones:
     df.columns = columns = ["demand", "served", "supply", "incoming"]
     # f = open(directory +)
     sns.lineplot(data=df, palette="tab10", linewidth=2.5)
-    f = open(directory + "zone time_demand {}.p".format(z.id), 'w')
+    f = open(directory + "zone time_demand {}.json".format(z.id), 'w')
     json.dump(z._time_demand, f)
     f.close()
     plt.savefig("{}/zone {}.png".format(directory, z.id))
     plt.clf()
 
 
-plt.clf()
-
-plt.show()

@@ -54,7 +54,7 @@ class Model:
     ):
 
         print("calling init function of Model")
-        seed1 = 10  # np.random.randint(0,1000000)
+        seed1 = 100  # np.random.randint(0,1000000)
         self.rs1 = np.random.RandomState(seed1)
         #
         self.zone_ids = zone_ids
@@ -208,7 +208,7 @@ class Model:
         then generate demand
         """
         if self.WARMUP_PHASE and t >= self.ANALYSIS_TIME_SECONDS:
-            print("changing time")
+            print("changing demand rate from warmup to analysis")
             self.set_analysis_time(self.ANALYSIS_TIME_HOUR)
             self.WARMUP_PHASE = False
             # update drivers infor/expectations
@@ -267,7 +267,7 @@ class Model:
         #
         self.generate_zonal_demand(t)
         self.operator.update_zonal_info(t)
-        self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
+        # self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
         self.assign_zone_veh(t, self.WARMUP_PHASE, penalty)
         self.move_fleet(t, self.WARMUP_PHASE, action)
 

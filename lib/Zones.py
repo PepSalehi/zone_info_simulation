@@ -80,6 +80,7 @@ class Zone:
         )  # percent change in price * elascticity
         new_demand = int((1 + change) * base_demand)  # since change is negative
         new_demand = np.max([0, new_demand])
+        assert new_demand <= base_demand
         return new_demand
 
     def join_incoming_vehicles(self, veh):
@@ -164,7 +165,8 @@ class Zone:
             d = self.D
 
         scale = 3600.0 / d
-        dt = np.int(self.rs1.exponential(scale))
+        # interarrival time is generated according to the exponential distribution
+        dt = np.int(self.rs1.exponential(scale)) 
         try:
             destination = self.DD.iloc[self.mid]["DOLocationID"]
             # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
@@ -193,7 +195,7 @@ class Zone:
                 self.N += 1
 
         d = self.calculate_demand_function(self.surge)
-
+        before_demand = len(self.demand)
         while d != 0 and self.reqs[-1].Tr <= T:  # self.N <= self.D:
             req = self._generate_request(d)
             if req is not None:
@@ -201,12 +203,18 @@ class Zone:
                 self.demand.append(req)
                 self.reqs.append(req)
                 self.N += 1
+                # for debugging, number of requests per 5 minutes
                 self._time_demand.append(
-                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60))
+                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60)) 
                 )
             else:
                 break
-
+        after_demand = len(self.demand)
+        if after_demand - before_demand > 100 :
+            print ("Huge increase in the number of requests over 30 seconds!!")
+            print ("d ", d)
+            print ("T ",T  )
+            print ("zone id ", self.id)
 
 # TODO: df_hourly_stats_over_days is what a professional driver knows
 # TODO: df_hourly_stats is stats per hour per day. Can be the true information provided by the operator (although how are they gonna know it in advance?)

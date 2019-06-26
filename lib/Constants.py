@@ -20,7 +20,7 @@ print("The number of zones is ", len(ZONE_IDS))
 
 FNAME = "daily_demand_day_2.csv"
 DEMAND_SOURCE = pd.read_csv("./Data/{demand}".format(demand=FNAME))
-print("The number of requests over all days is  ", DEMAND_SOURCE.size)
+print("The number of requests over all days is  ", DEMAND_SOURCE.shape)
 
 # bin demand into 15 min periods,
 
