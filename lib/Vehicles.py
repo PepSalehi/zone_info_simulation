@@ -352,6 +352,7 @@ class Veh():
         except:
             print("ozone")
             print(self.ozone)
+            raise Exception("selected was empty, here is a {} and here is selected {}".format(a, selected))
 #                print(df)
 #                print(dist)
             
