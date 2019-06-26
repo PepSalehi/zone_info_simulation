@@ -61,10 +61,10 @@ if not os.path.exists(directory):
     os.makedirs(directory)
 
 # save raw results 
-with open('driver_revenue.p', 'wb') as f: 
+with open(directory+'driver_revenue.p', 'wb') as f: 
     pickle.dump(driver_revenue, f)
 
-with open('op_revenue.p', 'wb') as f: 
+with open(directory+'op_revenue.p', 'wb') as f: 
     pickle.dump(op_rev, f)
 
 
