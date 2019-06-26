@@ -4,7 +4,7 @@ from scipy import stats
 import pickle
 import matplotlib.pyplot as plt
 import os
-
+import json
 import seaborn as sns
 sns.set(style="whitegrid")
 
@@ -40,7 +40,6 @@ if not os.path.exists(directory):
 
 for z in m.zones: 
 	# z = m.zones[l.index(88)]
-
 	demand = z._demand_history
 	supply = z._supply_history 
 	served = z._serverd_demand_history
@@ -49,9 +48,11 @@ for z in m.zones:
 	data = pd.DataFrame.from_records([demand, served, supply, incoming])
 	# data = pd.DataFrame.from_records([demand, supply, incoming])
 	df = data.transpose()
-	df.columns = columns=["demand", "served", "supply", "incoming"]
-	# df.columns = columns=["demand", "supply", "incoming"]
+    df.columns = columns=["demand", "served", "supply", "incoming"]
 
+    with open("directory/zone {} time_demand.json", "w") as f:
+        json.dump(z._time_demand )
+         
 
 	sns.lineplot(data=df, palette="tab10", linewidth=2.5)
 
