@@ -61,12 +61,12 @@ class Zone:
         self._serverd_demand_history = []
         self._supply_history = []
         self._incoming_supply_history = []
-
+        # for debugging
+        self._time_demand = []
 
     def read_daily_demand(self, demand_df):
         self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
 
-   
     def calculate_demand_function(self, surge):
         """ 
         This should be a decreasing function of price 
@@ -92,7 +92,6 @@ class Zone:
             print(veh.idle)
             print(veh.rebalancing)
             print(veh.time_to_be_available)
-       
 
         self.incoming_vehicles.append(veh)
 
@@ -198,13 +197,15 @@ class Zone:
         while d != 0 and self.reqs[-1].Tr <= T:  # self.N <= self.D:
             req = self._generate_request(d)
             if req is not None:
-                # self.demand.append(self.reqs[-1]) # hmm, what? 
-                self.demand.append(req) 
+                # self.demand.append(self.reqs[-1]) # hmm, what?
+                self.demand.append(req)
                 self.reqs.append(req)
                 self.N += 1
+                self._time_demand.append(
+                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60))
+                )
             else:
                 break
-
 
 
 # TODO: df_hourly_stats_over_days is what a professional driver knows
