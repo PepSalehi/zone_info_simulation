@@ -304,12 +304,14 @@ class Veh:
         # a = b[b["Origin"].isin(neighbors_list)]
         a = a[a["Origin"].isin(neighbors_list)]
 
-        # corner case: take zone 127. When a taxi is there and no demand is left, df and therefore a will be empty. 
+        # corner case: take zone 127. When a taxi is there and no demand is left, df and therefore a will be empty.
         # in this situation, it should just move to one of its neighbors
         if a.empty:
-            print ("corner case: take zone 127. there and no demand is left, df and therefore a will be empty. in this situation, it should just move to one of its neighbors")
+            print(
+                "corner case: take zone 127. there and no demand is left, df and therefore a will be empty. in this situation, it should just move to one of its neighbors"
+            )
             print("ozone", self.ozone)
-            print ("destination", neighbors_list[0])
+            print("destination", neighbors_list[0])
             return neighbors_list[0]
 
         # TODO: this should be a very interesting pandas question. In the above, if I use
@@ -330,19 +332,14 @@ class Veh:
         ):  # they don't know the average fare for an area, they use one for all
             # print("They don't know the fare")
             a.avg_fare = CONST_FARE
+            # TODO : round up the fare
 
         if not self.professional:
-            match_prob = 1  # what?
-            # the problem here is that p*q is way
-
-            # beta = 0.001 # coefficient to make calculation work out
-            # beta = 0.01 # remove this
-        # TODO : round up the fare
-
+            # if not professional, you don't consider supply in your decision making
+            match_prob = 1
         else:
             try:
                 match_prob = a.prob_of_s
-                # beta = 0.01 # change it to 0.01
             except:
                 print(df)
                 print("that was df")

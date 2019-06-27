@@ -36,6 +36,7 @@ los_median = []
 denied_w = []
 ff = []
 driver_revenue = defaultdict(list)
+driver_revenue_plotting = []
 fleet = 1500
 n_repl = 10
 for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
@@ -44,6 +45,7 @@ for av_share in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]:
         m = pickle.load(open(pickle_template.format(av_share, repl),'rb'))
         op_rev[av_share].append(np.sum(m.operator.revenues))
         driver_revenue[av_share].append([np.sum(v.collected_fares) for v in m.vehilcs])
+        driver_revenue_plotting.append([np.sum(v.collected_fares) for v in m.vehilcs])
         # op_cost.append(get_operation_cost(fleet,pro_share ))
         op_cost.append(fleet * 30 )
         system_LOS = report.served.sum()/report.total.sum()
@@ -109,14 +111,14 @@ plt.clf()
 # plt.savefig("{}/op_rev.png".format(directory))
 # plt.clf()
 
-# driver_revenue = np.array(driver_revenue)
-# data = pd.DataFrame.from_records([driver_revenue])
-# df = data.transpose()
-# df.columns = columns=["driver_revenue"]
-# df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
-# df["Ratio"] = df.index
-# df.to_csv(directory + "driver_revenue.csv")
-# sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
-# plt.savefig("{}/driver_revenue.png".format(directory))
-# plt.clf()
+driver_revenue_plotting = np.array(driver_revenue_plotting)
+data = pd.DataFrame.from_records([driver_revenue_plotting])
+df = data.transpose()
+df.columns = columns=["driver_revenue"]
+df.index = np.repeat([0.0, 0.2,0.4, 0.6, 0.8, 1.0],n_repl)
+df["Ratio"] = df.index
+df.to_csv(directory + "driver_revenue.csv")
+sns_plot = sns.boxplot(x="Ratio",y="driver_revenue",data=df, palette="tab10", linewidth=2.5)
+plt.savefig("{}/driver_revenue.png".format(directory))
+plt.clf()
 
