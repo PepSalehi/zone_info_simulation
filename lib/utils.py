@@ -54,7 +54,7 @@ class Model:
     ):
 
         print("calling init function of Model")
-        seed1 = 100  # np.random.randint(0,1000000)
+        seed1 = 1100  # np.random.randint(0,1000000)
         self.rs1 = np.random.RandomState(seed1)
         #
         self.zone_ids = zone_ids

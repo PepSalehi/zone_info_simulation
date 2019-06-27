@@ -202,8 +202,8 @@ class Veh:
             if self.is_AV:
                 assert action is not None
                 target_zone = Zones[action].id
-                # print("action", action)
-                # print("target zone id", Zones[action].id)
+                print("action", action)
+                print("target zone id", Zones[action].id)
             #            print(target_zone)
             for z in Zones:
                 if z.id == target_zone:
@@ -282,8 +282,16 @@ class Veh:
                     self.profits.append(
                         req.fare
                     )  # the absolute fare, useful for hired drivers
+                    if self.is_AV:
+                        print ("thre fare was", req.fare)
+                        print ("proftis are ", self.profits)
 
-                #
+                if WARMUP_PHASE:
+                    if self.is_AV:
+                        self.profits.append(req.fare)
+                        print ("thre fare was", req.fare)
+                        print ("proftis are ", self.profits)
+                        
                 self.req = req
                 return True
         return False

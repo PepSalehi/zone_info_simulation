@@ -72,14 +72,14 @@ class RebalancingEnv(gym.Env):
             # print(str(veh.ozone))
             # print("is rebalancing?" , str(veh.rebalancing))
             # print("is idle?", str(veh.idle))
-            # if veh.rebalancing:
-            #     print("time_to_be_available")
-            #     print(veh.time_to_be_available)
-            # if veh.is_busy():
-            #     print("veh is serving demand going to")
-            #     print(str(veh.ozone))
-            #     print("time_to_be_available")
-            #     print(veh.time_to_be_available)
+            if veh.rebalancing:
+                print("time_to_be_available")
+                print(veh.time_to_be_available)
+            if veh.is_busy():
+                print("veh is serving demand going to")
+                print(str(veh.ozone))
+                print("time_to_be_available")
+                print(veh.time_to_be_available)
                 
 
             self.model.dispatch_at_time(T, self.penalty)
@@ -102,13 +102,17 @@ class RebalancingEnv(gym.Env):
         T += INT_ASSIGN
         self.T = self.T + INT_ASSIGN
         # calculate the reward of that action
+        print("veh.profits")
+        print(veh.profits)
         total_new_income = np.sum(veh.profits) - self.old_income 
         self.old_income = np.sum(veh.profits)
         # normalize the reward. 
         # from previous runs, avg revenue is 35 with std of 5
         # (base on Nuts and bolts of DRL)
         normalized_income = (total_new_income ) #/10
-        reward += normalized_income
+        reward = normalized_income
+        print("reward")
+        print(reward)
         # total_new_income = np.sum(model.operator.revenues) - self.old_income 
         # self.old_income = np.sum(model.operator.revenues)
         # reward += total_new_income
