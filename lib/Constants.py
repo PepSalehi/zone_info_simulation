@@ -58,16 +58,16 @@ FUEL_COST = 0.033 * 0.01  # dollors per meter. roughly 54 cents/mile
 # times is extremely ugly, but works
 ANALYSIS_TIME_HOUR = 8  # 8-9 am
 ANALYSIS_TIME_SECONDS = ANALYSIS_TIME_HOUR * 3600
-WARMUP_TIME_HOUR = ANALYSIS_TIME_HOUR - 1  # used for setting up the demand
+WARMUP_TIME_HOUR = 7  # used for setting up the demand 8am
 WARMUP_TIME_SECONDS = WARMUP_TIME_HOUR * 3600
 
 DEMAND_UPDATE_INTERVAL = 3600  # seconds
 POLICY_UPDATE_INTERVAL = 10 * 60  # 10 minutes
 MIN_DEMAND = 40  # min demand to have surge
-
+ANALYSIS_DURATION = 4 * 3600 # hours
 # warm-up time, study time and cool-down time of the simulation (in seconds)
 # start_time_offset + 1 hour warm up + 1 hour analysis
-T_TOTAL_SECONDS = WARMUP_TIME_SECONDS + 3600 + 3600
+T_TOTAL_SECONDS = WARMUP_TIME_SECONDS + 3600 + ANALYSIS_DURATION
 # T_WARM_UP = 60*30
 # T_STUDY = 60*60
 # T_COOL_DOWN = 60*30

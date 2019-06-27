@@ -304,6 +304,14 @@ class Veh:
         # a = b[b["Origin"].isin(neighbors_list)]
         a = a[a["Origin"].isin(neighbors_list)]
 
+        # corner case: take zone 127. When a taxi is there and no demand is left, df and therefore a will be empty. 
+        # in this situation, it should just move to one of its neighbors
+        if a.empty:
+            print ("corner case: take zone 127. there and no demand is left, df and therefore a will be empty. in this situation, it should just move to one of its neighbors")
+            print("ozone", self.ozone)
+            print ("destination", neighbors_list[0])
+            return neighbors_list[0]
+
         # TODO: this should be a very interesting pandas question. In the above, if I use
         # b = pd.merge(df, dist, left_on='Origin', right_on='DOLocationID', how='left')
         # a = b[b["Origin"].isin(neighbors_list)]
