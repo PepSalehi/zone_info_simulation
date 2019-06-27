@@ -9,12 +9,13 @@ Created on Tue Mar 19 14:22:13 2019
 import argparse
 import time 
 import pickle 
+import json
 from lib.utils import Model 
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE, SURGE_MULTIPLIER, BONUS, PERCENT_FALSE_DEMAND
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
 from lib.Constants import PERCE_KNOW
 from lib.Env_updated import RebalancingEnv
-output_path = "./Outputs/RL/"
+
 
 
 import gym
@@ -29,6 +30,9 @@ from keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory
+
+
+output_path = "./Outputs/RL/"
 
 def main():
     
@@ -137,8 +141,11 @@ def main():
                                     target_model_update=1e-2, policy=policy, gamma=.99)
                     dqn.compile(Adam(lr=0.001, epsilon=0.05, decay=0.0), metrics=['mae'])
                     
-                    dqn.fit(env, nb_steps=nb_steps, action_repetition=1, visualize=False, verbose=2)
+                    history = dqn.fit(env, nb_steps=nb_steps, action_repetition=1, visualize=False, verbose=2)
                     dqn.save_weights('new_dqn_weights_%s.h5f' % (nb_steps), overwrite=True)
+
+                    history_dict = history.history
+                    json.dump(history_dict, open(output_path+"history_{}.json".format(nb_steps), 'w'))
 
 
    
