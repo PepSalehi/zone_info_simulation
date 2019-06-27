@@ -9,7 +9,7 @@ Created on Tue Mar 19 14:22:13 2019
 import argparse
 import time 
 import pickle 
-from lib.utils_with_rel_engine import Model 
+from lib.utils import Model 
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE, SURGE_MULTIPLIER, BONUS, PERCENT_FALSE_DEMAND
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
 from lib.Constants import PERCE_KNOW

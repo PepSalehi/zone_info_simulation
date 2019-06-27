@@ -283,7 +283,7 @@ class Model:
         demand_df = pd.DataFrame.from_dict(a, orient="index", columns=["demand"])
         # normalize it 
         demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
-        print ("normalized demand ", demand_df)
+        # print ("normalized demand ", demand_df)
         return demand_df
 
     def _get_supply_per_zone(self):

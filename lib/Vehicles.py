@@ -24,7 +24,7 @@ class Veh:
         self,
         rs,
         operator,
-        beta,
+        beta=1,
         true_demand=True,
         professional=False,
         ini_loc=None,
