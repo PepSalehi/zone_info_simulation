@@ -134,7 +134,7 @@ class Model:
             Z.read_daily_demand(self.daily_demand)
             self.zones.append(Z)
 
-    def _create_vehicles(self, beta):
+    def _create_vehicles(self, beta=1):
         """
         """
         self.vehilcs = [
@@ -281,6 +281,9 @@ class Model:
         """
         a = {z.id: len(z.demand) for z in self.zones}
         demand_df = pd.DataFrame.from_dict(a, orient="index", columns=["demand"])
+        # normalize it 
+        demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
+        print ("normalized demand ", demand_df)
         return demand_df
 
     def _get_supply_per_zone(self):
@@ -289,6 +292,8 @@ class Model:
         """
         b = {z.id: len(z.idle_vehicles) for z in self.zones}
         supply_df = pd.DataFrame.from_dict(b, orient="index", columns=["supply"])
+        # normalize it 
+        supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1) 
         return supply_df
 
     def get_state(self, veh):
@@ -296,10 +301,14 @@ class Model:
         returns: matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij) 
 
         """
+        max_cost = 7 # just a preliminary attempt at normalizing the costs 
 
         dist = veh._get_dist_to_all_zones()[["DOLocationID", "trip_distance_meter"]]
         dist["costs"] = dist.trip_distance_meter * veh.rebl_cost
         dist["costs"] = dist["costs"].apply(lambda x: np.around(x, 1))
+
+        dist["costs"] /= max_cost
+
         demand_df = self._get_demand_per_zone()
         supply_df = self._get_supply_per_zone()
         d_s = pd.merge(demand_df, supply_df, left_index=True, right_index=True)

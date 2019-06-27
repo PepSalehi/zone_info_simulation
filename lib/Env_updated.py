@@ -67,26 +67,27 @@ class RebalancingEnv(gym.Env):
         # As long as a decision for AV is not needed, keep simulating
         while not veh.should_move():
             T = self.T
-            T_ = self.T+INT_ASSIGN
+            # T_ = self.T+INT_ASSIGN
             # dispatch the system for INT_ASSIGN seconds
-            while T < T_:
-                print("veh is currently")
-                print(str(veh.ozone))
-                print(str(veh.rebalancing))
-                if veh.rebalancing:
-                    print("time_to_be_available")
-                    print(veh.time_to_be_available)
-                self.model.dispatch_at_time(T, self.penalty)
-                T += INT_ASSIGN
+            # while T < T_:
+            print("veh is currently at")
+            print(str(veh.ozone))
+            print(str(veh.rebalancing))
+            if veh.rebalancing:
+                print("time_to_be_available")
+                print(veh.time_to_be_available)
+            self.model.dispatch_at_time(T, self.penalty)
+            T += INT_ASSIGN
             self.T = self.T+INT_ASSIGN
+
         #check and see if the AV is ready to move. If not, keep simulating 
         print("AV should move ")
         T = self.T
-        T_ = self.T+INT_ASSIGN
+        # T_ = self.T+INT_ASSIGN
         # move it 
-        while T < T_:
-            self.model.dispatch_at_time(T, self.penalty, action)
-            T += INT_ASSIGN
+        # while T < T_:
+        self.model.dispatch_at_time(T, self.penalty, action)
+        T += INT_ASSIGN
         self.T = self.T + INT_ASSIGN
         # calculate the reward of that action
         total_new_income = np.sum(veh.profits) - self.old_income 
