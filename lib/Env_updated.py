@@ -107,7 +107,7 @@ class RebalancingEnv(gym.Env):
         # normalize the reward. 
         # from previous runs, avg revenue is 35 with std of 5
         # (base on Nuts and bolts of DRL)
-        normalized_income = (total_new_income ) /10
+        normalized_income = (total_new_income ) #/10
         reward += normalized_income
         # total_new_income = np.sum(model.operator.revenues) - self.old_income 
         # self.old_income = np.sum(model.operator.revenues)
