@@ -20,6 +20,13 @@ driver_id = 0
 
 
 class Veh:
+    """
+    A vehicle can have 4 states
+    1. idle -> waiting to be matched 
+    2. rebalacning -> travelling, but without a passenger. Upon arrival, should wait to be matched 
+    3. serving -> currently saving demand. Should make a decision to move upon arrival at the req's destination
+    4. should_make_a_decision
+    """
     def __init__(
         self,
         rs,
@@ -37,14 +44,16 @@ class Veh:
         self.id = driver_id
         self.just_started = True
         self.is_AV = is_AV
-        self.idle = True
-        self.busy = False
+
+        self.idle = True 
+        self.should_make_a_decision = False
         self.rebalancing = False
+
         self.true_demand = true_demand
         self.professional = professional
         self.know_fare = know_fare
         self.rs = rs
-        self.DIST_MAT = DIST_MAT
+        # self.DIST_MAT = DIST_MAT
         self.operator = operator
         self.locations = []
         self.req = None
@@ -81,8 +90,8 @@ class Veh:
     # if self.is_AV:
     #     agent = DQNAgent(action_space = ZONE_IDS)
 
-    def _sanity_check(self):
-        assert (self.busy is not self.rebalancing) or (self.busy is not self.idle)
+    # def _sanity_check(self):
+    #     assert (self.busy is not self.rebalancing) or (self.busy is not self.idle)
 
     def _calc_matching_prob(self):
         if not self.professional:
@@ -93,33 +102,36 @@ class Veh:
         return df
 
     def _get_dist_to_all_zones(self):
-        dists = self.DIST_MAT.query("PULocationID=={o}".format(o=self.ozone))
+        dists = DIST_MAT.query("PULocationID=={o}".format(o=self.ozone))
 
         return dists
 
     def _get_dist_to_only_neighboring_zones(self):
-        neighbors_list = self.get_neighboring_zone_ids()
-        dists = self.DIST_MAT.query(
-            "PULocationID=={o} & DOLocationID.isin({destinations})".format(
-                o=self.ozone, destinations=neighbors_list
-            )
-        )
+        # neighbors_list = self.get_neighboring_zone_ids()
+        dists = DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"].isin(self.get_neighboring_zone_ids()))]
+        # dists = DIST_MAT.query(
+        #     "PULocationID=={o} & DOLocationID.isin({destinations})".format(
+        #         o=self.ozone, destinations=neighbors_list
+        #     )
+        # )
         return dists
 
     def _get_time_to_destination(self, dest):
-        dist = self._get_distance_to_destination(dest)
-        t = dist / CONSTANT_SPEED
+        # dist = self._get_distance_to_destination(dest)
+        t =  self._get_distance_to_destination(dest) / CONSTANT_SPEED
         return t
 
     def _get_distance_to_destination(self, dest):
         try:  # because of the Nans, etc.  just a hack
             dist = np.ceil(
-                self.DIST_MAT.query(
-                    "PULocationID == {origin} & DOLocationID == {destination} ".format(
-                        origin=self.ozone, destination=dest
-                    )
-                )["trip_distance_meter"].values[0]
+                # DIST_MAT.query(
+                #     "PULocationID == {origin} & DOLocationID == {destination} ".format(
+                #         origin=self.ozone, destination=dest
+                #     )
+                # )["trip_distance_meter"].values[0]
+                DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == dest)]["trip_distance_meter"].values[0] 
             )
+            
 
         except:
             dist = 1000
@@ -168,11 +180,11 @@ class Veh:
         """ 
         a list of ids of the neighboring zones 
         """
-        neighbors_list = zones_neighbors[str(self.ozone)]
-        return neighbors_list
+        # neighbors_list = zones_neighbors[str(self.ozone)]
+        return zones_neighbors[str(self.ozone)]
 
     def is_busy(self):
-        return not self.idle and not self.rebalancing
+        return not self.idle and not self.rebalancing 
 
     def set_target_zone(self, target):
         """
@@ -199,7 +211,8 @@ class Veh:
         If it's in a zone (busy or rebl), with tba < 5, then it will automatically join the zone's list, then get matched with the demand. In other words, once it ends up in 
         a zone, it doesn't make a decision again! The only time they consciously make a decision to move, it's when they have waited too long
         """
-        if self.should_move():
+
+        def _make_a_decision():
             # first, get out of the current zone's queue
             if self.zone is not None:
                 self.zone.remove_veh_from_waiting_list(self)
@@ -241,24 +254,30 @@ class Veh:
 
             return target_zone
 
+
+
+        if self.should_move():
+            _ = _make_a_decision()
+
         if self.rebalancing:  # and not self.busy:
             self.update_rebalancing(WARMUP_PHASE)
 
         elif self.idle and not self.rebalancing and self.time_idled <= self.MAX_IDLE:
             # it's sitting somewhere
             self.keep_waiting()
-        #            print ("waiting")
+
 
         # this is the time it's busy serving demand
         elif self.is_busy():
-            #            print("BUSY SERVING DEMAND")
+            
             self.time_to_be_available -= INT_ASSIGN
             if self.time_to_be_available <= 0:
-                #                print("SERVED IT")
                 self.rebalancing = False
-                self.idle = True
+                self.idle = False 
                 self.time_idled = 0
                 self.time_to_be_available = 0
+                _ = _make_a_decision()
+
 
     def match_w_req(self, req, Zones, WARMUP_PHASE):
 
@@ -273,8 +292,9 @@ class Veh:
 
                 self.ozone = dest
                 self.zone = z
-
-                z.join_incoming_vehicles(self)
+                # don't match incoming, rather join the undecided list. actually, don't join any list
+                # z.join_incoming_vehicles(self)
+                # z.join_undecided_vehicles(self)
                 #
                 if not WARMUP_PHASE:
                     if not self.professional:
@@ -311,7 +331,7 @@ class Veh:
         This has to be based on the information communicated by the app, as well as the prior experience
         """
         # debugging.
-        self._times_chose_zone.append([t, self.idle, self.rebalancing, self.is_busy(), self.should_move(), self.time_to_be_available, self.waited_too_long() ])
+        # self._times_chose_zone.append([t, self.idle, self.rebalancing, self.is_busy(), self.should_move(), self.time_to_be_available, self.waited_too_long() ])
 
         dist = self._get_dist_to_all_zones()
         df = self.get_data_from_operator(t, self.true_demand)
@@ -434,7 +454,7 @@ class Veh:
         dest = request.ozone
         current_loc = self.ozone
         dist = np.ceil(
-            self.DIST_MAT.query(
+            DIST_MAT.query(
                 "PULocationID == {origin} & DOLocationID == {destination} ".format(
                     origin=current_loc, destination=dest
                 )

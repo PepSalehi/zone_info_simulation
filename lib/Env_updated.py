@@ -66,7 +66,8 @@ class RebalancingEnv(gym.Env):
         veh = self.model.vehilcs[-1]
         # As long as a decision for AV is not needed, keep simulating
         # should move () is the condition to check for 
-        while not veh.should_move():
+        # while not veh.should_move():
+        while veh.is_busy():
             T = self.T
             # print('Heading to')
             # print(str(veh.ozone))

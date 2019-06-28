@@ -44,6 +44,7 @@ class Zone:
         self.idle_vehicles = list()
         self.busy_vehicles = list()
         self.incoming_vehicles = list()
+        self.undecided_vehicles = list()
         self.fare = None
         self.reqs = []
         self.N = 0
@@ -64,7 +65,7 @@ class Zone:
         # for debugging
         self._time_demand = []
     
-    # @lru_cache()
+
     def read_daily_demand(self, demand_df):
         # self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
         self.DD = demand_df[demand_df["PULocationID"] == self.id]
@@ -96,10 +97,23 @@ class Zone:
             print(veh.time_to_be_available)
 
         self.incoming_vehicles.append(veh)
+    
+
+    def join_undecided_vehicles(self, veh):
+        try:
+            assert veh not in self.undecided_vehicles
+        except AssertionError:
+            print(veh.locations)
+            print(veh.zone.id)
+            print(veh.ozone)
+            print(veh.idle)
+            print(veh.rebalancing)
+            print(veh.time_to_be_available)
+
+        self.undecided_vehicles.append(veh)
 
     def remove_veh_from_waiting_list(self, veh):
         if veh in self.idle_vehicles:
-            #            print("removed idle")
             self.idle_vehicles.remove(veh)
 
     def identify_idle_vehicles(self):
