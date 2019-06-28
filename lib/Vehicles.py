@@ -64,12 +64,16 @@ class Veh:
         self.number_of_times_moved = 0
         self.number_of_times_overwaited = 0
         self.distance_travelled = 0
+        self.time_to_be_available  = 0
 
         self.tba = []
         self.total_waited = 0
         self.zone = None
         self.collected_fares = []
         self.collected_fare_per_zone = defaultdict(int)
+
+        # debugging 
+        self._times_chose_zone = []
 
     #        self.prior = self.set_prior_info()
     #        self.live_data = self.get_data_from_operator()
@@ -151,6 +155,7 @@ class Veh:
             self.rebalancing = False
             self.idle = True
             self.time_idled = 0
+            self.time_to_be_available = 0
             if not WARMUP_PHASE:
                 self.number_of_times_moved += 1
             # should it also get out of the waiting list?
@@ -190,6 +195,9 @@ class Veh:
         4. if it's currently serving a demand -> update status 
 
         action is the INDEX of the zone, needs to be converted to the actual zone_id 
+
+        If it's in a zone (busy or rebl), with tba < 5, then it will automatically join the zone's list, then get matched with the demand. In other words, once it ends up in 
+        a zone, it doesn't make a decision again! The only time they consciously make a decision to move, it's when they have waited too long
         """
         if self.should_move():
             # first, get out of the current zone's queue
@@ -250,6 +258,7 @@ class Veh:
                 self.rebalancing = False
                 self.idle = True
                 self.time_idled = 0
+                self.time_to_be_available = 0
 
     def match_w_req(self, req, Zones, WARMUP_PHASE):
 
@@ -283,23 +292,26 @@ class Veh:
                         req.fare
                     )  # the absolute fare, useful for hired drivers
                     if self.is_AV:
-                        print ("thre fare was", req.fare)
-                        print ("proftis are ", self.profits)
+                        print("thre fare was", req.fare)
+                        print("proftis are ", self.profits)
 
                 if WARMUP_PHASE:
                     if self.is_AV:
                         self.profits.append(req.fare)
-                        print ("thre fare was", req.fare)
-                        print ("proftis are ", self.profits)
-                        
+                        print("thre fare was", req.fare)
+                        print("proftis are ", self.profits)
+
                 self.req = req
                 return True
+        # why and when would it return False?
         return False
 
     def choose_target_zone(self, t):
         """
         This has to be based on the information communicated by the app, as well as the prior experience
         """
+        # debugging.
+        self._times_chose_zone.append([t, self.idle, self.rebalancing, self.is_busy(), self.should_move(), self.time_to_be_available, self.waited_too_long() ])
 
         dist = self._get_dist_to_all_zones()
         df = self.get_data_from_operator(t, self.true_demand)

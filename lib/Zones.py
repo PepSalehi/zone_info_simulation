@@ -3,7 +3,7 @@ import pandas as pd
 
 # import geopandas as gpd
 from collections import deque
-
+# from functools import lru_cache
 from lib.Requests import Req
 from lib.Constants import WARMUP_TIME_SECONDS, BONUS, zones_neighbors
 
@@ -63,10 +63,11 @@ class Zone:
         self._incoming_supply_history = []
         # for debugging
         self._time_demand = []
-
+    
+    # @lru_cache()
     def read_daily_demand(self, demand_df):
-        self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
-
+        # self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
+        self.DD = demand_df[demand_df["PULocationID"] == self.id]
     def calculate_demand_function(self, surge):
         """ 
         This should be a decreasing function of price 
@@ -103,7 +104,7 @@ class Zone:
 
     def identify_idle_vehicles(self):
         for v in self.incoming_vehicles:
-            if v.time_to_be_available < 5:  # not v.rebalancing and
+            if v.time_to_be_available <= 1:  # not v.rebalancing and
                 assert v not in self.idle_vehicles
                 v.rebalancing = False
                 v.idle = True
@@ -157,6 +158,7 @@ class Zone:
         self.surge = m
 
     # generate one request, following exponential arrival interval
+    # @profile 
     def _generate_request(self, d=None):
         # check if there is any demand first
         if self.D == 0:  # i.e., no demand
@@ -187,6 +189,7 @@ class Zone:
         return req
 
     # generate requests up to time T, following Poisson process
+    # @profile
     def generate_requests_to_time(self, T):
         if self.N == 0:
             req = self._generate_request()

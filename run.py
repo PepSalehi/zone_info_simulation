@@ -145,6 +145,7 @@ def main():
                             )
                         )
 
+                        m.runtime = runtime
                         report = m.get_service_rate_per_zone()
 
                         # So that it doesn't save a file with 1.5.py, rather 15.py

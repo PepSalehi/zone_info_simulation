@@ -17,4 +17,6 @@ for i in 0.0 0.2 0.4 0.6 0.8 1.0 ; do for f in 1500 2000 2500 ; do  python run_p
 
 pip install snakeviz
 python -m cProfile -s tottime -o myscript.cprof run.py -f 10 -k 0.2
-snakeviz myscript.cprof
+snakeviz myscript.cprof 
+line_profiler
+kernprof -l -v run.py -f 10 -k 0.2

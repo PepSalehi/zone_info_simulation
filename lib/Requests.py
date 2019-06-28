@@ -13,14 +13,9 @@ class Req:
         dzone: destination zone
         Ds: shortest travel distance
         Ts: shortest travel time
-        
-       
         Tp: pickup time
         Td: dropoff time
-
         DR: distance rejected (true if distance O->D is less than DISTANCE_THRESHOLD)
-    
-
     """
 
     def __init__(self, id, Tr, fare, ozone=4, dzone=12, DIST_MAT=DIST_MAT):
@@ -28,7 +23,7 @@ class Req:
         self.Tr = Tr
         self.ozone = ozone
         self.dzone = dzone
-        self.DIST_MAT = DIST_MAT
+        # self.DIST_MAT = DIST_MAT
         self.Ds, self.Ts = self._get_distance_time()
         self.fare = fare
 
@@ -36,19 +31,22 @@ class Req:
         self.Td = -1.0
         self.D = 0.0
         self.DR = False
-        self.NS = 0
-        self.NP = 0
-        self.ND = 0
+        # self.NS = 0
+        # self.NP = 0
+        # self.ND = 0
 
+    # @profile
     def _get_distance_time(self):
         try:
             Ds = np.ceil(
-                self.DIST_MAT.query(
-                    "PULocationID == {origin} & DOLocationID == {destination} ".format(
-                        origin=self.ozone, destination=self.dzone
-                    )
-                )["trip_distance_meter"].values[0]
+                # self.DIST_MAT.query(
+                #     "PULocationID == {origin} & DOLocationID == {destination} ".format(
+                #         origin=self.ozone, destination=self.dzone
+                #     )
+                # )["trip_distance_meter"].values[0]
+                DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)]["trip_distance_meter"].values[0]  
             )
+
 
         except:
             Ds = 10 * 1609  # meter

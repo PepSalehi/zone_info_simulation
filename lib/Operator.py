@@ -61,7 +61,8 @@ class Operator:
         """
         return the correct demand 
         """
-        df = self.demand_fare_stats_of_the_day.query("Hour == {hour}".format(hour=t))
+        # df = self.demand_fare_stats_of_the_day.query("Hour == {hour}".format(hour=t))
+        df = self.demand_fare_stats_of_the_day[self.demand_fare_stats_of_the_day["Hour"] == t]
         df = df.assign(surge=1)
         df = df.assign(bonus=0)
         df = df.assign(match_prob=1)
@@ -110,7 +111,7 @@ class Operator:
         
         hour = int(np.floor(t / 3600))
         self.true_zonal_info_over_t(hour)
-        self.false_zonal_info_over_t(hour)
+        # self.false_zonal_info_over_t(hour)
         assert self.live_data is not None
         return self.live_data
 

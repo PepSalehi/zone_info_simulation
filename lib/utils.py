@@ -263,6 +263,7 @@ class Model:
         return performance_results
 
     # dispatch the AMoD system: move vehicles, generate requests, assign, reoptimize and rebalance
+    # @profile
     def dispatch_at_time(self, t, penalty=-10, action=None):
         #
         self.generate_zonal_demand(t)
