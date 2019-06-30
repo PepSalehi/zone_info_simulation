@@ -59,6 +59,8 @@ class RebalancingEnv(gym.Env):
         impelements action, returns new state, reward. 
         Currently the DQN is inside the model.dispatch_at_time function 
         '''
+        print("Inside Step")
+        print("Step count: ", self.step_count )
         flag = False 
         self.step_count += 1
         reward = 0 
@@ -99,9 +101,11 @@ class RebalancingEnv(gym.Env):
         # T_ = self.T+INT_ASSIGN
         # move it 
         # while T < T_:
+        print ("T before dispatching", T)
         self.model.dispatch_at_time(T, self.penalty, action)
         T += INT_ASSIGN
         self.T = self.T + INT_ASSIGN
+        print ("T AFTER dispatching", T)
         # calculate the reward of that action
         print("veh.profits")
         print(veh.profits)
