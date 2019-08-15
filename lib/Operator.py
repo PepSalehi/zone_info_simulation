@@ -159,15 +159,15 @@ class Operator:
                 if zone.id == zid:
                     zone.bonus = bonus
 
-    def dissiminate_zonal_demand_info(self, t, tell_truth=True):
-        """
-        Drivers will use this function to access the demand data. 
-        #TODO this can be potentially updated to include supply as well. An Uber driver told me that he would switch to pax mode
-        # and see how many cars were around, to get a sense of what would be the odds of getting a match  
-        """
+    # def dissiminate_zonal_demand_info(self, t, tell_truth=True):
+    #     """
+    #     Drivers will use this function to access the demand data. 
+    #     #TODO this can be potentially updated to include supply as well. An Uber driver told me that he would switch to pax mode
+    #     # and see how many cars were around, to get a sense of what would be the odds of getting a match  
+    #     """
 
-        if tell_truth:
-            self.true_zonal_info(t)
+    #     if tell_truth:
+    #         self.true_zonal_info(t)
 
     def expected_fare_totaldemand_per_zone_over_days(self, t):
 

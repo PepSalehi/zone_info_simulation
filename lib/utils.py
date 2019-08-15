@@ -4,6 +4,7 @@ import time
 import random
 import pickle
 from collections import Counter
+from functools import lru_cache
 from lib.Zones import Zone
 from lib.configs import configs
 from lib.Constants import (
@@ -15,6 +16,7 @@ from lib.Constants import (
     SURGE_MULTIPLIER,
     BONUS,
     PERCENT_FALSE_DEMAND,
+    FUEL_COST
 )
 from lib.Constants import (
     T_TOTAL_SECONDS,
@@ -49,7 +51,6 @@ class Model:
         percent_false_demand=PERCENT_FALSE_DEMAND,
         percentage_know_fare=PERCE_KNOW,
         AV_share=AV_SHARE,
-        RL_engine=None,
         beta=configs["BETA"],
     ):
 
@@ -94,7 +95,6 @@ class Model:
         #
         self.operator = Operator(report, BONUS=BONUS, SURGE_MULTIPLIER=SURGE_MULTIPLIER)
         #
-        self.RL_engine = RL_engine
         # pro drivers know fares, so perc_know must take this into account
         self.fleet_pro_size = int(self.PRO_SHARE * self.FLEET_SIZE)
         self.percent_false_demand = percent_false_demand
@@ -105,7 +105,7 @@ class Model:
             (1 - self.percentage_know_fare) * self.FLEET_SIZE
         )
         self.fleet_AV = int(self.AV_SHARE * self.FLEET_SIZE)
-
+        print("fleet AV", self.fleet_AV)
         self._create_vehicles(beta)
 
         print(Counter(v.ozone for v in self.vehilcs))
@@ -162,17 +162,7 @@ class Model:
 
             remaining_veh = list(set(remaining_veh) - set(vs))
 
-        # if self.fleet_DONT_know_fare > 0:
-        #     print("fleet Don't know fare", self.fleet_DONT_know_fare )
-        #     if not ('remaining_veh' in locals()):
-        #         remaining_veh = self.vehilcs
-
-        #     vs = np.random.choice(remaining_veh, self.fleet_DONT_know_fare, replace=False)
-        #     for v in vs:
-        #         v.know_fare = False
-
-        #     remaining_veh = list(set(remaining_veh)-set(vs))
-
+    
         if self.fleet_know_fare > 0:
             print("fleet know fare", self.fleet_know_fare)
             if not ("remaining_veh" in locals()):
@@ -188,12 +178,13 @@ class Model:
             if not ("remaining_veh" in locals()):
                 remaining_veh = self.vehilcs
             # vs = random.choices(remaining_veh, k=self.AV_SHARE)
-            vs = np.random.choice(remaining_veh, self.AV_SHARE, replace=False)
-            for v in vs:
+            self.av_vehs = np.random.choice(remaining_veh, self.fleet_AV, replace=False)
+            
+            for v in self.av_vehs :
                 v.is_AV = True
-                v.RL_engine = self.RL_engine
+                # v.RL_engine = self.RL_engine
 
-            remaining_veh = list(set(remaining_veh) - set(vs))
+            remaining_veh = list(set(remaining_veh) - set(self.av_vehs))
 
     def set_analysis_time(self, t):
         """ 
@@ -220,15 +211,16 @@ class Model:
     def act(self, t, action):
         for veh in self.vehilcs:
             if veh.is_AV:
-                veh.move(t, self.zones, self.WARMUP_PHASE)
+                veh.act(t, self.zones, self.WARMUP_PHASE)
 
     def move_fleet(self, t, WARMUP_PHASE, action):
         for veh in self.vehilcs:
-            if not veh.is_AV:  # AV is already being moved by the engine
-                _ = veh.move(t, self.zones, WARMUP_PHASE)
-            if veh.is_AV:
-                # if veh.should_move(): this causes errors, since move is not just moving, but also rebalancing, waiting, etc.
-                veh.move(t, self.zones, WARMUP_PHASE, action)
+            _ = veh.act(t, self.zones, WARMUP_PHASE)
+            # if not veh.is_AV:  # AV is already being moved by the engine
+            #     _ = veh.act(t, self.zones, WARMUP_PHASE)
+            # if veh.is_AV:
+            #     # if veh.should_move(): this causes errors, since move is not just moving, but also rebalancing, waiting, etc.
+            #     veh.act(t, self.zones, WARMUP_PHASE, action)
 
     def assign_zone_veh(self, t, WARMUP_PHASE, penalty):
 
@@ -275,7 +267,8 @@ class Model:
         if t % 500 == 0:
             print("time is {time}".format(time=t))
 
-    def _get_demand_per_zone(self):
+    @lru_cache(maxsize=None)
+    def _get_demand_per_zone(self,t):
         """ 
         
         Dataframe with zone_id as index and demand column
@@ -283,40 +276,63 @@ class Model:
         a = {z.id: len(z.demand) for z in self.zones}
         demand_df = pd.DataFrame.from_dict(a, orient="index", columns=["demand"])
         # normalize it 
-        demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
+        # demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
         # print ("normalized demand ", demand_df)
         return demand_df
-
-    def _get_supply_per_zone(self):
+    
+    @lru_cache(maxsize=None)
+    def _get_supply_per_zone(self, t):
         """ 
         Dataframe with zone_id as index and supply column
         """
         b = {z.id: len(z.idle_vehicles) for z in self.zones}
         supply_df = pd.DataFrame.from_dict(b, orient="index", columns=["supply"])
         # normalize it 
-        supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1) 
+        # supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1) 
         return supply_df
-
-    def get_state(self, veh):
+    
+    
+    @lru_cache(maxsize=None)
+    def _calc_rebl_cost(self, ozone, max_cost=7):
         """
+        This should be based on the value of time and time it took to get to the destination
+        max_cost = 7 # just a preliminary attempt at normalizing the costs 
+        """
+        
+        dist = Veh._get_dist_to_all_zones(ozone)[["DOLocationID", "trip_distance_meter"]]
+        # dist = veh._get_dist_to_all_zones(veh.ozone)[["DOLocationID", "trip_distance_meter"]]
+        # this is the costliest operation! 
+        dist["costs"] = ((dist.trip_distance_meter * FUEL_COST).apply(lambda x: np.around(x, 1)) ) / max_cost
+        # dist["costs"] = dist["costs"].apply(lambda x: np.around(x, 1))
+        # dist["costs"] /= max_cost
+
+        return dist
+    
+    @lru_cache(maxsize=None)
+    def _get_both_supply_and_demand_per_zone(self, t):
+        demand_df = self._get_demand_per_zone(t)
+        supply_df = self._get_supply_per_zone(t)
+        return( pd.merge(demand_df, supply_df, left_index=True, right_index=True) )
+
+
+    @lru_cache(maxsize=None)
+    def _get_demand_supply_costs_df(self, ozone, t):
+        dist =  self._calc_rebl_cost(ozone)
+        d_s = self._get_both_supply_and_demand_per_zone(t)
+        # d_s_c = pd.merge(d_s, dist, left_index=True, right_on="DOLocationID")[["demand", "supply", "costs"]].values
+        # d_s_c = d_s_c[["demand", "supply", "costs"]]
+        # d_s_c = d_s_c.values
+        # return pd.merge(d_s, dist.set_index('DOLocationID'), left_index=True, right_index=True)[["demand", "supply", "costs"]].values
+        return pd.merge(d_s, dist, left_index=True, right_on="DOLocationID")[["demand", "supply", "costs"]].values
+    def get_state(self, veh, t):
+        """
+        veh: an object
         returns: matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij) 
 
         """
-        max_cost = 7 # just a preliminary attempt at normalizing the costs 
+        
 
-        dist = veh._get_dist_to_all_zones()[["DOLocationID", "trip_distance_meter"]]
-        dist["costs"] = dist.trip_distance_meter * veh.rebl_cost
-        dist["costs"] = dist["costs"].apply(lambda x: np.around(x, 1))
-
-        dist["costs"] /= max_cost
-
-        demand_df = self._get_demand_per_zone()
-        supply_df = self._get_supply_per_zone()
-        d_s = pd.merge(demand_df, supply_df, left_index=True, right_index=True)
-        d_s_c = pd.merge(d_s, dist, left_index=True, right_on="DOLocationID")
-        d_s_c = d_s_c[["demand", "supply", "costs"]]
-        d_s_c = d_s_c.as_matrix()
-        return d_s_c
+        return self._get_demand_supply_costs_df(veh.ozone, t)
 
 
 if __name__ == "__main__":

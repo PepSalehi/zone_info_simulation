@@ -63,18 +63,18 @@ class Req:
         return self.dzone
 
     # visualize
-    def draw(self):
-        import matplotlib.pyplot as plt
+    # def draw(self):
+    #     import matplotlib.pyplot as plt
 
-        plt.plot(self.olng, self.olat, "r", marker="+")
-        plt.plot(self.dlng, self.dlat, "r", marker="x")
-        plt.plot(
-            [self.olng, self.dlng],
-            [self.olat, self.dlat],
-            "r",
-            linestyle="--",
-            dashes=(0.5, 1.5),
-        )
+    #     plt.plot(self.olng, self.olat, "r", marker="+")
+    #     plt.plot(self.dlng, self.dlat, "r", marker="x")
+    #     plt.plot(
+    #         [self.olng, self.dlng],
+    #         [self.olat, self.dlat],
+    #         "r",
+    #         linestyle="--",
+    #         dashes=(0.5, 1.5),
+    #     )
 
     def __str__(self):
         str = "req %d from (%.7f) to (%.7f) at t = %.3f" % (
