@@ -92,7 +92,6 @@ class Zone:
             print(veh.locations)
             print(veh.zone.id)
             print(veh.ozone)
-            print(veh.idle)
             print(veh.rebalancing)
             print(veh.time_to_be_available)
 
@@ -118,10 +117,9 @@ class Zone:
 
     def identify_idle_vehicles(self):
         for v in self.incoming_vehicles:
-            if v.time_to_be_available <= 1:  # not v.rebalancing and
+            if v.time_to_be_available <= 0:  # not v.rebalancing and
                 assert v not in self.idle_vehicles
-                v.rebalancing = False
-                v.idle = True
+      
                 self.idle_vehicles.append(v)
                 self.incoming_vehicles.remove(v)
 

@@ -36,7 +36,7 @@ PERCENT_FALSE_DEMAND = 0.0  # given wrong demand info
 AV_SHARE = 0
 
 
-PENALTY = -50
+PENALTY = 0
 PERCE_KNOW = 0  # percentage of drivers that know the avg fare
 CONST_FARE = 6  # fare used when they don't know the true avg fare
 SURGE_MULTIPLIER = 2

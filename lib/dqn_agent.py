@@ -6,13 +6,15 @@
 from keras.layers import Dense, Input, Conv2D, Flatten
 from keras.models import Model
 from keras.optimizers import Adam
+from keras.callbacks import TensorBoard
+
 from collections import deque
 import numpy as np
 import random
 import argparse
 import gym
 from gym import wrappers, logger
-
+from time import time
 
 class DQNAgent():
     def __init__(self, state_space, action_space, args=None, episodes=500):
@@ -24,6 +26,7 @@ class DQNAgent():
 
         # discount rate
         self.gamma = 0.99
+        self.tensorboard = TensorBoard(log_dir="Outputs/{}".format(time()))
 
         # initially 90% exploration, 10% exploitation
         self.epsilon = 1.0
@@ -155,7 +158,8 @@ class DQNAgent():
                          np.array(q_values_batch), # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
                          batch_size=batch_size,
                          epochs=1,
-                         verbose=0)
+                         verbose=0,
+                         callbacks=[self.tensorboard])
 
         # update exploration-exploitation probability
         self.update_epsilon()

@@ -1,7 +1,7 @@
 from keras.layers import Dense, Input
 from keras.models import Model
 from keras.optimizers import Adam
-from collections import deque
+from collections import deque, Counter
 from lib.Constants import PENALTY
 import numpy as np
 import random
@@ -17,7 +17,10 @@ from lib.utils import Model
 from lib.Constants import ZONE_IDS, DEMAND_SOURCE, INT_ASSIGN, FLEET_SIZE, PRO_SHARE, SURGE_MULTIPLIER, BONUS, PERCENT_FALSE_DEMAND
 from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, WARMUP_TIME_HOUR
 from lib.Constants import PERCE_KNOW
+from lib.Vehicles import VehState
 from lib.dqn_agent import DQNAgent
+
+
 if __name__ == '__main__':
     
     ####
@@ -77,7 +80,7 @@ if __name__ == '__main__':
     if args.av:
         av_share = [float(x) for x in args.av.split(',')]
     else:
-        av_share = [0.2]
+        av_share = [0.02]
    
 
     ####
@@ -109,7 +112,7 @@ if __name__ == '__main__':
     agent = DQNAgent(env.observation_space, env.action_space)
 
     # should be solved in this number of episodes
-    episode_count = 100
+    episode_count = 30
     state_size = env.observation_space.shape[0]
     batch_size = 64
 
@@ -134,24 +137,30 @@ if __name__ == '__main__':
             loop_counter += 1
             _sar = {}
             actions = np.zeros(env.model.fleet_AV)
+
+            # get actions if needed and collect rewards 
             for i, veh in enumerate([v for v in env.model.av_vehs]):
+
                 # if it's rebalancing or serving demand, leave it alone
                 if veh.should_move() :
+                    # if loop_counter > 1:
+                        # print("hah, let's see your state", veh._state)
                     # if it has to move because didn't get any matches, record that as a huge penalty 
                     if veh.waited_too_long():
                         print("waited too long after ", veh.time_idled)
                         _sar[i] =  [veh._info_for_rl_agent[0], veh._info_for_rl_agent[1], PENALTY]
                         veh._info_for_rl_agent = [] # reset state_action_reward 
-
-                    elif not veh.just_started: 
+                    
+                    
+                    # not the first time around
+                    elif loop_counter > 1 and veh._state == VehState.DECISION:
                         # so it must have finished serving a match 
+                        # print("inside the other loop JAJAJAJAJA")
                         try:
                             assert len(veh._info_for_rl_agent) == 3
                         except AssertionError:
-                            print(veh.idle)
-                            print(veh.rebalancing)
+                            print(veh._state)
                             print(veh.waited_too_long())
-                            print(veh.TIME_TO_MAKE_A_DECISION)
                             print(veh.time_idled)
                             print(len(veh.reqs))
                             print([r.fare for r in veh.reqs])
@@ -161,6 +170,10 @@ if __name__ == '__main__':
                         _sar[i] = veh._info_for_rl_agent[:]
                         veh._info_for_rl_agent = [] # reset state_action_reward 
 
+                    else:
+                        print("YOU WERE NOT SUPPOSED TO BE HERE")
+                        print(veh._state)
+                        print(loop_counter)
                     # state 
                     veh._info_for_rl_agent.append(state_n[i])
                     # action 
@@ -171,11 +184,17 @@ if __name__ == '__main__':
                     actions[i] = np.nan
           
             # get all the rewards  
-            try:
-                reward_n = [v[2] for _ , v in _sar.items()]
-            except:
-                print('sar', _sar)
-                raise IndexError
+            if len(_sar) >0:
+                try:
+                    reward_n = [v[2] for _ , v in _sar.items()]
+                except:
+                    print('sar', _sar)
+                    raise IndexError
+            else:
+                reward_n = [0]
+
+            # 
+            # print(Counter([veh._state for veh in env.model.av_vehs]))
             
             # Simulate 
             state_n, _ , done, _ = env.step(actions)
@@ -187,7 +206,7 @@ if __name__ == '__main__':
             print("len(agent.memory) ", len(agent.memory) )
 
 
-            if loop_counter == 1000:
+            if loop_counter == 30:
                 print("state")
                 print(state_n[0])
             # For profiling
@@ -198,7 +217,8 @@ if __name__ == '__main__':
             # # store every experience unit in replay buffer
             # agent.remember(state, actions, reward, next_state, done)
             # state = next_state
-            total_reward += np.sum(reward_n)
+            if reward_n is not None:
+                total_reward += np.sum(reward_n)
             print("total_reward", total_reward)
 
             # call experience relay
@@ -222,5 +242,11 @@ if __name__ == '__main__':
         if episode % p_trials == 0:
             print("Episode %d: Mean reward = %0.2lf " %
                   (episode, mean_score))
+        
+        pickle.dump(scores, open( "./Outputs/dqn/scores {}.p".format(episode), "wb" ) )
+        pickle.dump(mean_score, open( "./Outputs/dqn/mean_score {}.p".format(episode), "wb" ) )
+        pickle.dump(agent, open( "my_agent.p", "wb" ) )
+        pickle.dump(agent.memory, open( "memories.p", "wb" ) )
+
 
     # close the env 

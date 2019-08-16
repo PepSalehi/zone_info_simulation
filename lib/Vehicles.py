@@ -17,8 +17,17 @@ from lib.Constants import (
 from lib.Requests import Req
 from lib.configs import configs
 from functools import lru_cache
+from enum import Enum, unique, auto    
+
 # from lib.rl_policy import DQNAgent
 driver_id = 0
+
+#https://stackoverflow.com/a/57516323/2005352
+class VehState(Enum):
+    IDLE  = auto()
+    REBAL = auto()
+    SERVING = auto()
+    DECISION = auto()
 
 
 class Veh:
@@ -47,14 +56,18 @@ class Veh:
         global driver_id
         driver_id += 1
         self.id = driver_id
-        self.just_started = True
+        # self.just_started = True
         self.is_AV = is_AV
 
-        self.idle = True 
-        self.should_make_a_decision = False
-         #  if True, decide which zone to go to next
-        self.TIME_TO_MAKE_A_DECISION  = True 
-        self.rebalancing = False
+        # self.idle = False 
+        # self.serving = False
+        #  #  if True, decide which zone to go to next
+        # self.TIME_TO_MAKE_A_DECISION  = True 
+        # self.rebalancing = False
+        # self.should_make_a_decision = False
+
+        self._state = VehState.IDLE
+        
 
         self.true_demand = true_demand
         self.professional = professional
@@ -69,6 +82,7 @@ class Veh:
             self.ozone = rs.choice(ZONE_IDS)
             #            self.ozone = 186
             self.locations.append(self.ozone)
+            self._state = VehState.DECISION
 
         self.IDLE_COST = 0  # should be based on the waiting time
         self.rebl_cost = FUEL_COST  # should be based on dist to the destination zone
@@ -76,7 +90,7 @@ class Veh:
         self.time_idled = 0
         self.MAX_IDLE = MAX_IDLE  # 15 minutes
 
-        self.t_since_idle = None
+        # self.t_since_idle = None
         self.number_of_times_moved = 0
         self.number_of_times_overwaited = 0
         self.distance_travelled = 0
@@ -166,13 +180,16 @@ class Veh:
         """
         Makes sure it's not idle nor rebalancing, then if it has been idle for too long returns True
         """
-        return self.idle and not self.rebalancing and self.time_idled > self.MAX_IDLE
+        return self._state == VehState.IDLE and self.time_idled > self.MAX_IDLE
+        # return self.idle and not self.rebalancing and self.time_idled > self.MAX_IDLE
 
     def update_rebalancing(self, WARMUP_PHASE):
         self.time_to_be_available -= INT_ASSIGN  #  delta t, this is a hack
-        if self.time_to_be_available <= 0:
-            self.rebalancing = False
-            self.idle = True
+     
+        if self.time_to_be_available < 0:
+            self._state = VehState.IDLE
+            # self.rebalancing = False
+            # self.idle = True
             self.time_idled = 0
             self.time_to_be_available = 0
             if not WARMUP_PHASE:
@@ -186,26 +203,20 @@ class Veh:
 
     def keep_serving(self):
         self.time_to_be_available -= INT_ASSIGN
-        if self.time_to_be_available <= 0:
+        if self.time_to_be_available < 0:
+            self._state = VehState.DECISION
             if self.is_AV:
                 try:
                     assert len(self._info_for_rl_agent) == 3
                 except AssertionError:
-                    print(self.idle)
-                    print(self.rebalancing)
                     print(self.waited_too_long())
-                    print(self.TIME_TO_MAKE_A_DECISION)
                     print(self.time_idled)
                     print(self._info_for_rl_agent)
                     print(len(self.reqs))
                     print([r.fare for r in self.reqs])
                     raise AssertionError
 
-            self.rebalancing = False
-            self.idle = True 
-            self.time_idled = 0
-            self.time_to_be_available = 0
-            self.TIME_TO_MAKE_A_DECISION = True 
+            
 
     @lru_cache(maxsize=None)
     def get_neighboring_zone_ids(self, ozone):
@@ -215,9 +226,25 @@ class Veh:
         neighbors_list = zones_neighbors[str(ozone)]
         neighbors_list.append(self.ozone)
         return neighbors_list 
-
+    @property
     def is_busy(self):
-        return not self.idle and not self.rebalancing 
+        # try:
+        #     assert self.serving == (not self.idle and not self.rebalancing )
+        # except AssertionError:
+        #         print(self.idle)
+        #         print(self.rebalancing)
+        #         print(self.waited_too_long())
+        #         print(self.TIME_TO_MAKE_A_DECISION)
+        #         print(self.time_idled)
+        #         if self.is_AV:
+        #             print("it is av")
+        #             print(self._info_for_rl_agent)
+        #             print(len(self.reqs))
+        #             print([r.fare for r in self.reqs])
+        #         print("serving:", self.serving)
+        #         raise AssertionError
+        
+        return self._state == VehState.SERVING
 
     def set_action(self, action):
         """
@@ -228,19 +255,29 @@ class Veh:
         self.action = int(action)
         # print("action is", action)
 
-    
+    @property
     def is_waiting_to_be_matched(self):
-
-        if self.idle and not self.rebalancing and self.time_idled <= self.MAX_IDLE :
+        if (self._state == VehState.IDLE and self.time_idled <= self.MAX_IDLE): 
+            return True 
+        else:
+            return False 
+        # if self.idle and not self.rebalancing and self.time_idled <= self.MAX_IDLE :
+      
+    @property
+    def is_rebalancing(self):
+        # True if self._state == VehState.REBAL else False 
+        if self._state == VehState.REBAL :
             return True
         else:
             return False
+            
     
     def should_move(self):
         """
         just started or has been idle for too long 
         """
-        return self.just_started or self.waited_too_long() or self.TIME_TO_MAKE_A_DECISION
+        
+        return self.waited_too_long() or self._state == VehState.DECISION
 
     def act(self, t, Zones, WARMUP_PHASE, action=None):
         """ 
@@ -269,8 +306,10 @@ class Veh:
                 # print("target zone id", target_zone)
             for z in Zones:
                 if z.id == target_zone:
-                    self.rebalancing = True
-                    self.idle = False
+                    self._state = VehState.REBAL
+                    # self.rebalancing = True
+                    # self.idle = False
+                    # self.TIME_TO_MAKE_A_DECISION  = False 
                     self.time_to_be_available = self._get_time_to_destination(
                         self.ozone, target_zone
                     )
@@ -290,36 +329,30 @@ class Veh:
                 self.number_of_times_moved += 1
                 self.locations.append(self.ozone)
 
-            self.time_idled = 0
-            self.just_started = False
-            self.TIME_TO_MAKE_A_DECISION = False 
+            # self.time_idled = 0
+          
 
             return target_zone
 
 
 
         if self.should_move():
-            # done in the main training loop# if it has to move because didn't get any matches, record that as a huge penalty 
-            # if self.waited_too_long():
-            #     self.sar = [self._info_for_rl_agent[0],self._info_for_rl_agent[1], PENALTY]
-                # save to memory 
-            # now start a new decision process    
-            
             _ = _make_a_decision(t)
-
-        if self.rebalancing:  # and not self.busy:
-            self.update_rebalancing(WARMUP_PHASE)
-
-        elif self.is_waiting_to_be_matched():
+            # self.update_rebalancing(WARMUP_PHASE)
+            # return 
+        if self.is_busy:
+            self.keep_serving()
+            return
+        if self.is_waiting_to_be_matched:
             # it's sitting somewhere
             self.keep_waiting()
+            return
+        if self.is_rebalancing:  # and not self.busy:
+          
+            self.update_rebalancing(WARMUP_PHASE)
+            return
 
-
-        # this is the time it's busy serving demand
-        elif self.is_busy():
-            self.keep_serving()
-
-        
+              
 
         # for debugging
         # path_to_write = configs['output_path']
@@ -328,9 +361,15 @@ class Veh:
         # writer.writerow([self.ozone, self.time_to_be_available, self.rebalancing, self.idle, self.is_busy()])
             
     def match_w_req(self, req, Zones, WARMUP_PHASE):
-
-        self.idle = False
-        self.rebalancing = False
+        # try:
+        #     assert self._state == VehState.IDLE
+        # except:
+        #     print(self.is_AV)
+        #     print(self._state)
+        #     print(self.time_to_be_available)
+        #     raise AssertionError 
+        
+        self._state = VehState.SERVING
         self.time_idled = 0
         dest = req.dzone
         for z in Zones:
@@ -361,15 +400,23 @@ class Veh:
                         req.fare
                     )  # the absolute fare, useful for hired drivers
                 if self.is_AV:
-                    # print("thre fare was", req.fare)
-                    # print("proftis are ", self.profits)
+                    print("thre fare was", req.fare)
+                    print("proftis are ", self.profits)
                     self.reqs.append(req)
                     self.locations.append(dest)
+
                     try:
                         assert len(self._info_for_rl_agent)==2
                     except AssertionError:
-                        print (self._info_for_rl_agent)
+                        print(self._state)
+                        print(self.waited_too_long())
+                        print(self.time_idled)
+                        print(self._info_for_rl_agent)
+                        print(len(self.reqs))
+                        print([r.fare for r in self.reqs])
                         raise AssertionError
+
+
                     self._info_for_rl_agent.append(np.round(req.fare,4)) # doesn't account for rebl cost yet
             
 

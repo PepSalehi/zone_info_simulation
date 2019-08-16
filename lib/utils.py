@@ -207,11 +207,7 @@ class Model:
         for z in self.zones:
             z.generate_requests_to_time(t)
 
-    # this is to be called by the RL algorithm
-    def act(self, t, action):
-        for veh in self.vehilcs:
-            if veh.is_AV:
-                veh.act(t, self.zones, self.WARMUP_PHASE)
+
 
     def move_fleet(self, t, WARMUP_PHASE, action):
         for veh in self.vehilcs:
@@ -276,7 +272,7 @@ class Model:
         a = {z.id: len(z.demand) for z in self.zones}
         demand_df = pd.DataFrame.from_dict(a, orient="index", columns=["demand"])
         # normalize it 
-        # demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
+        demand_df["demand"] = demand_df["demand"] / (demand_df["demand"].max() + 1) 
         # print ("normalized demand ", demand_df)
         return demand_df
     
@@ -288,7 +284,7 @@ class Model:
         b = {z.id: len(z.idle_vehicles) for z in self.zones}
         supply_df = pd.DataFrame.from_dict(b, orient="index", columns=["supply"])
         # normalize it 
-        # supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1) 
+        supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1) 
         return supply_df
     
     

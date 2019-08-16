@@ -11,3 +11,5 @@ Data/taxi_zones/taxi_zones.shp
 /Data/taxi_zones/taxi_zones.shp
 ./lib/__pycache__/*
 /lib/__*
+./some_dqn_trials/*
+some_dqn_trials
