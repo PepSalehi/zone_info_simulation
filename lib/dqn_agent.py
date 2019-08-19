@@ -70,8 +70,8 @@ class DQNAgent():
 
 
     # save Q Network params to a file
-    def save_weights(self):
-        self.q_model.save_weights(self.weights_file)
+    def save_weights(self, f):
+        self.q_model.save_weights(f)
 
 
     # copy trained Q Network params to target Q Network

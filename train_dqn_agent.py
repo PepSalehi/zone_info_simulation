@@ -292,7 +292,8 @@ if __name__ == "__main__":
             ),
         )
         # use weights instead
-        pickle.dump(agent, open("my_agent {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
+        agent.save_weights('dqn_weights_{} with AV_share of {} .h5'.format(sim_id, av_share[0]))
+        # pickle.dump(agent, open("my_agent {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
         pickle.dump(agent.memory, open("memories {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
 
     # close the env
