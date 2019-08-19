@@ -18,7 +18,7 @@ from lib.Requests import Req
 from lib.configs import configs
 from functools import lru_cache
 from enum import Enum, unique, auto    
-
+import pickle
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
@@ -107,6 +107,8 @@ class Veh:
         # to store (state, action, reward) for each vehicle 
         self._info_for_rl_agent = []
         self.reqs = []
+        self.total_served = 0
+        self.state_hist = [] 
 
   
     def _calc_matching_prob(self):
@@ -184,17 +186,17 @@ class Veh:
         # return self.idle and not self.rebalancing and self.time_idled > self.MAX_IDLE
 
     def update_rebalancing(self, WARMUP_PHASE):
+        assert self._state == VehState.REBAL
         self.time_to_be_available -= INT_ASSIGN  #  delta t, this is a hack
-     
+        
         if self.time_to_be_available < 0:
             self._state = VehState.IDLE
-            # self.rebalancing = False
-            # self.idle = True
+            self.state_hist.append(self._state)
             self.time_idled = 0
             self.time_to_be_available = 0
             if not WARMUP_PHASE:
                 self.number_of_times_moved += 1
-            # should it also get out of the waiting list?
+           
 
     def keep_waiting(self):
         self.time_idled += INT_ASSIGN
@@ -204,6 +206,7 @@ class Veh:
     def keep_serving(self):
         self.time_to_be_available -= INT_ASSIGN
         if self.time_to_be_available < 0:
+            assert self._state == VehState.SERVING
             self._state = VehState.DECISION
             if self.is_AV:
                 try:
@@ -214,6 +217,15 @@ class Veh:
                     print(self._info_for_rl_agent)
                     print(len(self.reqs))
                     print([r.fare for r in self.reqs])
+                    print("time_to_be_available", self.time_to_be_available)
+                    print("total_served", self.total_served)
+                    print("self.is_busy", self.is_busy)
+                    print("ozone", self.ozone)
+                    print(self._state)
+                    print("locations", self.locations)
+                    print("self.state_hist", self.state_hist)
+                    print("veh id ", self.id)
+                    pickle.dump(self, open("veh.p", "wb"))
                     raise AssertionError
 
             
@@ -230,19 +242,7 @@ class Veh:
     def is_busy(self):
         # try:
         #     assert self.serving == (not self.idle and not self.rebalancing )
-        # except AssertionError:
-        #         print(self.idle)
-        #         print(self.rebalancing)
-        #         print(self.waited_too_long())
-        #         print(self.TIME_TO_MAKE_A_DECISION)
-        #         print(self.time_idled)
-        #         if self.is_AV:
-        #             print("it is av")
-        #             print(self._info_for_rl_agent)
-        #             print(len(self.reqs))
-        #             print([r.fare for r in self.reqs])
-        #         print("serving:", self.serving)
-        #         raise AssertionError
+       
         
         return self._state == VehState.SERVING
 
@@ -307,6 +307,7 @@ class Veh:
             for z in Zones:
                 if z.id == target_zone:
                     self._state = VehState.REBAL
+                    self.state_hist.append(self._state)
                     # self.rebalancing = True
                     # self.idle = False
                     # self.TIME_TO_MAKE_A_DECISION  = False 
@@ -368,42 +369,48 @@ class Veh:
         #     print(self._state)
         #     print(self.time_to_be_available)
         #     raise AssertionError 
-        
-        self._state = VehState.SERVING
+        assert self._state == VehState.IDLE
         self.time_idled = 0
         dest = req.dzone
+        matched = False 
         for z in Zones:
             if z.id == dest:
+                self._state = VehState.SERVING
+                self.state_hist.append(self._state)
                 self.time_to_be_available = self._get_time_to_destination(self.ozone, dest)
                 dist = self._get_distance_to_destination(self.ozone, dest)
 
                 self.ozone = dest
                 self.zone = z
+                
+                matched = True
                 # don't match incoming, rather join the undecided list. 
                 # actually, don't join any list because in the next step, "act" will take care of it
                 # z.join_incoming_vehicles(self)
                 # z.join_undecided_vehicles(self)
                 #
-                if not WARMUP_PHASE:
-                    if not self.professional and not self.is_AV:
-                        self.collected_fares.append((1 - PHI) * req.fare)
-                        self.operator.revenues.append(PHI * req.fare)
-                        self.collected_fare_per_zone[req.ozone] += (1 - PHI) * req.fare
-                    elif self.professional:
-                        self.collected_fares.append(req.fare)
-                        self.operator.revenues.append(req.fare)
-                        self.collected_fare_per_zone[req.ozone] += req.fare
+                # if not WARMUP_PHASE:
+                if not self.professional and not self.is_AV:
+                    self.collected_fares.append((1 - PHI) * req.fare)
+                    self.operator.revenues.append(PHI * req.fare)
+                    self.collected_fare_per_zone[req.ozone] += (1 - PHI) * req.fare
 
-                    self.locations.append(dest)
-                    self.distance_travelled += dist
-                    self.profits.append(
-                        req.fare
-                    )  # the absolute fare, useful for hired drivers
+                elif self.professional:
+                    self.collected_fares.append(req.fare)
+                    self.operator.revenues.append(req.fare)
+                    self.collected_fare_per_zone[req.ozone] += req.fare
+
+                self.locations.append(dest)
+                self.distance_travelled += dist
+                self.profits.append(
+                    req.fare
+                )  
                 if self.is_AV:
-                    print("thre fare was", req.fare)
-                    print("proftis are ", self.profits)
+                    # print("thre fare was", req.fare)
+                    # print("proftis are ", self.profits)
                     self.reqs.append(req)
                     self.locations.append(dest)
+                    self.total_served += 1
 
                     try:
                         assert len(self._info_for_rl_agent)==2
@@ -414,15 +421,32 @@ class Veh:
                         print(self._info_for_rl_agent)
                         print(len(self.reqs))
                         print([r.fare for r in self.reqs])
+                        print(self.time_to_be_available)
+                        print(self.total_served)
                         raise AssertionError
 
 
-                    self._info_for_rl_agent.append(np.round(req.fare,4)) # doesn't account for rebl cost yet
-            
+                    self._info_for_rl_agent.append(np.round(req.fare, 4)) # doesn't account for rebl cost yet
+                    try:
+                        assert len(self._info_for_rl_agent)==3
+                    except AssertionError:
+                        print(self._state)
+                        print(self.waited_too_long())
+                        print(self.time_idled)
+                        print(self._info_for_rl_agent)
+                        print(len(self.reqs))
+                        print([r.fare for r in self.reqs])
+                        print(self.time_to_be_available)
+                        print(self.total_served)
+                        raise AssertionError
 
 
                 self.req = req
                 return True
+
+
+        if not matched:
+            print("zone {} does not exist ".format(dest))
         # why and when would it return False?
         return False
     

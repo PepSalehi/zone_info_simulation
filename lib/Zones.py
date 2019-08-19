@@ -6,6 +6,7 @@ from collections import deque
 # from functools import lru_cache
 from lib.Requests import Req
 from lib.Constants import WARMUP_TIME_SECONDS, BONUS, zones_neighbors
+from lib.Vehicles import VehState
 
 """
 
@@ -117,7 +118,8 @@ class Zone:
 
     def identify_idle_vehicles(self):
         for v in self.incoming_vehicles:
-            if v.time_to_be_available <= 0:  # not v.rebalancing and
+            # if v.time_to_be_available <= 0:  # not v.rebalancing and
+            if v._state == VehState.IDLE:
                 assert v not in self.idle_vehicles
       
                 self.idle_vehicles.append(v)

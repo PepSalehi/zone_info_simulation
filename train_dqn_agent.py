@@ -201,10 +201,10 @@ if __name__ == "__main__":
                         _sar[i] = veh._info_for_rl_agent[:]
                         veh._info_for_rl_agent = []  # reset state_action_reward
 
-                    else:
-                        print("YOU WERE NOT SUPPOSED TO BE HERE")
-                        print(veh._state)
-                        print(loop_counter)
+                    # else:
+                        # print("YOU WERE NOT SUPPOSED TO BE HERE")
+                        # print(veh._state)
+                        # print(loop_counter)
                     # state
                     veh._info_for_rl_agent.append(state_n[i])
                     # action
@@ -291,6 +291,7 @@ if __name__ == "__main__":
                 "wb",
             ),
         )
+        # use weights instead
         pickle.dump(agent, open("my_agent {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
         pickle.dump(agent.memory, open("memories {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
 
