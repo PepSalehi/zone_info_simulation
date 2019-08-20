@@ -123,7 +123,7 @@ if __name__ == "__main__":
     scores = []
     p_trials = 10
     logger.setLevel(logger.ERROR)
-    pretrained_weights = True
+
     # env = gym.make(args.env_id)
     config = {
         "fleet_size": fleet_sizes[0],
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     # instantiate the DQN/DDQN agent
     agent = DQNAgent(env.observation_space, env.action_space)
 
+    pretrained_weights = False
     if pretrained_weights:
         agent.load_weights("dqn_weights_1 with AV_share of 0.8 .h5")
 
@@ -155,6 +156,7 @@ if __name__ == "__main__":
 
     # Q-Learning sampling and fitting
     for episode in range(episode_count):
+        print("episode", episode)
         state_n = env.reset()
         print("state_n dimension", state_n[0].shape)
         print("state")
