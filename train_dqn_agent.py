@@ -35,7 +35,6 @@ from lib.Constants import PERCE_KNOW
 from lib.Vehicles import VehState
 from lib.dqn_agent import DQNAgent
 
-
 if __name__ == "__main__":
 
     ####
@@ -73,7 +72,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.fleet:
         fleet_sizes = [int(x) for x in args.fleet.split(",")]
-    #        fleet_sizes = args.fleet
+    # fleet_sizes = args.fleet
     else:
         fleet_sizes = FLEET_SIZE
 
@@ -208,7 +207,7 @@ if __name__ == "__main__":
                         _sar[i] = veh._info_for_rl_agent[:]
                         veh._info_for_rl_agent = []  # reset state_action_reward
 
-                    # else:
+                        # else:
                         # print("YOU WERE NOT SUPPOSED TO BE HERE")
                         # print(veh._state)
                         # print(loop_counter)
@@ -261,7 +260,7 @@ if __name__ == "__main__":
 
             # call experience relay
             if (
-                len(agent.memory) >= batch_size
+                        len(agent.memory) >= batch_size
             ):  # should this be indented and moved into the while loop?
                 # since this is now only happening once per episode
                 # I did, and it took forever to do anything
@@ -284,8 +283,8 @@ if __name__ == "__main__":
         pickle.dump(
             scores,
             open(
-                "./Outputs/dqn/scores {} from simulation {} with AV_share of {}.p".format(episode, 
-                sim_id , av_share[0]),
+                "./Outputs/dqn/scores {} from simulation {} with AV_share of {}.p".format(episode,
+                                                                                          sim_id, av_share[0]),
                 "wb",
             ),
         )
@@ -303,5 +302,4 @@ if __name__ == "__main__":
         # pickle.dump(agent, open("my_agent {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
         pickle.dump(agent.memory, open("memories {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))
 
-    # close the env
-
+        # close the env

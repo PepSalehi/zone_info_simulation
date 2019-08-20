@@ -3,7 +3,7 @@
 
 """
 
-from keras.layers import Dense, Input, Conv2D, Flatten, BatchNormalization
+from keras.layers import Dense, Input, Conv2D, Flatten, BatchNormalization, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard
@@ -61,7 +61,10 @@ class DQNAgent():
     def build_model(self, n_inputs, n_outputs):
         inputs = Input(shape=(n_inputs[0], n_inputs[1], 1), name='state')
         x = Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu')(inputs)
-        # x = Flatten()(x)
+        # x = MaxPooling2D(pool_size=2)(x)
+        x = Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu')(x)
+        x = MaxPooling2D(pool_size=2)(x)
+        x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
         x = BatchNormalization()(x)
         x = Dense(n_outputs, activation='softmax', name='action')(x)
