@@ -25,8 +25,8 @@ class DQNAgent():
         self.memory = []
 
         # discount rate
-        self.gamma = 0.99
-        self.tensorboard = TensorBoard(log_dir="Outputs/{}".format(time()))
+        self.gamma = 0.95
+        # self.tensorboard = TensorBoard(log_dir="Outputs/{}".format(time()))
 
         # initially 90% exploration, 10% exploitation
         self.epsilon = 1.0
@@ -68,6 +68,10 @@ class DQNAgent():
         q_model.summary()
         return q_model
 
+
+    def load_weights(self, f):
+        assert isinstance(f, str)
+        self.q_model.load_weights(f)
 
     # save Q Network params to a file
     def save_weights(self, f):
@@ -156,10 +160,10 @@ class DQNAgent():
         # train the Q-network
         self.q_model.fit(np.array(state_batch),
                          np.array(q_values_batch), # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
-                         batch_size=batch_size,
-                         epochs=1,
-                         verbose=0,
-                         callbacks=[self.tensorboard])
+                         batch_size=batch_size)
+                         # epochs=1,
+                         # verbose=0)
+                         # callbacks=[self.tensorboard])
 
         # update exploration-exploitation probability
         self.update_epsilon()

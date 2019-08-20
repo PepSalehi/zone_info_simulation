@@ -119,9 +119,11 @@ if __name__ == "__main__":
     #
     #
     # stores the reward per episode
-    scores = deque(maxlen=10000)
+    # scores = deque(maxlen=10000)
+    scores = []
     p_trials = 10
     logger.setLevel(logger.ERROR)
+    pretrained_weights = True
     # env = gym.make(args.env_id)
     config = {
         "fleet_size": fleet_sizes[0],
@@ -143,8 +145,11 @@ if __name__ == "__main__":
     # instantiate the DQN/DDQN agent
     agent = DQNAgent(env.observation_space, env.action_space)
 
+    if pretrained_weights:
+        agent.load_weights("dqn_weights_1 with AV_share of 0.8 .h5")
+
     # should be solved in this number of episodes
-    episode_count = 30
+    episode_count = 5
     state_size = env.observation_space.shape[0]
     batch_size = 64
 
@@ -175,7 +180,7 @@ if __name__ == "__main__":
                     # print("hah, let's see your state", veh._state)
                     # if it has to move because didn't get any matches, record that as a huge penalty
                     if veh.waited_too_long():
-                        print("waited too long after ", veh.time_idled)
+                        # print("waited too long after ", veh.time_idled)
                         _sar[i] = [
                             veh._info_for_rl_agent[0],
                             veh._info_for_rl_agent[1],
@@ -263,7 +268,7 @@ if __name__ == "__main__":
                 agent.replay(batch_size)
 
         scores.append(total_reward)
-        mean_score = np.mean(scores)
+        # mean_score = np.mean(scores)
 
         # if mean_score >= win_reward[args.env_id] and episode >= win_trials:
         #     print("Solved in episode %d: Mean survival = %0.2lf in %d episodes"
@@ -282,15 +287,15 @@ if __name__ == "__main__":
                 "wb",
             ),
         )
-        pickle.dump(
-            mean_score,
-            open(
-                "./Outputs/dqn/mean_score {} from simulation {} with AV_share of {}.p".format(
-                    episode, sim_id, av_share[0]
-                ),
-                "wb",
-            ),
-        )
+        # pickle.dump(
+        #     mean_score,
+        #     open(
+        #         "./Outputs/dqn/mean_score {} from simulation {} with AV_share of {}.p".format(
+        #             episode, sim_id, av_share[0]
+        #         ),
+        #         "wb",
+        #     ),
+        # )
         # use weights instead
         agent.save_weights('dqn_weights_{} with AV_share of {} .h5'.format(sim_id, av_share[0]))
         # pickle.dump(agent, open("my_agent {} with AV_share of {}.p".format(sim_id, av_share[0]), "wb"))

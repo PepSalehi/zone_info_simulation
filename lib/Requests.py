@@ -44,7 +44,8 @@ class Req:
                 #         origin=self.ozone, destination=self.dzone
                 #     )
                 # )["trip_distance_meter"].values[0]
-                DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)]["trip_distance_meter"].values[0]  
+                DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)][
+                    "trip_distance_meter"].values[0]
             )
 
 
@@ -86,4 +87,3 @@ class Req:
         # str += "\n  earliest pickup time = %.3f, latest pickup at t = %.3f" % ( self.Cep, self.Clp)
         # str += "\n  pickup at t = %.3f, dropoff at t = %.3f" % ( self.Tp, self.Td)
         return str
-

@@ -17,14 +17,16 @@ from lib.Constants import (
 from lib.Requests import Req
 from lib.configs import configs
 from functools import lru_cache
-from enum import Enum, unique, auto    
+from enum import Enum, unique, auto
 import pickle
+
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
-#https://stackoverflow.com/a/57516323/2005352
+
+# https://stackoverflow.com/a/57516323/2005352
 class VehState(Enum):
-    IDLE  = auto()
+    IDLE = auto()
     REBAL = auto()
     SERVING = auto()
     DECISION = auto()
@@ -39,19 +41,18 @@ class Veh:
     4. should_make_a_decision
     """
 
-
     def __init__(
-        self,
-        rs,
-        operator,
-        beta=1,
-        true_demand=True,
-        professional=False,
-        ini_loc=None,
-        know_fare=False,
-        is_AV=False,
-        DIST_MAT=DIST_MAT
-       
+            self,
+            rs,
+            operator,
+            beta=1,
+            true_demand=True,
+            professional=False,
+            ini_loc=None,
+            know_fare=False,
+            is_AV=False,
+            DIST_MAT=DIST_MAT
+
     ):
         global driver_id
         driver_id += 1
@@ -67,7 +68,6 @@ class Veh:
         # self.should_make_a_decision = False
 
         self._state = VehState.IDLE
-        
 
         self.true_demand = true_demand
         self.professional = professional
@@ -94,7 +94,7 @@ class Veh:
         self.number_of_times_moved = 0
         self.number_of_times_overwaited = 0
         self.distance_travelled = 0
-        self.time_to_be_available  = 0
+        self.time_to_be_available = 0
 
         self.tba = []
         self.total_waited = 0
@@ -108,9 +108,8 @@ class Veh:
         self._info_for_rl_agent = []
         self.reqs = []
         self.total_served = 0
-        self.state_hist = [] 
+        self.state_hist = []
 
-  
     def _calc_matching_prob(self):
         if not self.professional:
             return 1
@@ -122,14 +121,16 @@ class Veh:
 
     @staticmethod
     @lru_cache(maxsize=None)
-    def _get_dist_to_all_zones( ozone):
+    def _get_dist_to_all_zones(ozone):
         dists = DIST_MAT.query("PULocationID=={o}".format(o=ozone))
 
         return dists
+
     @lru_cache(maxsize=None)
-    def _get_dist_to_only_neighboring_zones(self,ozone):
+    def _get_dist_to_only_neighboring_zones(self, ozone):
         # neighbors_list = self.get_neighboring_zone_ids()
-        dists = DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"].isin(self.get_neighboring_zone_ids(ozone)))]
+        dists = DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (
+        DIST_MAT["DOLocationID"].isin(self.get_neighboring_zone_ids(ozone)))]
         # dists = DIST_MAT.query(
         #     "PULocationID=={o} & DOLocationID.isin({destinations})".format(
         #         o=self.ozone, destinations=neighbors_list
@@ -140,7 +141,7 @@ class Veh:
     @lru_cache(maxsize=None)
     def _get_time_to_destination(self, ozone, dest):
         # dist = self._get_distance_to_destination(dest)
-        t =  self._get_distance_to_destination(ozone, dest) / CONSTANT_SPEED
+        t = self._get_distance_to_destination(ozone, dest) / CONSTANT_SPEED
         return t
 
     @lru_cache(maxsize=None)
@@ -152,9 +153,10 @@ class Veh:
                 #         origin=self.ozone, destination=dest
                 #     )
                 # )["trip_distance_meter"].values[0]
-                DIST_MAT[(DIST_MAT["PULocationID"] == ozone) & (DIST_MAT["DOLocationID"] == dest)]["trip_distance_meter"].values[0] 
+                DIST_MAT[(DIST_MAT["PULocationID"] == ozone) & (DIST_MAT["DOLocationID"] == dest)][
+                    "trip_distance_meter"].values[0]
             )
-            
+
 
         except:
             dist = 1000
@@ -187,8 +189,8 @@ class Veh:
 
     def update_rebalancing(self, WARMUP_PHASE):
         assert self._state == VehState.REBAL
-        self.time_to_be_available -= INT_ASSIGN  #  delta t, this is a hack
-        
+        self.time_to_be_available -= INT_ASSIGN  # delta t, this is a hack
+
         if self.time_to_be_available < 0:
             self._state = VehState.IDLE
             self.state_hist.append(self._state)
@@ -196,12 +198,10 @@ class Veh:
             self.time_to_be_available = 0
             if not WARMUP_PHASE:
                 self.number_of_times_moved += 1
-           
 
     def keep_waiting(self):
         self.time_idled += INT_ASSIGN
         self.total_waited += INT_ASSIGN
-
 
     def keep_serving(self):
         self.time_to_be_available -= INT_ASSIGN
@@ -228,8 +228,6 @@ class Veh:
                     pickle.dump(self, open("veh.p", "wb"))
                     raise AssertionError
 
-            
-
     @lru_cache(maxsize=None)
     def get_neighboring_zone_ids(self, ozone):
         """ 
@@ -237,13 +235,14 @@ class Veh:
         """
         neighbors_list = zones_neighbors[str(ozone)]
         neighbors_list.append(self.ozone)
-        return neighbors_list 
+        return neighbors_list
+
     @property
     def is_busy(self):
         # try:
         #     assert self.serving == (not self.idle and not self.rebalancing )
-       
-        
+
+
         return self._state == VehState.SERVING
 
     def set_action(self, action):
@@ -257,26 +256,25 @@ class Veh:
 
     @property
     def is_waiting_to_be_matched(self):
-        if (self._state == VehState.IDLE and self.time_idled <= self.MAX_IDLE): 
-            return True 
-        else:
-            return False 
-        # if self.idle and not self.rebalancing and self.time_idled <= self.MAX_IDLE :
-      
-    @property
-    def is_rebalancing(self):
-        # True if self._state == VehState.REBAL else False 
-        if self._state == VehState.REBAL :
+        if (self._state == VehState.IDLE and self.time_idled <= self.MAX_IDLE):
             return True
         else:
             return False
-            
-    
+            # if self.idle and not self.rebalancing and self.time_idled <= self.MAX_IDLE :
+
+    @property
+    def is_rebalancing(self):
+        # True if self._state == VehState.REBAL else False 
+        if self._state == VehState.REBAL:
+            return True
+        else:
+            return False
+
     def should_move(self):
         """
         just started or has been idle for too long 
         """
-        
+
         return self.waited_too_long() or self._state == VehState.DECISION
 
     def act(self, t, Zones, WARMUP_PHASE, action=None):
@@ -290,7 +288,7 @@ class Veh:
         """
 
         def _make_a_decision(t):
-            
+
             # first, get out of the current zone's queue
             if self.zone is not None:
                 self.zone.remove_veh_from_waiting_list(self)
@@ -301,7 +299,7 @@ class Veh:
             if self.is_AV:
                 # assert self.action is not None
                 target_zone = Zones[self.action].id
-                
+
                 # print("action", self.action)
                 # print("target zone id", target_zone)
             for z in Zones:
@@ -331,11 +329,9 @@ class Veh:
                 self.locations.append(self.ozone)
 
             # self.time_idled = 0
-          
+
 
             return target_zone
-
-
 
         if self.should_move():
             _ = _make_a_decision(t)
@@ -349,18 +345,18 @@ class Veh:
             self.keep_waiting()
             return
         if self.is_rebalancing:  # and not self.busy:
-          
+
             self.update_rebalancing(WARMUP_PHASE)
             return
 
-              
 
-        # for debugging
-        # path_to_write = configs['output_path']
-        # filepath = path_to_write +'driver ' + str(self.id)+ '.csv'
-        # writer=csv.writer(open(filepath,'a'))
-        # writer.writerow([self.ozone, self.time_to_be_available, self.rebalancing, self.idle, self.is_busy()])
-            
+
+            # for debugging
+            # path_to_write = configs['output_path']
+            # filepath = path_to_write +'driver ' + str(self.id)+ '.csv'
+            # writer=csv.writer(open(filepath,'a'))
+            # writer.writerow([self.ozone, self.time_to_be_available, self.rebalancing, self.idle, self.is_busy()])
+
     def match_w_req(self, req, Zones, WARMUP_PHASE):
         # try:
         #     assert self._state == VehState.IDLE
@@ -372,7 +368,7 @@ class Veh:
         assert self._state == VehState.IDLE
         self.time_idled = 0
         dest = req.dzone
-        matched = False 
+        matched = False
         for z in Zones:
             if z.id == dest:
                 self._state = VehState.SERVING
@@ -382,7 +378,7 @@ class Veh:
 
                 self.ozone = dest
                 self.zone = z
-                
+
                 matched = True
                 # don't match incoming, rather join the undecided list. 
                 # actually, don't join any list because in the next step, "act" will take care of it
@@ -404,7 +400,7 @@ class Veh:
                 self.distance_travelled += dist
                 self.profits.append(
                     req.fare
-                )  
+                )
                 if self.is_AV:
                     # print("thre fare was", req.fare)
                     # print("proftis are ", self.profits)
@@ -413,7 +409,7 @@ class Veh:
                     self.total_served += 1
 
                     try:
-                        assert len(self._info_for_rl_agent)==2
+                        assert len(self._info_for_rl_agent) == 2
                     except AssertionError:
                         print(self._state)
                         print(self.waited_too_long())
@@ -425,10 +421,9 @@ class Veh:
                         print(self.total_served)
                         raise AssertionError
 
-
-                    self._info_for_rl_agent.append(np.round(req.fare, 4)) # doesn't account for rebl cost yet
+                    self._info_for_rl_agent.append(np.round(req.fare, 4))  # doesn't account for rebl cost yet
                     try:
-                        assert len(self._info_for_rl_agent)==3
+                        assert len(self._info_for_rl_agent) == 3
                     except AssertionError:
                         print(self._state)
                         print(self.waited_too_long())
@@ -439,17 +434,15 @@ class Veh:
                         print(self.time_to_be_available)
                         print(self.total_served)
                         raise AssertionError
-
 
                 self.req = req
                 return True
-
 
         if not matched:
             print("zone {} does not exist ".format(dest))
         # why and when would it return False?
         return False
-    
+
     @lru_cache(maxsize=None)
     def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
 
@@ -458,9 +451,9 @@ class Veh:
         a = pd.merge(df, dist, left_on="Origin", right_on="DOLocationID", how="left")
         # a = pd.merge(df.set_index('Origin'), dist.set_index('DOLocationID'),  how="left", 
         # left_index=True, right_index=True)
-        
+
         neighbors_list = self.get_neighboring_zone_ids(ozone)
-        a = a[a["Origin"].isin(neighbors_list)] 
+        a = a[a["Origin"].isin(neighbors_list)]
         # a = a[a.index.isin(neighbors_list)] 
 
 
@@ -473,7 +466,7 @@ class Veh:
             return neighbors_list[0]
 
         if (
-            not self.know_fare
+                not self.know_fare
         ):  # they don't know the average fare for an area, they use one for all
             fare_to_to_use = CONST_FARE
         else:
@@ -494,12 +487,11 @@ class Veh:
                 print("that was a")
                 print(self.professional)
 
-
         # a["relative_demand"] = a["total_pickup"] / a["total_pickup"].sum()
 
         expected_revenue = (
-            1 - PHI
-        ) * fare_to_to_use * a.surge * match_prob * self.beta + a.bonus
+                               1 - PHI
+                           ) * fare_to_to_use * a.surge * match_prob * self.beta + a.bonus
         expected_cost = (
             a.trip_distance_meter * self.rebl_cost
         )  # doesn't take into account the distance travelled once the demand is picked up
@@ -517,7 +509,7 @@ class Veh:
 
         # so that probability doesn't end up being negative
         # a["prob"] = a["prof"] / a["prof"].sum()
-        prob = prof/ prof.sum()
+        prob = prof / prof.sum()
         return (a, prob)
 
     def choose_target_zone(self, t):
@@ -525,8 +517,6 @@ class Veh:
         This has to be based on the information communicated by the app, as well as the prior experience
         It should have the option of not moving. Maybe include that in the neighbors list 
         """
-
-
 
         # debugging.
         # self._times_chose_zone.append([t, self.idle, self.rebalancing, self.is_busy(), self.should_move(), self.time_to_be_available, self.waited_too_long() ])
@@ -628,10 +618,8 @@ class Veh:
             print(self.ozone)
             raise Exception("selected was empty, here is a {}".format(a))
 
-
         return selected["DOLocationID"].values[0]
         # return selected.index.values[0]
-
 
     def _calculate_fare(self, request, surge):
         """
@@ -642,24 +630,23 @@ class Veh:
         p2 = 0.5 * 5 * 1609 * distance_meters
         f = p1 + surge * p2
         return f
-    
-    # @lru_cache(maxsize=None)
-    # def _calc_rebl_cost(self, dist):
-    #     """
-    #     This should be based on the value of time and time it took to get to the destination
-        
-    #     """
-    #     # dist = veh._get_dist_to_all_zones(veh.ozone)[["DOLocationID", "trip_distance_meter"]]
-    #     # this is the costliest operation! 
-    #     dist["costs"] = dist.trip_distance_meter * self.rebl_cost
-    #     dist["costs"] = dist["costs"].apply(lambda x: np.around(x, 1))
 
-    #     return dist
+        # @lru_cache(maxsize=None)
+        # def _calc_rebl_cost(self, dist):
+        #     """
+        #     This should be based on the value of time and time it took to get to the destination
 
-    # def realized_trip_profit(self, request, surge=1, driver_bonus=0):
-    #     assert isinstance(request, Req)
-    #     fare = self._calculate_fare(request, surge)
-    #     rebl_cost = self._calc_rebl_cost(request)
-    #     profit = (1 - PHI) * fare + driver_bonus - rebl_cost - self.IDLE_COST
-    #     return profit
+        #     """
+        #     # dist = veh._get_dist_to_all_zones(veh.ozone)[["DOLocationID", "trip_distance_meter"]]
+        #     # this is the costliest operation!
+        #     dist["costs"] = dist.trip_distance_meter * self.rebl_cost
+        #     dist["costs"] = dist["costs"].apply(lambda x: np.around(x, 1))
 
+        #     return dist
+
+        # def realized_trip_profit(self, request, surge=1, driver_bonus=0):
+        #     assert isinstance(request, Req)
+        #     fare = self._calculate_fare(request, surge)
+        #     rebl_cost = self._calc_rebl_cost(request)
+        #     profit = (1 - PHI) * fare + driver_bonus - rebl_cost - self.IDLE_COST
+        #     return profit
