@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="tidy up&#10;">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/lib/dqn_agent.py" afterPath="$PROJECT_DIR$/lib/dqn_agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/train_dqn_agent.py" afterPath="$PROJECT_DIR$/train_dqn_agent.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -33,10 +32,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="train_dqn_agent.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="train_dqn_agent.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train_dqn_agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="551">
+            <state relative-caret-position="851">
               <caret line="284" column="93" lean-forward="false" selection-start-line="284" selection-start-column="93" selection-end-line="284" selection-end-column="93" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
@@ -45,12 +44,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="dqn_agent.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="dqn_agent.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/dqn_agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="611">
-              <caret line="163" column="34" lean-forward="false" selection-start-line="163" selection-start-column="34" selection-end-line="163" selection-end-column="34" />
-              <folding />
+            <state relative-caret-position="495">
+              <caret line="76" column="0" lean-forward="true" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
+              <folding>
+                <element signature="e#57#131#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -134,6 +135,8 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>scores</find>
+      <find>epsilon</find>
+      <find>ADAm</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -148,8 +151,8 @@
         <option value="$PROJECT_DIR$/dqn_analysis" />
         <option value="$PROJECT_DIR$/dqn_analysis_0.py" />
         <option value="$PROJECT_DIR$/interactive_analysis.ipynb" />
-        <option value="$PROJECT_DIR$/lib/dqn_agent.py" />
         <option value="$PROJECT_DIR$/train_dqn_agent.py" />
+        <option value="$PROJECT_DIR$/lib/dqn_agent.py" />
       </list>
     </option>
   </component>
@@ -752,20 +755,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/dqn_agent.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="611">
-          <caret line="163" column="34" lean-forward="false" selection-start-line="163" selection-start-column="34" selection-end-line="163" selection-end-column="34" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/train_dqn_agent.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="551">
+        <state relative-caret-position="851">
           <caret line="284" column="93" lean-forward="false" selection-start-line="284" selection-start-column="93" selection-end-line="284" selection-end-column="93" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/dqn_agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="495">
+          <caret line="76" column="0" lean-forward="true" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
+          <folding>
+            <element signature="e#57#131#0" expanded="true" />
           </folding>
         </state>
       </provider>

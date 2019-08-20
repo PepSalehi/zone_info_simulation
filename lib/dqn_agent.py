@@ -3,7 +3,7 @@
 
 """
 
-from keras.layers import Dense, Input, Conv2D, Flatten
+from keras.layers import Dense, Input, Conv2D, Flatten, BatchNormalization
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import TensorBoard
@@ -43,7 +43,7 @@ class DQNAgent():
         n_inputs = state_space.shape
         n_outputs = action_space.n
         self.q_model = self.build_model(n_inputs, n_outputs)
-        self.q_model.compile(loss='mse', optimizer=Adam())
+        self.q_model.compile(loss='mse', optimizer=Adam(lr=0.01))
         # target Q Network
         self.target_q_model = self.build_model(n_inputs, n_outputs)
         # copy Q Network params to target Q Network
@@ -56,13 +56,14 @@ class DQNAgent():
         else:
             print("-------------DQN------------")
 
-    
-    # Q Network 
+
+    # Q Network
     def build_model(self, n_inputs, n_outputs):
         inputs = Input(shape=(n_inputs[0], n_inputs[1], 1), name='state')
         x = Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu')(inputs)
-        x = Flatten()(x)
+        # x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
+        x = BatchNormalization()(x)
         x = Dense(n_outputs, activation='softmax', name='action')(x)
         q_model = Model(inputs, x)
         q_model.summary()
@@ -72,6 +73,7 @@ class DQNAgent():
     def load_weights(self, f):
         assert isinstance(f, str)
         self.q_model.load_weights(f)
+        print("used prior weights")
 
     # save Q Network params to a file
     def save_weights(self, f):
@@ -140,7 +142,7 @@ class DQNAgent():
             state = state.reshape(-1, state.shape[0], state.shape[1], 1)
             next_state = next_state.reshape(-1, next_state.shape[0], next_state.shape[1], 1)
 
-            q_values = self.q_model.predict(state) # mind the 's': q_values and q_value 
+            q_values = self.q_model.predict(state) # mind the 's': q_values and q_value
 
             # get Q_max
             q_value = self.get_target_q_value(next_state, reward)
@@ -161,8 +163,8 @@ class DQNAgent():
         self.q_model.fit(np.array(state_batch),
                          np.array(q_values_batch), # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
                          batch_size=batch_size,
-                         epochs=50)
-                         # verbose=0)
+                         epochs=10,
+                         verbose=0)
                          # callbacks=[self.tensorboard])
 
         # update exploration-exploitation probability
@@ -174,7 +176,7 @@ class DQNAgent():
 
         self.replay_counter += 1
 
-    
+
     # decrease the exploration, increase exploitation
     def update_epsilon(self):
         if self.epsilon > self.epsilon_min:
