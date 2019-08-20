@@ -276,8 +276,8 @@ if __name__ == "__main__":
         #     print("Epsilon: ", agent.epsilon)
         #     agent.save_weights()
         #     break
-        if episode % p_trials == 0:
-            print("Episode %d: Mean reward = %0.2lf " % (episode, mean_score))
+        # if episode % p_trials == 0:
+        #     print("Episode %d: Mean reward = %0.2lf " % (episode, mean_score))
 
         pickle.dump(
             scores,

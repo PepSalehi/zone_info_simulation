@@ -160,8 +160,8 @@ class DQNAgent():
         # train the Q-network
         self.q_model.fit(np.array(state_batch),
                          np.array(q_values_batch), # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
-                         batch_size=batch_size)
-                         # epochs=1,
+                         batch_size=batch_size,
+                         epochs=50)
                          # verbose=0)
                          # callbacks=[self.tensorboard])
 
