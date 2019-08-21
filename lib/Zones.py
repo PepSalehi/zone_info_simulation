@@ -65,11 +65,11 @@ class Zone:
         self._incoming_supply_history = []
         # for debugging
         self._time_demand = []
-    
 
     def read_daily_demand(self, demand_df):
         # self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
         self.DD = demand_df[demand_df["PULocationID"] == self.id]
+
     def calculate_demand_function(self, surge):
         """ 
         This should be a decreasing function of price 
@@ -97,9 +97,12 @@ class Zone:
             print(veh.time_to_be_available)
 
         self.incoming_vehicles.append(veh)
-    
 
     def join_undecided_vehicles(self, veh):
+        """
+
+        :type veh: object
+        """
         try:
             assert veh not in self.undecided_vehicles
         except AssertionError:
@@ -121,11 +124,12 @@ class Zone:
             # if v.time_to_be_available <= 0:  # not v.rebalancing and
             if v._state == VehState.IDLE:
                 assert v not in self.idle_vehicles
-      
+
                 self.idle_vehicles.append(v)
                 self.incoming_vehicles.remove(v)
 
     def match_veh_demand(self, Zones, t, WARMUP_PHASE, penalty=-10):
+
         for v in self.idle_vehicles[:]:
             if len(self.demand) > 0:
                 req = self.demand.popleft()
@@ -145,7 +149,7 @@ class Zone:
                         "should be penalized"
                         # v.profits.append(penalty)
 
-    #                    break
+    # break
 
     def assign(self, Zones, t, WARMUP_PHASE, penalty):
         self.identify_idle_vehicles()
@@ -182,7 +186,7 @@ class Zone:
 
         scale = 3600.0 / d
         # interarrival time is generated according to the exponential distribution
-        dt = np.int(self.rs1.exponential(scale)) 
+        dt = np.int(self.rs1.exponential(scale))
         try:
             destination = self.DD.iloc[self.mid]["DOLocationID"]
             # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
@@ -222,17 +226,16 @@ class Zone:
                 self.N += 1
                 # for debugging, number of requests per 5 minutes
                 self._time_demand.append(
-                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60)) 
+                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60))
                 )
             else:
                 break
         after_demand = len(self.demand)
-        if after_demand - before_demand > 100 :
-            print ("Huge increase in the number of requests over 30 seconds!!")
-            print ("d ", d)
-            print ("T ",T  )
-            print ("zone id ", self.id)
+        if after_demand - before_demand > 100:
+            print("Huge increase in the number of requests over 30 seconds!!")
+            print("d ", d)
+            print("T ", T)
+            print("zone id ", self.id)
 
 # TODO: df_hourly_stats_over_days is what a professional driver knows
 # TODO: df_hourly_stats is stats per hour per day. Can be the true information provided by the operator (although how are they gonna know it in advance?)
-

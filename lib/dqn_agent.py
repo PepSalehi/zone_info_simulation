@@ -11,10 +11,12 @@ from keras.callbacks import TensorBoard
 from collections import deque
 import numpy as np
 import random
+from collections import deque
 import argparse
 import gym
 from gym import wrappers, logger
 from time import time
+
 
 class DQNAgent():
     def __init__(self, state_space, action_space, args=None, episodes=500):
@@ -22,7 +24,7 @@ class DQNAgent():
         self.action_space = action_space
         self.ddqn = True
         # experience buffer
-        self.memory = []
+        self.memory = deque(maxlen=10000)
 
         # discount rate
         self.gamma = 0.95
@@ -56,13 +58,12 @@ class DQNAgent():
         else:
             print("-------------DQN------------")
 
-
     # Q Network
     def build_model(self, n_inputs, n_outputs):
         inputs = Input(shape=(n_inputs[0], n_inputs[1], 1), name='state')
-        x = Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu')(inputs)
+        x = Conv2D(32, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(inputs)
         # x = MaxPooling2D(pool_size=2)(x)
-        x = Conv2D(32, kernel_size=(3, 3), strides=(1,1), padding='same', activation='relu')(x)
+        x = Conv2D(32, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(x)
         x = MaxPooling2D(pool_size=2)(x)
         x = Flatten()(x)
         x = Dense(256, activation='relu')(x)
@@ -71,7 +72,6 @@ class DQNAgent():
         q_model = Model(inputs, x)
         q_model.summary()
         return q_model
-
 
     def load_weights(self, f):
         assert isinstance(f, str)
@@ -82,11 +82,9 @@ class DQNAgent():
     def save_weights(self, f):
         self.q_model.save_weights(f)
 
-
     # copy trained Q Network params to target Q Network
     def update_weights(self):
         self.target_q_model.set_weights(self.q_model.get_weights())
-
 
     # eps-greedy policy
     def act(self, state):
@@ -100,12 +98,10 @@ class DQNAgent():
         # select the action with max Q-value
         return np.argmax(q_values[0])
 
-
     # store experiences in the replay buffer
     def remember(self, state, action, reward, next_state, done):
         item = (state, action, reward, next_state, done)
         self.memory.append(item)
-
 
     # compute Q_max
     # use of target Q Network solves the non-stationarity problem
@@ -130,7 +126,6 @@ class DQNAgent():
         q_value += reward
         return q_value
 
-
     # experience replay addresses the correlation issue between samples
     def replay(self, batch_size):
         # sars = state, action, reward, state' (next_state)
@@ -145,7 +140,7 @@ class DQNAgent():
             state = state.reshape(-1, state.shape[0], state.shape[1], 1)
             next_state = next_state.reshape(-1, next_state.shape[0], next_state.shape[1], 1)
 
-            q_values = self.q_model.predict(state) # mind the 's': q_values and q_value
+            q_values = self.q_model.predict(state)  # mind the 's': q_values and q_value
 
             # get Q_max
             q_value = self.get_target_q_value(next_state, reward)
@@ -164,11 +159,12 @@ class DQNAgent():
 
         # train the Q-network
         self.q_model.fit(np.array(state_batch),
-                         np.array(q_values_batch), # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
+                         np.array(q_values_batch),
+                         # so, q_model will predict q(s,a), q_values are q_max, so the difference will be the loss
                          batch_size=batch_size,
                          epochs=10,
                          verbose=0)
-                         # callbacks=[self.tensorboard])
+        # callbacks=[self.tensorboard])
 
         # update exploration-exploitation probability
         self.update_epsilon()
@@ -178,7 +174,6 @@ class DQNAgent():
             self.update_weights()
 
         self.replay_counter += 1
-
 
     # decrease the exploration, increase exploitation
     def update_epsilon(self):
