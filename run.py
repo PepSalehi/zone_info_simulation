@@ -87,7 +87,6 @@ def main():
         bonus = BONUS
 
     if args.pro:
-
         pro_share = [float(x) for x in args.pro.split(",")]
     else:
         pro_share = [PRO_SHARE]
@@ -117,10 +116,10 @@ def main():
                             DEMAND_SOURCE,
                             WARMUP_TIME_HOUR,
                             ANALYSIS_TIME_HOUR,
-                            FLEET_SIZE=fleet_size,
-                            PRO_SHARE=pro_s,
-                            SURGE_MULTIPLIER=surge,
-                            BONUS=bonus,
+                            fleet_size=fleet_size,
+                            pro_share=pro_s,
+                            surge_multiplier=surge,
+                            bonus=bonus,
                             percent_false_demand=percent_false_demand,
                             percentage_know_fare=perc_k,
                         )

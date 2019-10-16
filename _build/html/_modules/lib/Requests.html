@@ -1,0 +1,212 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib.Requests &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.Requests</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="n">DIST_MAT</span><span class="p">,</span> <span class="n">CONSTANT_SPEED</span>
+
+
+<div class="viewcode-block" id="Req"><a class="viewcode-back" href="../../lib.html#lib.Requests.Req">[docs]</a><span class="k">class</span> <span class="nc">Req</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Req is a class for requests</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        id: sequential unique id</span>
+<span class="sd">        Tr: request time</span>
+<span class="sd">        ozone: origin zone</span>
+<span class="sd">        dzone: destination zone</span>
+<span class="sd">        Ds: shortest travel distance</span>
+<span class="sd">        Ts: shortest travel time</span>
+<span class="sd">        Tp: pickup time</span>
+<span class="sd">        Td: dropoff time</span>
+<span class="sd">        DR: distance rejected (true if distance O-&gt;D is less than DISTANCE_THRESHOLD)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">Tr</span><span class="p">,</span> <span class="n">fare</span><span class="p">,</span> <span class="n">ozone</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">dzone</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">DIST_MAT</span><span class="o">=</span><span class="n">DIST_MAT</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a request instance.</span>
+
+<span class="sd">        @param id: (int) sequential unique id</span>
+<span class="sd">        @param Tr: (int) req time</span>
+<span class="sd">        @param fare: (float)</span>
+<span class="sd">        @param ozone: (int) origin zone</span>
+<span class="sd">        @param dzone: (int) destination zone</span>
+<span class="sd">        @param DIST_MAT: deprecated</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Tr</span> <span class="o">=</span> <span class="n">Tr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span> <span class="o">=</span> <span class="n">ozone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dzone</span> <span class="o">=</span> <span class="n">dzone</span>
+        <span class="c1"># self.DIST_MAT = DIST_MAT</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Ds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fare</span> <span class="o">=</span> <span class="n">fare</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Tp</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Td</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">D</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DR</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># self.NS = 0</span>
+        <span class="c1"># self.NP = 0</span>
+        <span class="c1"># self.ND = 0</span>
+
+    <span class="c1"># @profile</span>
+    <span class="k">def</span> <span class="nf">_get_distance_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the distance and time in the request.</span>
+<span class="sd">        @return: tuple (distance, time)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">Ds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="c1"># self.DIST_MAT.query(</span>
+                <span class="c1">#     &quot;PULocationID == {origin} &amp; DOLocationID == {destination} &quot;.format(</span>
+                <span class="c1">#         origin=self.ozone, destination=self.dzone</span>
+                <span class="c1">#     )</span>
+                <span class="c1"># )[&quot;trip_distance_meter&quot;].values[0]</span>
+                <span class="n">DIST_MAT</span><span class="p">[(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;PULocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzone</span><span class="p">)][</span>
+                    <span class="s2">&quot;trip_distance_meter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">Ds</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="mi">1609</span>  <span class="c1"># meter</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;didn&#39;t find the distance&quot;</span><span class="p">)</span>
+        <span class="n">Ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">Ds</span> <span class="o">/</span> <span class="n">CONSTANT_SPEED</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Ds</span><span class="p">,</span> <span class="n">Ts</span>
+
+<div class="viewcode-block" id="Req.get_origin"><a class="viewcode-back" href="../../lib.html#lib.Requests.Req.get_origin">[docs]</a>    <span class="k">def</span> <span class="nf">get_origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: (int) the origin zone id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span></div>
+
+<div class="viewcode-block" id="Req.get_destination"><a class="viewcode-back" href="../../lib.html#lib.Requests.Req.get_destination">[docs]</a>    <span class="k">def</span> <span class="nf">get_destination</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: (int) the destination zone id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dzone</span></div>
+
+    <span class="c1"># visualize</span>
+    <span class="c1"># def draw(self):</span>
+    <span class="c1">#     import matplotlib.pyplot as plt</span>
+
+    <span class="c1">#     plt.plot(self.olng, self.olat, &quot;r&quot;, marker=&quot;+&quot;)</span>
+    <span class="c1">#     plt.plot(self.dlng, self.dlat, &quot;r&quot;, marker=&quot;x&quot;)</span>
+    <span class="c1">#     plt.plot(</span>
+    <span class="c1">#         [self.olng, self.dlng],</span>
+    <span class="c1">#         [self.olat, self.dlat],</span>
+    <span class="c1">#         &quot;r&quot;,</span>
+    <span class="c1">#         linestyle=&quot;--&quot;,</span>
+    <span class="c1">#         dashes=(0.5, 1.5),</span>
+    <span class="c1">#     )</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Defines string representation of a request.</span>
+<span class="sd">        @return: (str) &quot;req [id] from [origin zone] to [dest. zone] at [time]&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;req </span><span class="si">%d</span><span class="s2"> from (</span><span class="si">%.7f</span><span class="s2">) to (</span><span class="si">%.7f</span><span class="s2">) at t = </span><span class="si">%.3f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dzone</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Tr</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># str += &quot;\n  earliest pickup time = %.3f, latest pickup at t = %.3f&quot; % ( self.Cep, self.Clp)</span>
+        <span class="c1"># str += &quot;\n  pickup at t = %.3f, dropoff at t = %.3f&quot; % ( self.Tp, self.Td)</span>
+        <span class="k">return</span> <span class="nb">str</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../lib/trial.html">All about me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lib.html">lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lib</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

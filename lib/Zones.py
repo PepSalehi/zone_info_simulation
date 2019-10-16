@@ -8,32 +8,33 @@ from lib.Requests import Req
 from lib.Constants import WARMUP_TIME_SECONDS, BONUS, zones_neighbors
 from lib.Vehicles import VehState
 
-"""
-
-Attributes:
-    rs1: a seeded random generator for requests
-    id: zone_id
-    DD : daily demand (every trip)
-    M: demand matrix 
-    D: demand volume (trips/hour)
-    V: number of vehicles
-    K: capacity of vehicles
-    vehs: the list of vehicles
-    N: number of requests
-
-    mid: row number of the demand file 
-    reqs: the list of requests
-    rejs: the list of rejected requests
-    distance_rejs: the list of requests rejected because the distance from O to D
-        was below the distance threshold (not included in rejs)
-    queue: requests in the queue
-    assign: assignment method
-    
-"""
-
-
 class Zone:
+    """
+    Attributes:
+        rs1: a seeded random generator for requests
+        id: zone_id
+        DD : daily demand (every trip)
+        M: demand matrix
+        D: demand volume (trips/hour)
+        V: number of vehicles
+        K: capacity of vehicles
+        vehs: the list of vehicles
+        N: number of requests
+
+        mid: row number of the demand file
+        reqs: the list of requests
+        rejs: the list of rejected requests
+        distance_rejs: the list of requests rejected because the distance from O to D
+            was below the distance threshold (not included in rejs)
+        queue: requests in the queue
+        assign: assignment method
+    """
     def __init__(self, ID, rs=None):
+        """
+        Initializes a zone object.
+        @param ID: (int) zone id
+        @param rs: random seeder
+        """
         if rs is None:
             seed1 = 10
             self.rs1 = np.random.RandomState(seed1)
@@ -67,15 +68,25 @@ class Zone:
         self._time_demand = []
 
     def read_daily_demand(self, demand_df):
+        """
+        Updates the daily demand of this zone.
+        @param demand_df: df describing demand for all zones.
+        @return: None
+        """
         # self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
         self.DD = demand_df[demand_df["PULocationID"] == self.id]
 
     def calculate_demand_function(self, surge):
-        """ 
+        """
+        Calculates demand as a function of current demand, elasticity, and surge.
+
         This should be a decreasing function of price 
         use elasticities instead 
         -0.6084 for NYC
-        
+        @param surge (float): surge multiplier.
+        @requires surge >= 1
+
+        @return (float): new demand according to surge
         """
         base_demand = self.D
         change = self.DEMAND_ELASTICITY * (
@@ -87,6 +98,11 @@ class Zone:
         return new_demand
 
     def join_incoming_vehicles(self, veh):
+        """
+        Adds incoming vehicle to list of incoming vehicles.
+        @param veh (Vehicle)
+        @return: None
+        """
         try:
             assert veh not in self.incoming_vehicles
         except AssertionError:
@@ -100,8 +116,8 @@ class Zone:
 
     def join_undecided_vehicles(self, veh):
         """
-
-        :type veh: object
+        Adds vehicle to list of undecided vehicles.
+        @param veh (Vehicle)
         """
         try:
             assert veh not in self.undecided_vehicles
@@ -116,10 +132,17 @@ class Zone:
         self.undecided_vehicles.append(veh)
 
     def remove_veh_from_waiting_list(self, veh):
+        """
+        Removes vehicle from idle vehicles.
+        @param veh (Vehicle)
+        """
         if veh in self.idle_vehicles:
             self.idle_vehicles.remove(veh)
 
     def identify_idle_vehicles(self):
+        """
+        Updates the idle vehicles and incoming vehicle list.
+        """
         for v in self.incoming_vehicles:
             # if v.time_to_be_available <= 0:  # not v.rebalancing and
             if v._state == VehState.IDLE:
@@ -129,7 +152,14 @@ class Zone:
                 self.incoming_vehicles.remove(v)
 
     def match_veh_demand(self, Zones, t, WARMUP_PHASE, penalty=-10):
-
+        """
+        Matches idle vehicles to requests via a queue.
+        @param Zones:
+        @param t: time
+        @param WARMUP_PHASE (bool)
+        @param penalty (float)
+        @return: None
+        """
         for v in self.idle_vehicles[:]:
             if len(self.demand) > 0:
                 req = self.demand.popleft()
@@ -152,19 +182,28 @@ class Zone:
     # break
 
     def assign(self, Zones, t, WARMUP_PHASE, penalty):
+        """
+        Identifies idle vehicles, then amends history and matches vehicle demand.
+
+        @param Zones:
+        @param t:
+        @param WARMUP_PHASE:
+        @param penalty:
+        @return: None
+        """
         self.identify_idle_vehicles()
         # bookkeeping
         self._demand_history.append(len(self.demand))
         self._serverd_demand_history.append(len(self.served_demand))
         self._supply_history.append(len(self.idle_vehicles))
         self._incoming_supply_history.append(len(self.incoming_vehicles))
-        #
         self.match_veh_demand(Zones, t, WARMUP_PHASE, penalty)
 
     def set_demand_rate_per_t(self, t):
         """
-        This should use self.demand as the (hourly) demand, and then generate demand accoring to a Poisson distribution
-        time_period: hour of day
+        Sets the demand per time period.
+        This should use self.demand as the (hourly) demand, and then generate demand according to a Poisson distribution
+        @param t: hour of day
         """
         # print (self.DD.shape)
         demand = self.DD.query("Hour == {T}".format(T=t))
@@ -173,11 +212,19 @@ class Zone:
         self.mid = 0
 
     def set_surge_multiplier(self, m):
+        """
+        Sets the surge multiplier.
+        @param m: (float) desired surge multiplier
+        """
         self.surge = m
 
-    # generate one request, following exponential arrival interval
     # @profile 
     def _generate_request(self, d=None):
+        """
+        Generate one request, following exponential arrival interval.
+        @param d: demand
+        @return: request
+        """
         # check if there is any demand first
         if self.D == 0:  # i.e., no demand
             return None
@@ -185,7 +232,7 @@ class Zone:
             d = self.D
 
         scale = 3600.0 / d
-        # interarrival time is generated according to the exponential distribution
+        # inter-arrival time is generated according to the exponential distribution
         dt = np.int(self.rs1.exponential(scale))
         try:
             destination = self.DD.iloc[self.mid]["DOLocationID"]
@@ -206,9 +253,14 @@ class Zone:
         self.mid += 1
         return req
 
-    # generate requests up to time T, following Poisson process
+
     # @profile
     def generate_requests_to_time(self, T):
+        """
+        Generate requests up to time T, following Poisson process
+        @param T: time
+        @return: None
+        """
         if self.N == 0:
             req = self._generate_request()
             if req is not None:

@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib.Vehicles &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.Vehicles</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ZONE_IDS</span><span class="p">,</span>
+    <span class="n">PHI</span><span class="p">,</span>
+    <span class="n">DIST_MAT</span><span class="p">,</span>
+    <span class="n">CONSTANT_SPEED</span><span class="p">,</span>
+    <span class="n">INT_ASSIGN</span><span class="p">,</span>
+    <span class="n">MAX_IDLE</span><span class="p">,</span>
+    <span class="n">FUEL_COST</span><span class="p">,</span>
+    <span class="n">CONST_FARE</span><span class="p">,</span>
+    <span class="n">zones_neighbors</span><span class="p">,</span>
+    <span class="n">PENALTY</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib.Requests</span> <span class="k">import</span> <span class="n">Req</span>
+<span class="kn">from</span> <span class="nn">lib.configs</span> <span class="k">import</span> <span class="n">configs</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">unique</span><span class="p">,</span> <span class="n">auto</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+
+<span class="c1"># from lib.rl_policy import DQNAgent</span>
+<span class="n">driver_id</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="c1"># https://stackoverflow.com/a/57516323/2005352</span>
+<div class="viewcode-block" id="VehState"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.VehState">[docs]</a><span class="k">class</span> <span class="nc">VehState</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum describing the state of a vehicle, where</span>
+<span class="sd">    IDLE = waiting to be matched</span>
+<span class="sd">    REBAL = travelling, but without a passenger. Upon arrival, should wait to be matched</span>
+<span class="sd">    SERVING = currently saving demand. Should make a decision to move upon arrival at the req&#39;s destination</span>
+<span class="sd">    DECISION = should make a decision</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">IDLE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">REBAL</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">SERVING</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+    <span class="n">DECISION</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Veh"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh">[docs]</a><span class="k">class</span> <span class="nc">Veh</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class encapsulating a vehicle.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">rs</span><span class="p">,</span>
+            <span class="n">operator</span><span class="p">,</span>
+            <span class="n">beta</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">true_demand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">professional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">ini_loc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">know_fare</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">is_AV</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">dist_mat</span><span class="o">=</span><span class="n">DIST_MAT</span>
+
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a Vehicle object.</span>
+
+<span class="sd">        @param rs: # TODO: what is this</span>
+<span class="sd">        @param operator (Operator): object describing operator-specific details (e.g. Uber)</span>
+<span class="sd">        @param beta (float):</span>
+<span class="sd">        @param true_demand (bool): # TODO: what is this</span>
+<span class="sd">        @param professional (bool): whether the vehicle is professional</span>
+<span class="sd">        @param ini_loc (int): initial location (zone) of the driver</span>
+<span class="sd">        @param know_fare (bool): whether the driver knows the fare</span>
+<span class="sd">        @param is_AV (bool)</span>
+<span class="sd">        @param dist_mat:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">global</span> <span class="n">driver_id</span>
+        <span class="n">driver_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">driver_id</span>
+        <span class="c1"># self.just_started = True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span> <span class="o">=</span> <span class="n">is_AV</span>
+
+        <span class="c1"># self.idle = False </span>
+        <span class="c1"># self.serving = False</span>
+        <span class="c1">#  #  if True, decide which zone to go to next</span>
+        <span class="c1"># self.TIME_TO_MAKE_A_DECISION  = True </span>
+        <span class="c1"># self.rebalancing = False</span>
+        <span class="c1"># self.should_make_a_decision = False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">IDLE</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">true_demand</span> <span class="o">=</span> <span class="n">true_demand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">professional</span> <span class="o">=</span> <span class="n">professional</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">know_fare</span> <span class="o">=</span> <span class="n">know_fare</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rs</span> <span class="o">=</span> <span class="n">rs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DIST_MAT</span> <span class="o">=</span> <span class="n">dist_mat</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">operator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">req</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="k">if</span> <span class="n">ini_loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span> <span class="o">=</span> <span class="n">rs</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">ZONE_IDS</span><span class="p">)</span>
+            <span class="c1">#            self.ozone = 186</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">DECISION</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">IDLE_COST</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># should be based on the waiting time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rebl_cost</span> <span class="o">=</span> <span class="n">FUEL_COST</span>  <span class="c1"># should be based on dist to the destination zone</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">profits</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAX_IDLE</span> <span class="o">=</span> <span class="n">MAX_IDLE</span>  <span class="c1"># 15 minutes</span>
+
+        <span class="c1"># self.t_since_idle = None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_times_moved</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_of_times_overwaited</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tba</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_waited</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collected_fares</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collected_fare_per_zone</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># debugging </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_times_chose_zone</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># to store (state, action, reward) for each vehicle </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reqs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_served</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_hist</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_calc_matching_prob</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        If the driver is not professional, it will be matched.</span>
+<span class="sd">        @return: int if the car is not professional, else None. (currently just 1?)</span>
+<span class="sd">        TODO: this is not good design</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">professional</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Veh.get_data_from_operator"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.get_data_from_operator">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_data_from_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">true_demand</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param t: time</span>
+<span class="sd">        @param true_demand (bool)</span>
+<span class="sd">        @return: dataframe with zonal info for vehicle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">zonal_info_for_veh</span><span class="p">(</span><span class="n">true_demand</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_dist_to_all_zones</span><span class="p">(</span><span class="n">ozone</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param ozone (int): current zone</span>
+<span class="sd">        @return: df of distance to each zone</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">DIST_MAT</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;PULocationID==</span><span class="si">{o}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">o</span><span class="o">=</span><span class="n">ozone</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">dists</span>
+
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_dist_to_only_neighboring_zones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param ozone (int): current zone</span>
+<span class="sd">        @return: df of distances to neighboring zones</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># neighbors_list = self.get_neighboring_zone_ids()</span>
+        <span class="n">dists</span> <span class="o">=</span> <span class="n">DIST_MAT</span><span class="p">[(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;PULocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
+        <span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)))]</span>
+        <span class="c1"># dists = DIST_MAT.query(</span>
+        <span class="c1">#     &quot;PULocationID=={o} &amp; DOLocationID.isin({destinations})&quot;.format(</span>
+        <span class="c1">#         o=self.ozone, destinations=neighbors_list</span>
+        <span class="c1">#     )</span>
+        <span class="c1"># )</span>
+        <span class="k">return</span> <span class="n">dists</span>
+
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_time_to_destination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param ozone (int): original zone</span>
+<span class="sd">        @param dest (int): destination zone</span>
+<span class="sd">        @return: time to destination</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># dist = self._get_distance_to_destination(dest)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_to_destination</span><span class="p">(</span><span class="n">ozone</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span> <span class="o">/</span> <span class="n">CONSTANT_SPEED</span>
+        <span class="k">return</span> <span class="n">t</span>
+
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_get_distance_to_destination</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param ozone (int): original zone</span>
+<span class="sd">        @param dest (int): destination zone</span>
+<span class="sd">        @return: distance to destination</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># because of the Nans, etc.  just a hack</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span>
+                <span class="c1"># DIST_MAT.query(</span>
+                <span class="c1">#     &quot;PULocationID == {origin} &amp; DOLocationID == {destination} &quot;.format(</span>
+                <span class="c1">#         origin=self.ozone, destination=dest</span>
+                <span class="c1">#     )</span>
+                <span class="c1"># )[&quot;trip_distance_meter&quot;].values[0]</span>
+                <span class="n">DIST_MAT</span><span class="p">[(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;PULocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">ozone</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">dest</span><span class="p">)][</span>
+                    <span class="s2">&quot;trip_distance_meter&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="mi">1000</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;Couldnt find the distance btw </span><span class="si">{o}</span><span class="s2"> and </span><span class="si">{d}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">o</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="n">d</span><span class="o">=</span><span class="n">dest</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dist</span>
+
+<div class="viewcode-block" id="Veh.set_prior_info"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.set_prior_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_prior_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets prior demand/fare info.</span>
+<span class="sd">        @param t: time</span>
+<span class="sd">        @return (df): prior</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">professional</span><span class="p">:</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">expected_fare_totaldemand_per_zone_over_days</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">prior</span></div>
+
+<div class="viewcode-block" id="Veh.cal_profit_per_zone_per_app"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.cal_profit_per_zone_per_app">[docs]</a>    <span class="k">def</span> <span class="nf">cal_profit_per_zone_per_app</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param t: time of day</span>
+<span class="sd">        @return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#        df = self.get_data_from_operator(t)</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Veh.waited_too_long"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.waited_too_long">[docs]</a>    <span class="k">def</span> <span class="nf">waited_too_long</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes sure it&#39;s not idle nor rebalancing, then if it has been idle for too long returns True</span>
+<span class="sd">        @return: (bool)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">IDLE</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_IDLE</span></div>
+        <span class="c1"># return self.idle and not self.rebalancing and self.time_idled &gt; self.MAX_IDLE</span>
+
+<div class="viewcode-block" id="Veh.update_rebalancing"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.update_rebalancing">[docs]</a>    <span class="k">def</span> <span class="nf">update_rebalancing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates when the vehicle state is rebalancing.</span>
+
+<span class="sd">        @param WARMUP_PHASE (bool)</span>
+<span class="sd">        @return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">REBAL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">-=</span> <span class="n">INT_ASSIGN</span>  <span class="c1"># delta t, this is a hack</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">IDLE</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">WARMUP_PHASE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_times_moved</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Veh.keep_waiting"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.keep_waiting">[docs]</a>    <span class="k">def</span> <span class="nf">keep_waiting</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the waiting time of a vehicle.</span>
+<span class="sd">        @return: None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">+=</span> <span class="n">INT_ASSIGN</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_waited</span> <span class="o">+=</span> <span class="n">INT_ASSIGN</span></div>
+
+<div class="viewcode-block" id="Veh.keep_serving"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.keep_serving">[docs]</a>    <span class="k">def</span> <span class="nf">keep_serving</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        # TODO: what&#39;s going on here?</span>
+<span class="sd">        @return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">-=</span> <span class="n">INT_ASSIGN</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">SERVING</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">DECISION</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+                <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waited_too_long</span><span class="p">())</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">))</span>
+                    <span class="nb">print</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">fare</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">])</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time_to_be_available&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;total_served&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_served</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;self.is_busy&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_busy</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ozone&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;locations&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;self.state_hist&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_hist</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;veh id &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;veh.p&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="ne">AssertionError</span></div>
+
+<div class="viewcode-block" id="Veh.get_neighboring_zone_ids"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.get_neighboring_zone_ids">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">get_neighboring_zone_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param ozone (int): pickup zone</span>
+<span class="sd">        @return: a list of ids (ints) of the neighboring zones</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">neighbors_list</span> <span class="o">=</span> <span class="n">zones_neighbors</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">ozone</span><span class="p">)]</span>
+        <span class="n">neighbors_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">neighbors_list</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_busy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># try:</span>
+        <span class="c1">#     assert self.serving == (not self.idle and not self.rebalancing )</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">SERVING</span>
+
+<div class="viewcode-block" id="Veh.set_action"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.set_action">[docs]</a>    <span class="k">def</span> <span class="nf">set_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the RL agent to decide on the target.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span>
+        <span class="k">assert</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">action</span><span class="p">)</span></div>
+        <span class="c1"># print(&quot;action is&quot;, action)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_waiting_to_be_matched</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: (bool)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">IDLE</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_IDLE</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+            <span class="c1"># if self.idle and not self.rebalancing and self.time_idled &lt;= self.MAX_IDLE :</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_rebalancing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: (bool)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># True if self._state == VehState.REBAL else False </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">REBAL</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Veh.should_move"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.should_move">[docs]</a>    <span class="k">def</span> <span class="nf">should_move</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @return: bool, true if just started or has been idle for too long</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">waited_too_long</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">DECISION</span></div>
+
+<div class="viewcode-block" id="Veh.act"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.act">[docs]</a>    <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">Zones</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        1. just started or has been idle for too long -&gt; choose zone </span>
+<span class="sd">        2. if it&#39;s rebalancing (i.e., on the way to the target zone) -&gt; check whether or not it has gotten there </span>
+<span class="sd">        3. if it&#39;s idle, but the waiting time has not yet exceeded the threshold -&gt;  keep waiting </span>
+<span class="sd">        4. if it&#39;s currently serving a demand -&gt; update status </span>
+<span class="sd">        5. idling is also an option </span>
+<span class="sd">        action is the INDEX of the zone, needs to be converted to the actual zone_id </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">_make_a_decision</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+
+            <span class="c1"># first, get out of the current zone&#39;s queue</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zone</span><span class="o">.</span><span class="n">remove_veh_from_waiting_list</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="c1"># then choose the destination</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                <span class="n">target_zone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">choose_target_zone</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                <span class="c1"># assert self.action is not None</span>
+                <span class="n">target_zone</span> <span class="o">=</span> <span class="n">Zones</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">action</span><span class="p">]</span><span class="o">.</span><span class="n">id</span>
+
+                <span class="c1"># print(&quot;action&quot;, self.action)</span>
+                <span class="c1"># print(&quot;target zone id&quot;, target_zone)</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">Zones</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_zone</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">REBAL</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">state_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+                    <span class="c1"># self.rebalancing = True</span>
+                    <span class="c1"># self.idle = False</span>
+                    <span class="c1"># self.TIME_TO_MAKE_A_DECISION  = False </span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_time_to_destination</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="n">target_zone</span>
+                    <span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tba</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span><span class="p">)</span>
+                    <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_to_destination</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="n">target_zone</span><span class="p">)</span>
+                    <span class="n">z</span><span class="o">.</span><span class="n">join_incoming_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">z</span>
+
+                    <span class="k">break</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">target_zone</span>
+            <span class="p">)</span>  <span class="c1"># debugging for now (so what is this comment? should I delete this line? WTF is this doing?)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">WARMUP_PHASE</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">+=</span> <span class="n">dist</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">number_of_times_moved</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+
+            <span class="c1"># self.time_idled = 0</span>
+
+
+            <span class="k">return</span> <span class="n">target_zone</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">should_move</span><span class="p">():</span>
+            <span class="n">_</span> <span class="o">=</span> <span class="n">_make_a_decision</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="c1"># self.update_rebalancing(WARMUP_PHASE)</span>
+            <span class="c1"># return </span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_busy</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keep_serving</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_waiting_to_be_matched</span><span class="p">:</span>
+            <span class="c1"># it&#39;s sitting somewhere</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">keep_waiting</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_rebalancing</span><span class="p">:</span>  <span class="c1"># and not self.busy:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_rebalancing</span><span class="p">(</span><span class="n">WARMUP_PHASE</span><span class="p">)</span>
+            <span class="k">return</span></div>
+
+
+
+            <span class="c1"># for debugging</span>
+            <span class="c1"># path_to_write = configs[&#39;output_path&#39;]</span>
+            <span class="c1"># filepath = path_to_write +&#39;driver &#39; + str(self.id)+ &#39;.csv&#39;</span>
+            <span class="c1"># writer=csv.writer(open(filepath,&#39;a&#39;))</span>
+            <span class="c1"># writer.writerow([self.ozone, self.time_to_be_available, self.rebalancing, self.idle, self.is_busy()])</span>
+
+<div class="viewcode-block" id="Veh.match_w_req"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.match_w_req">[docs]</a>    <span class="k">def</span> <span class="nf">match_w_req</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">Zones</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Matches with request if possible and returns an indicator whether the vehicle is matched.</span>
+<span class="sd">        </span>
+<span class="sd">        @param req: (Request)</span>
+<span class="sd">        @param Zones: list of zones (ints)</span>
+<span class="sd">        @param WARMUP_PHASE: bool</span>
+<span class="sd">        @return: bool (matched or not)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># try:</span>
+        <span class="c1">#     assert self._state == VehState.IDLE</span>
+        <span class="c1"># except:</span>
+        <span class="c1">#     print(self.is_AV)</span>
+        <span class="c1">#     print(self._state)</span>
+        <span class="c1">#     print(self.time_to_be_available)</span>
+        <span class="c1">#     raise AssertionError </span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">==</span> <span class="n">VehState</span><span class="o">.</span><span class="n">IDLE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">dzone</span>
+        <span class="n">matched</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">Zones</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">dest</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="n">VehState</span><span class="o">.</span><span class="n">SERVING</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_hist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_time_to_destination</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_distance_to_destination</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span> <span class="o">=</span> <span class="n">dest</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">zone</span> <span class="o">=</span> <span class="n">z</span>
+
+                <span class="n">matched</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="c1"># don&#39;t match incoming, rather join the undecided list. </span>
+                <span class="c1"># actually, don&#39;t join any list because in the next step, &quot;act&quot; will take care of it</span>
+                <span class="c1"># z.join_incoming_vehicles(self)</span>
+                <span class="c1"># z.join_undecided_vehicles(self)</span>
+                <span class="c1">#</span>
+                <span class="c1"># if not WARMUP_PHASE:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">professional</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">collected_fares</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">PHI</span><span class="p">)</span> <span class="o">*</span> <span class="n">req</span><span class="o">.</span><span class="n">fare</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">revenues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PHI</span> <span class="o">*</span> <span class="n">req</span><span class="o">.</span><span class="n">fare</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">collected_fare_per_zone</span><span class="p">[</span><span class="n">req</span><span class="o">.</span><span class="n">ozone</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">PHI</span><span class="p">)</span> <span class="o">*</span> <span class="n">req</span><span class="o">.</span><span class="n">fare</span>
+
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">professional</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">collected_fares</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">fare</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">revenues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">fare</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">collected_fare_per_zone</span><span class="p">[</span><span class="n">req</span><span class="o">.</span><span class="n">ozone</span><span class="p">]</span> <span class="o">+=</span> <span class="n">req</span><span class="o">.</span><span class="n">fare</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distance_travelled</span> <span class="o">+=</span> <span class="n">dist</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">profits</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">req</span><span class="o">.</span><span class="n">fare</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                    <span class="c1"># print(&quot;thre fare was&quot;, req.fare)</span>
+                    <span class="c1"># print(&quot;proftis are &quot;, self.profits)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">total_served</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+                    <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waited_too_long</span><span class="p">())</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">fare</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_served</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">AssertionError</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">fare</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>  <span class="c1"># doesn&#39;t account for rebl cost yet</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+                    <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waited_too_long</span><span class="p">())</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_idled</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info_for_rl_agent</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">fare</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">reqs</span><span class="p">])</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_to_be_available</span><span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">total_served</span><span class="p">)</span>
+                        <span class="k">raise</span> <span class="ne">AssertionError</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">req</span> <span class="o">=</span> <span class="n">req</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">matched</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;zone </span><span class="si">{}</span><span class="s2"> does not exist &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+        <span class="c1"># why and when would it return False?</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_compute_attractiveness_of_zones</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">ozone</span><span class="p">,</span> <span class="n">true_demand</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        @param t: time</span>
+<span class="sd">        @param ozone: (int) current zone</span>
+<span class="sd">        @param true_demand: (bool)</span>
+<span class="sd">        @return: (df) attractiveness to all zones and (df) probability to go to each zone</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dist_to_all_zones</span><span class="p">(</span><span class="n">ozone</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_from_operator</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">true_demand</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;Origin&quot;</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+        <span class="c1"># a = pd.merge(df.set_index(&#39;Origin&#39;), dist.set_index(&#39;DOLocationID&#39;),  how=&quot;left&quot;, </span>
+        <span class="c1"># left_index=True, right_index=True)</span>
+
+        <span class="n">neighbors_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">neighbors_list</span><span class="p">)]</span>
+        <span class="c1"># a = a[a.index.isin(neighbors_list)] </span>
+
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;corner case: take zone 127. there and no demand is left, df and therefore a will be empty. &quot;</span>
+                <span class="s2">&quot;in this situation, it should just move to one of its neighbors&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ozone&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;destination&quot;</span><span class="p">,</span> <span class="n">neighbors_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">neighbors_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">know_fare</span>
+        <span class="p">):</span>  <span class="c1"># they don&#39;t know the average fare for an area, they use one for all</span>
+            <span class="n">fare_to_to_use</span> <span class="o">=</span> <span class="n">CONST_FARE</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fare_to_to_use</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">avg_fare</span>
+            <span class="c1"># a.avg_fare = CONST_FARE</span>
+            <span class="c1"># TODO : round up the fare</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">professional</span><span class="p">:</span>
+            <span class="c1"># if not professional, you don&#39;t consider supply in your decision making</span>
+            <span class="n">match_prob</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">match_prob</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">prob_of_s</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;that was df&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;that was a&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">professional</span><span class="p">)</span>
+
+        <span class="c1"># a[&quot;relative_demand&quot;] = a[&quot;total_pickup&quot;] / a[&quot;total_pickup&quot;].sum()</span>
+
+        <span class="n">expected_revenue</span> <span class="o">=</span> <span class="p">(</span>
+                               <span class="mi">1</span> <span class="o">-</span> <span class="n">PHI</span>
+                           <span class="p">)</span> <span class="o">*</span> <span class="n">fare_to_to_use</span> <span class="o">*</span> <span class="n">a</span><span class="o">.</span><span class="n">surge</span> <span class="o">*</span> <span class="n">match_prob</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="n">bonus</span>
+        <span class="n">expected_cost</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">trip_distance_meter</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebl_cost</span>
+        <span class="p">)</span>  <span class="c1"># doesn&#39;t take into account the distance travelled once the demand is picked up</span>
+
+        <span class="c1"># a[&quot;expected_cost&quot;] = expected_cost</span>
+        <span class="c1"># a[&quot;numerator&quot;] = (expected_revenue - expected_cost) * a[&quot;total_pickup&quot;]</span>
+        <span class="c1"># a[&quot;expected_revenue&quot;] = expected_revenue</span>
+        <span class="c1"># a[&quot;expected_profit&quot;] = expected_revenue - expected_cost</span>
+        <span class="n">prof</span> <span class="o">=</span> <span class="p">(((</span><span class="n">expected_revenue</span> <span class="o">-</span> <span class="n">expected_cost</span><span class="p">)</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;total_pickup&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+        <span class="c1"># http://cs231n.github.io/linear-classify/#softmax</span>
+        <span class="c1"># for numerical stability</span>
+        <span class="c1"># a[&#39;prof&#39;] -= np.max(a[&#39;prof&#39;])</span>
+        <span class="c1"># a[&#39;prob&#39;] = np.exp(a[&#39;prof&#39;])/np.sum(np.exp(a[&#39;prof&#39;]))</span>
+
+        <span class="c1"># so that probability doesn&#39;t end up being negative</span>
+        <span class="c1"># a[&quot;prob&quot;] = a[&quot;prof&quot;] / a[&quot;prof&quot;].sum()</span>
+        <span class="n">prob</span> <span class="o">=</span> <span class="n">prof</span> <span class="o">/</span> <span class="n">prof</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="Veh.choose_target_zone"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.choose_target_zone">[docs]</a>    <span class="k">def</span> <span class="nf">choose_target_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This has to be based on the information communicated by the app, as well as the prior experience</span>
+<span class="sd">        It should have the option of not moving. Maybe include that in the neighbors list</span>
+<span class="sd">        @param t: time of day</span>
+<span class="sd">        @return</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># debugging.</span>
+        <span class="c1"># self._times_chose_zone.append([t, self.idle, self.rebalancing, self.is_busy(), self.should_move(), self.time_to_be_available, self.waited_too_long() ])</span>
+
+        <span class="c1"># dist = self._get_dist_to_all_zones(self.ozone)</span>
+        <span class="c1"># df = self.get_data_from_operator(t, self.true_demand)</span>
+        <span class="c1"># a = pd.merge(df, dist, left_on=&quot;Origin&quot;, right_on=&quot;DOLocationID&quot;, how=&quot;left&quot;)</span>
+
+        <span class="c1"># neighbors_list = self.get_neighboring_zone_ids(self.ozone)</span>
+        <span class="c1"># # assert len(neighbors_list) &gt; 0</span>
+        <span class="c1"># # so that it can only choose from its neighboring zones</span>
+        <span class="c1"># # TODO : this line bumped the running time of the code from 5 to 63 minutes!</span>
+        <span class="c1"># # a = b[b[&quot;Origin&quot;].isin(neighbors_list)]</span>
+        <span class="c1"># a = a[a[&quot;Origin&quot;].isin(neighbors_list)]</span>
+
+        <span class="c1"># # corner case: take zone 127. When a taxi is there and no demand is left, df and therefore a will be empty.</span>
+        <span class="c1"># # in this situation, it should just move to one of its neighbors</span>
+        <span class="c1"># if a.empty:</span>
+        <span class="c1">#     print(</span>
+        <span class="c1">#         &quot;corner case: take zone 127. there and no demand is left, df and therefore a will be empty. in this situation, it should just move to one of its neighbors&quot;</span>
+        <span class="c1">#     )</span>
+        <span class="c1">#     print(&quot;ozone&quot;, self.ozone)</span>
+        <span class="c1">#     print(&quot;destination&quot;, neighbors_list[0])</span>
+        <span class="c1">#     return neighbors_list[0]</span>
+
+        <span class="c1"># # TODO: this should be a very interesting pandas question. In the above, if I use</span>
+        <span class="c1"># # b = pd.merge(df, dist, left_on=&#39;Origin&#39;, right_on=&#39;DOLocationID&#39;, how=&#39;left&#39;)</span>
+        <span class="c1"># # a = b[b[&quot;Origin&quot;].isin(neighbors_list)]</span>
+        <span class="c1"># # it will take 63 minutes!!!</span>
+        <span class="c1"># # if it&#39;s just a all along, it&#39;s 14 minutes.</span>
+        <span class="c1"># # none of this (i.e. isin(list)) and it&#39;s 5 minutes. OMG!</span>
+        <span class="c1"># # After investigating this more, it seems that the most problematic one was indeed reassignment, i.e. a = b[b[&quot;Origin&quot;].isin(neighbors_list)]</span>
+        <span class="c1"># # but I have no idea why</span>
+
+
+
+        <span class="c1"># if (</span>
+        <span class="c1">#     not self.know_fare</span>
+        <span class="c1"># ):  # they don&#39;t know the average fare for an area, they use one for all</span>
+        <span class="c1">#     # print(&quot;They don&#39;t know the fare&quot;)</span>
+        <span class="c1">#     a.avg_fare = CONST_FARE</span>
+        <span class="c1">#     # TODO : round up the fare</span>
+
+        <span class="c1"># if not self.professional:</span>
+        <span class="c1">#     # if not professional, you don&#39;t consider supply in your decision making</span>
+        <span class="c1">#     match_prob = 1</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     try:</span>
+        <span class="c1">#         match_prob = a.prob_of_s</span>
+        <span class="c1">#     except:</span>
+        <span class="c1">#         print(df)</span>
+        <span class="c1">#         print(&quot;that was df&quot;)</span>
+        <span class="c1">#         print(a)</span>
+        <span class="c1">#         print(&quot;that was a&quot;)</span>
+        <span class="c1">#         print(self.professional)</span>
+
+        <span class="c1"># a[&quot;relative_demand&quot;] = a[&quot;total_pickup&quot;] / a[&quot;total_pickup&quot;].sum()</span>
+        <span class="c1"># expected_revenue = (</span>
+        <span class="c1">#     1 - PHI</span>
+        <span class="c1"># ) * a.avg_fare * a.surge * match_prob * self.beta + a.bonus</span>
+        <span class="c1"># expected_cost = (</span>
+        <span class="c1">#     a.trip_distance_meter * self.rebl_cost</span>
+        <span class="c1"># )  # doesn&#39;t take into account the distance travelled once the demand is picked up</span>
+
+        <span class="c1"># a[&quot;expected_cost&quot;] = expected_cost</span>
+        <span class="c1"># a[&quot;numerator&quot;] = (expected_revenue - expected_cost) * a[&quot;total_pickup&quot;]</span>
+        <span class="c1"># a[&quot;expected_revenue&quot;] = expected_revenue</span>
+        <span class="c1"># a[&quot;expected_profit&quot;] = expected_revenue - expected_cost</span>
+        <span class="c1"># a[&quot;prof&quot;] = (expected_revenue - expected_cost) * a[&quot;total_pickup&quot;]</span>
+        <span class="c1"># a[&quot;prof&quot;] = a[&quot;prof&quot;].clip(lower=0)</span>
+
+        <span class="c1"># # http://cs231n.github.io/linear-classify/#softmax</span>
+        <span class="c1"># # for numerical stability</span>
+        <span class="c1"># # a[&#39;prof&#39;] -= np.max(a[&#39;prof&#39;])</span>
+        <span class="c1"># # a[&#39;prob&#39;] = np.exp(a[&#39;prof&#39;])/np.sum(np.exp(a[&#39;prof&#39;]))</span>
+
+        <span class="c1"># # so that probability doesn&#39;t end up being negative</span>
+
+        <span class="c1"># a[&quot;prob&quot;] = a[&quot;prof&quot;] / a[&quot;prof&quot;].sum()</span>
+
+        <span class="c1"># path_to_write = configs[&#39;output_path&#39;]</span>
+        <span class="c1"># with open(path_to_write +&#39;driver &#39; + str(self.id)+ &#39;.csv&#39;, &#39;a&#39;) as f:</span>
+        <span class="c1">#     a.to_csv(f, header = True, mode=&#39;a&#39;, index = False)</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">prob</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_attractiveness_of_zones</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">true_demand</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">selected</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">prob</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># if self.waited_too_long():</span>
+            <span class="c1">#     cc = 0</span>
+            <span class="c1">#     while selected[&#39;DOLocationID&#39;].values[0] == self.zone:</span>
+            <span class="c1">#         cc += 1</span>
+            <span class="c1">#         selected = a.sample(n=1, weights=&#39;prob&#39;, replace=True)</span>
+            <span class="c1">#         if cc == 1000:</span>
+            <span class="c1">#             print (&#39;did 1000 iterations, still chose the same zone&#39;, self.z)</span>
+            <span class="c1">#             break</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ozone&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;selected was empty, here is a </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">selected</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="c1"># return selected.index.values[0]</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_fare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">surge</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        From Yellow Cab taxi webpage</span>
+<span class="sd">        @param request (Request)</span>
+<span class="sd">        @param surge (float): surge multiplier</span>
+<span class="sd">        @return: (float) fare</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">distance_meters</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">dist</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="mf">2.5</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">1609</span> <span class="o">*</span> <span class="n">distance_meters</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">surge</span> <span class="o">*</span> <span class="n">p2</span>
+        <span class="k">return</span> <span class="n">f</span></div>
+
+        <span class="c1"># @lru_cache(maxsize=None)</span>
+        <span class="c1"># def _calc_rebl_cost(self, dist):</span>
+        <span class="c1">#     &quot;&quot;&quot;</span>
+        <span class="c1">#     This should be based on the value of time and time it took to get to the destination</span>
+
+        <span class="c1">#     &quot;&quot;&quot;</span>
+        <span class="c1">#     # dist = veh._get_dist_to_all_zones(veh.ozone)[[&quot;DOLocationID&quot;, &quot;trip_distance_meter&quot;]]</span>
+        <span class="c1">#     # this is the costliest operation!</span>
+        <span class="c1">#     dist[&quot;costs&quot;] = dist.trip_distance_meter * self.rebl_cost</span>
+        <span class="c1">#     dist[&quot;costs&quot;] = dist[&quot;costs&quot;].apply(lambda x: np.around(x, 1))</span>
+
+        <span class="c1">#     return dist</span>
+
+        <span class="c1"># def realized_trip_profit(self, request, surge=1, driver_bonus=0):</span>
+        <span class="c1">#     assert isinstance(request, Req)</span>
+        <span class="c1">#     fare = self._calculate_fare(request, surge)</span>
+        <span class="c1">#     rebl_cost = self._calc_rebl_cost(request)</span>
+        <span class="c1">#     profit = (1 - PHI) * fare + driver_bonus - rebl_cost - self.IDLE_COST</span>
+        <span class="c1">#     return profit</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../lib/trial.html">All about me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lib.html">lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lib</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,258 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib.Env_aggregate_step_func &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.Env_aggregate_step_func</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">gym</span>
+<span class="kn">from</span> <span class="nn">gym</span> <span class="k">import</span> <span class="n">spaces</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">lib.utils</span> <span class="k">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ZONE_IDS</span><span class="p">,</span>
+    <span class="n">DEMAND_SOURCE</span><span class="p">,</span>
+    <span class="n">INT_ASSIGN</span><span class="p">,</span>
+    <span class="n">FLEET_SIZE</span><span class="p">,</span>
+    <span class="n">PRO_SHARE</span><span class="p">,</span>
+    <span class="n">SURGE_MULTIPLIER</span><span class="p">,</span>
+    <span class="n">BONUS</span><span class="p">,</span>
+    <span class="n">PERCENT_FALSE_DEMAND</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">T_TOTAL_SECONDS</span><span class="p">,</span>
+    <span class="n">WARMUP_TIME_SECONDS</span><span class="p">,</span>
+    <span class="n">ANALYSIS_TIME_SECONDS</span><span class="p">,</span>
+    <span class="n">ANALYSIS_TIME_HOUR</span><span class="p">,</span>
+    <span class="n">WARMUP_TIME_HOUR</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="n">PERCE_KNOW</span><span class="p">,</span> <span class="n">INT_REBL</span>
+
+<span class="n">output_path</span> <span class="o">=</span> <span class="s2">&quot;./Outputs/&quot;</span>
+
+
+<div class="viewcode-block" id="RebalancingEnv"><a class="viewcode-back" href="../../lib.html#lib.Env_aggregate_step_func.RebalancingEnv">[docs]</a><span class="k">class</span> <span class="nc">RebalancingEnv</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    RebalancingEnv is the environment class for DQN</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        model: AMoD system to train</span>
+<span class="sd">        dT: time interval for training</span>
+<span class="sd">        penalty: penalty of rebalancing a vehicle</span>
+<span class="sd">        action_space: action space</span>
+<span class="sd">        state: the system state. It&#39;s (ui, vi, cik) for every zone, where cik is the cost of going to i. e.g., 67 zones -&gt; 67  * 3.</span>
+<span class="sd">        center: the centroid of cells</span>
+<span class="sd">        input_dim: input dimension</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">gym</span><span class="o">.</span><span class="n">Env</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;INSIDE INIT FUNCTION&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;av_share&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span>
+            <span class="n">ZONE_IDS</span><span class="p">,</span>
+            <span class="n">DEMAND_SOURCE</span><span class="p">,</span>
+            <span class="n">WARMUP_TIME_HOUR</span><span class="p">,</span>
+            <span class="n">ANALYSIS_TIME_HOUR</span><span class="p">,</span>
+            <span class="n">FLEET_SIZE</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;fleet_size&quot;</span><span class="p">],</span>
+            <span class="n">PRO_SHARE</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;pro_s&quot;</span><span class="p">],</span>
+            <span class="n">SURGE_MULTIPLIER</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;surge&quot;</span><span class="p">],</span>
+            <span class="n">bonus</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;bonus&quot;</span><span class="p">],</span>
+            <span class="n">percent_false_demand</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;percent_false_demand&quot;</span><span class="p">],</span>
+            <span class="n">percentage_know_fare</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;perc_k&quot;</span><span class="p">],</span>
+            <span class="n">AV_share</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;av_share&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dT</span> <span class="o">=</span> <span class="n">INT_REBL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">action_space</span> <span class="o">=</span> <span class="n">spaces</span><span class="o">.</span><span class="n">Discrete</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ZONE_IDS</span><span class="p">))</span>
+        <span class="c1"># why not define an observation space?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ZONE_IDS</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observation_space</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">ZONE_IDS</span><span class="p">),</span> <span class="mi">3</span><span class="p">))</span>
+
+        <span class="c1"># self.center = np.zeros((Mlng, Mlat, 2))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">ZONE_IDS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epi_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">WARMUP_TIME_SECONDS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_income</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="RebalancingEnv.step"><a class="viewcode-back" href="../../lib.html#lib.Env_aggregate_step_func.RebalancingEnv.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">actions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        actions: a vector of length N_AV, which contains the target zone for idle veh, </span>
+<span class="sd">        and inaction for busy ones</span>
+<span class="sd">        impelements action, returns new state, reward. </span>
+<span class="sd">        Currently the DQN is inside the model.dispatch_at_time function </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># print(&quot;Inside Step&quot;)</span>
+        <span class="c1"># print(&quot;Step count: &quot;, self.step_count)</span>
+        <span class="c1"># print(&quot;T: &quot;, self.T)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">veh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">av_vehs</span><span class="p">]):</span>
+            <span class="c1"># if the veh has to move, then move it</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="n">veh</span><span class="o">.</span><span class="n">set_action</span><span class="p">(</span><span class="n">actions</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="c1"># move the world forward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">dispatch_at_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">+</span> <span class="n">INT_ASSIGN</span>
+        <span class="c1"># print(&quot;end T: &quot;, self.T)</span>
+
+        <span class="n">state_n</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">veh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">av_vehs</span><span class="p">]):</span>
+            <span class="n">state_n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="n">veh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+
+        <span class="c1"># total_new_income = np.sum(veh.profits) - self.old_income</span>
+        <span class="c1"># self.old_income = np.sum(veh.profits)</span>
+        <span class="c1"># # normalize the reward.</span>
+        <span class="c1"># # from previous runs, avg revenue is 35 with std of 5</span>
+        <span class="c1"># # (base on Nuts and bolts of DRL)</span>
+        <span class="c1"># normalized_income = (total_new_income ) #/10</span>
+        <span class="c1"># reward = normalized_income</span>
+        <span class="c1"># print(&quot;reward&quot;)</span>
+        <span class="c1"># print(reward)</span>
+        <span class="c1"># total_new_income = np.sum(model.operator.revenues) - self.old_income</span>
+        <span class="c1"># self.old_income = np.sum(model.operator.revenues)</span>
+        <span class="c1"># reward += total_new_income</span>
+        <span class="c1"># report = self.model.get_service_rate_per_zone()</span>
+        <span class="c1"># system_LOS = report.served.sum()/report.total.sum()</span>
+        <span class="c1"># reward += system_LOS</span>
+        <span class="c1"># self.T = self.T+INT_ASSIGN</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;T_TOTAL_SECONDS&quot;</span><span class="p">,</span> <span class="n">T_TOTAL_SECONDS</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;self.T&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">&gt;=</span> <span class="n">T_TOTAL_SECONDS</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Episode is done!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">state_n</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="RebalancingEnv.reset"><a class="viewcode-back" href="../../lib.html#lib.Env_aggregate_step_func.RebalancingEnv.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Calling the reset method! &quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span>
+            <span class="n">ZONE_IDS</span><span class="p">,</span>
+            <span class="n">DEMAND_SOURCE</span><span class="p">,</span>
+            <span class="n">WARMUP_TIME_HOUR</span><span class="p">,</span>
+            <span class="n">ANALYSIS_TIME_HOUR</span><span class="p">,</span>
+            <span class="n">FLEET_SIZE</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;fleet_size&quot;</span><span class="p">],</span>
+            <span class="n">PRO_SHARE</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;pro_s&quot;</span><span class="p">],</span>
+            <span class="n">SURGE_MULTIPLIER</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;surge&quot;</span><span class="p">],</span>
+            <span class="n">bonus</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;bonus&quot;</span><span class="p">],</span>
+            <span class="n">percent_false_demand</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;percent_false_demand&quot;</span><span class="p">],</span>
+            <span class="n">percentage_know_fare</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;perc_k&quot;</span><span class="p">],</span>
+            <span class="n">AV_share</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;av_share&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_reward</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">WARMUP_TIME_SECONDS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_income</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">state_n</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">veh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">av_vehs</span><span class="p">]):</span>
+            <span class="n">state_n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="n">veh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">state_n</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../lib/trial.html">All about me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lib.html">lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lib</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

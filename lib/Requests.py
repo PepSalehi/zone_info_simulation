@@ -19,6 +19,16 @@ class Req:
     """
 
     def __init__(self, id, Tr, fare, ozone=4, dzone=12, DIST_MAT=DIST_MAT):
+        """
+        Creates a request instance.
+
+        @param id: (int) sequential unique id
+        @param Tr: (int) req time
+        @param fare: (float)
+        @param ozone: (int) origin zone
+        @param dzone: (int) destination zone
+        @param DIST_MAT: deprecated
+        """
         self.id = id
         self.Tr = Tr
         self.ozone = ozone
@@ -37,6 +47,10 @@ class Req:
 
     # @profile
     def _get_distance_time(self):
+        """
+        Gets the distance and time in the request.
+        @return: tuple (distance, time)
+        """
         try:
             Ds = np.ceil(
                 # self.DIST_MAT.query(
@@ -47,20 +61,22 @@ class Req:
                 DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)][
                     "trip_distance_meter"].values[0]
             )
-
-
         except:
             Ds = 10 * 1609  # meter
             print("didn't find the distance")
         Ts = np.int(Ds / CONSTANT_SPEED)
-        return (Ds, Ts)
+        return Ds, Ts
 
-    # return origin
     def get_origin(self):
+        """
+        @return: (int) the origin zone id
+        """
         return self.ozone
 
-    # return destination
     def get_destination(self):
+        """
+        @return: (int) the destination zone id
+        """
         return self.dzone
 
     # visualize
@@ -78,6 +94,10 @@ class Req:
     #     )
 
     def __str__(self):
+        """
+        Defines string representation of a request.
+        @return: (str) "req [id] from [origin zone] to [dest. zone] at [time]"
+        """
         str = "req %d from (%.7f) to (%.7f) at t = %.3f" % (
             self.id,
             self.ozone,

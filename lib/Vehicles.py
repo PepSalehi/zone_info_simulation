@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import csv
 from collections import defaultdict
 from lib.Constants import (
     ZONE_IDS,
@@ -23,9 +22,15 @@ import pickle
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
-
 # https://stackoverflow.com/a/57516323/2005352
 class VehState(Enum):
+    """
+    Enum describing the state of a vehicle, where
+    IDLE = waiting to be matched
+    REBAL = travelling, but without a passenger. Upon arrival, should wait to be matched
+    SERVING = currently saving demand. Should make a decision to move upon arrival at the req's destination
+    DECISION = should make a decision
+    """
     IDLE = auto()
     REBAL = auto()
     SERVING = auto()
@@ -34,11 +39,7 @@ class VehState(Enum):
 
 class Veh:
     """
-    A vehicle can have 4 states
-    1. idle -> waiting to be matched 
-    2. rebalacning -> travelling, but without a passenger. Upon arrival, should wait to be matched 
-    3. serving -> currently saving demand. Should make a decision to move upon arrival at the req's destination
-    4. should_make_a_decision
+    Class encapsulating a vehicle.
     """
 
     def __init__(
@@ -51,9 +52,22 @@ class Veh:
             ini_loc=None,
             know_fare=False,
             is_AV=False,
-            DIST_MAT=DIST_MAT
+            dist_mat=DIST_MAT
 
     ):
+        """
+        Creates a Vehicle object.
+
+        @param rs: # TODO: what is this
+        @param operator (Operator): object describing operator-specific details (e.g. Uber)
+        @param beta (float):
+        @param true_demand (bool): # TODO: what is this
+        @param professional (bool): whether the vehicle is professional
+        @param ini_loc (int): initial location (zone) of the driver
+        @param know_fare (bool): whether the driver knows the fare
+        @param is_AV (bool)
+        @param dist_mat:
+        """
         global driver_id
         driver_id += 1
         self.id = driver_id
@@ -73,7 +87,7 @@ class Veh:
         self.professional = professional
         self.know_fare = know_fare
         self.rs = rs
-        # self.DIST_MAT = DIST_MAT
+        self.DIST_MAT = dist_mat
         self.operator = operator
         self.locations = []
         self.req = None
@@ -111,23 +125,41 @@ class Veh:
         self.state_hist = []
 
     def _calc_matching_prob(self):
+        """
+        If the driver is not professional, it will be matched.
+        @return: int if the car is not professional, else None. (currently just 1?)
+        TODO: this is not good design
+        """
         if not self.professional:
             return 1
 
     @lru_cache(maxsize=None)
     def get_data_from_operator(self, t, true_demand):
+        """
+        @param t: time
+        @param true_demand (bool)
+        @return: dataframe with zonal info for vehicle
+        """
         df = self.operator.zonal_info_for_veh(true_demand)
         return df
 
     @staticmethod
     @lru_cache(maxsize=None)
     def _get_dist_to_all_zones(ozone):
+        """
+        @param ozone (int): current zone
+        @return: df of distance to each zone
+        """
         dists = DIST_MAT.query("PULocationID=={o}".format(o=ozone))
 
         return dists
 
     @lru_cache(maxsize=None)
     def _get_dist_to_only_neighboring_zones(self, ozone):
+        """
+        @param ozone (int): current zone
+        @return: df of distances to neighboring zones
+        """
         # neighbors_list = self.get_neighboring_zone_ids()
         dists = DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (
         DIST_MAT["DOLocationID"].isin(self.get_neighboring_zone_ids(ozone)))]
@@ -140,12 +172,22 @@ class Veh:
 
     @lru_cache(maxsize=None)
     def _get_time_to_destination(self, ozone, dest):
+        """
+        @param ozone (int): original zone
+        @param dest (int): destination zone
+        @return: time to destination
+        """
         # dist = self._get_distance_to_destination(dest)
         t = self._get_distance_to_destination(ozone, dest) / CONSTANT_SPEED
         return t
 
     @lru_cache(maxsize=None)
     def _get_distance_to_destination(self, ozone, dest):
+        """
+        @param ozone (int): original zone
+        @param dest (int): destination zone
+        @return: distance to destination
+        """
         try:  # because of the Nans, etc.  just a hack
             dist = np.ceil(
                 # DIST_MAT.query(
@@ -156,8 +198,6 @@ class Veh:
                 DIST_MAT[(DIST_MAT["PULocationID"] == ozone) & (DIST_MAT["DOLocationID"] == dest)][
                     "trip_distance_meter"].values[0]
             )
-
-
         except:
             dist = 1000
             print(
@@ -168,7 +208,9 @@ class Veh:
 
     def set_prior_info(self, t):
         """
-        prior demand/fare info
+        Sets prior demand/fare info.
+        @param t: time
+        @return (df): prior
         """
         if self.professional:
             prior = self.operator.expected_fare_totaldemand_per_zone_over_days(t)
@@ -177,17 +219,28 @@ class Veh:
         return prior
 
     def cal_profit_per_zone_per_app(self, t):
+        """
+        @param t: time of day
+        @return: None
+        """
         #        df = self.get_data_from_operator(t)
         pass
 
     def waited_too_long(self):
         """
         Makes sure it's not idle nor rebalancing, then if it has been idle for too long returns True
+        @return: (bool)
         """
         return self._state == VehState.IDLE and self.time_idled > self.MAX_IDLE
         # return self.idle and not self.rebalancing and self.time_idled > self.MAX_IDLE
 
     def update_rebalancing(self, WARMUP_PHASE):
+        """
+        Updates when the vehicle state is rebalancing.
+
+        @param WARMUP_PHASE (bool)
+        @return: None
+        """
         assert self._state == VehState.REBAL
         self.time_to_be_available -= INT_ASSIGN  # delta t, this is a hack
 
@@ -200,10 +253,18 @@ class Veh:
                 self.number_of_times_moved += 1
 
     def keep_waiting(self):
+        """
+        Updates the waiting time of a vehicle.
+        @return: None
+        """
         self.time_idled += INT_ASSIGN
         self.total_waited += INT_ASSIGN
 
     def keep_serving(self):
+        """
+        # TODO: what's going on here?
+        @return:
+        """
         self.time_to_be_available -= INT_ASSIGN
         if self.time_to_be_available < 0:
             assert self._state == VehState.SERVING
@@ -230,8 +291,9 @@ class Veh:
 
     @lru_cache(maxsize=None)
     def get_neighboring_zone_ids(self, ozone):
-        """ 
-        a list of ids of the neighboring zones 
+        """
+        @param ozone (int): pickup zone
+        @return: a list of ids (ints) of the neighboring zones
         """
         neighbors_list = zones_neighbors[str(ozone)]
         neighbors_list.append(self.ozone)
@@ -239,15 +301,17 @@ class Veh:
 
     @property
     def is_busy(self):
+        """
+        @return: bool
+        """
         # try:
         #     assert self.serving == (not self.idle and not self.rebalancing )
-
 
         return self._state == VehState.SERVING
 
     def set_action(self, action):
         """
-        use the RL agent to decide on the target  
+        Use the RL agent to decide on the target.
         """
         assert self.is_AV
         assert action is not None
@@ -256,6 +320,9 @@ class Veh:
 
     @property
     def is_waiting_to_be_matched(self):
+        """
+        @return: (bool)
+        """
         if (self._state == VehState.IDLE and self.time_idled <= self.MAX_IDLE):
             return True
         else:
@@ -264,6 +331,9 @@ class Veh:
 
     @property
     def is_rebalancing(self):
+        """
+        @return: (bool)
+        """
         # True if self._state == VehState.REBAL else False 
         if self._state == VehState.REBAL:
             return True
@@ -272,9 +342,8 @@ class Veh:
 
     def should_move(self):
         """
-        just started or has been idle for too long 
+        @return: bool, true if just started or has been idle for too long
         """
-
         return self.waited_too_long() or self._state == VehState.DECISION
 
     def act(self, t, Zones, WARMUP_PHASE, action=None):
@@ -358,6 +427,14 @@ class Veh:
             # writer.writerow([self.ozone, self.time_to_be_available, self.rebalancing, self.idle, self.is_busy()])
 
     def match_w_req(self, req, Zones, WARMUP_PHASE):
+        """
+        Matches with request if possible and returns an indicator whether the vehicle is matched.
+        
+        @param req: (Request)
+        @param Zones: list of zones (ints)
+        @param WARMUP_PHASE: bool
+        @return: bool (matched or not)
+        """
         # try:
         #     assert self._state == VehState.IDLE
         # except:
@@ -445,6 +522,12 @@ class Veh:
 
     @lru_cache(maxsize=None)
     def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
+        """
+        @param t: time
+        @param ozone: (int) current zone
+        @param true_demand: (bool)
+        @return: (df) attractiveness to all zones and (df) probability to go to each zone
+        """
 
         dist = self._get_dist_to_all_zones(ozone)
         df = self.get_data_from_operator(t, true_demand)
@@ -456,10 +539,10 @@ class Veh:
         a = a[a["Origin"].isin(neighbors_list)]
         # a = a[a.index.isin(neighbors_list)] 
 
-
         if a.empty:
             print(
-                "corner case: take zone 127. there and no demand is left, df and therefore a will be empty. in this situation, it should just move to one of its neighbors"
+                "corner case: take zone 127. there and no demand is left, df and therefore a will be empty. "
+                "in this situation, it should just move to one of its neighbors"
             )
             print("ozone", self.ozone)
             print("destination", neighbors_list[0])
@@ -510,12 +593,14 @@ class Veh:
         # so that probability doesn't end up being negative
         # a["prob"] = a["prof"] / a["prof"].sum()
         prob = prof / prof.sum()
-        return (a, prob)
+        return a, prob
 
     def choose_target_zone(self, t):
         """
         This has to be based on the information communicated by the app, as well as the prior experience
-        It should have the option of not moving. Maybe include that in the neighbors list 
+        It should have the option of not moving. Maybe include that in the neighbors list
+        @param t: time of day
+        @return
         """
 
         # debugging.
@@ -624,6 +709,9 @@ class Veh:
     def _calculate_fare(self, request, surge):
         """
         From Yellow Cab taxi webpage
+        @param request (Request)
+        @param surge (float): surge multiplier
+        @return: (float) fare
         """
         distance_meters = request.dist
         p1 = 2.5

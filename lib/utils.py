@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import time
-import random
 import pickle
 from collections import Counter
 from functools import lru_cache
@@ -29,57 +27,68 @@ from lib.Constants import PERCE_KNOW, CONST_FARE, AV_SHARE
 from lib.Operator import Operator
 from lib.Vehicles import Veh
 
-
-# models creates all the zones. initializes the daily demand. this should be later be confined to hourly/15 mins demand
-# Zones must then create Requests from the matrix row by row
-#
-#
 class Model:
     """ 
-    encompassing object
+    Encompassing object for simulation. Creates all the zones, initializes daily demand.
+    Zone objects then create Requests from the matrix row by row.
     """
 
     def __init__(
             self,
             zone_ids,
             daily_demand,
-            WARMUP_TIME_HOUR,
-            ANALYSIS_TIME_HOUR,
-            FLEET_SIZE=FLEET_SIZE,
-            PRO_SHARE=PRO_SHARE,
-            SURGE_MULTIPLIER=SURGE_MULTIPLIER,
-            BONUS=BONUS,
+            warmup_time_hour,
+            analysis_time_hour,
+            fleet_size=FLEET_SIZE,
+            pro_share=PRO_SHARE,
+            surge_multiplier=SURGE_MULTIPLIER,
+            bonus=BONUS,
             percent_false_demand=PERCENT_FALSE_DEMAND,
             percentage_know_fare=PERCE_KNOW,
-            AV_share=AV_SHARE,
+            av_share=AV_SHARE,
             beta=configs["BETA"],
     ):
+        """
+        @param zone_ids:
+        @param daily_demand:
+        @param warmup_time_hour:
+        @param analysis_time_hour :
+        @param fleet_size (int):
+        @param pro_share (float): percent of fleet with pro drivers
+        @param surge_multiplier (float)
+        @param bonus (float): dollar bonus awarded to drivers
+        @param percent_false_demand (float)
+        @param percentage_know_fare (float): percent of drivers that know the fare
+        @param av_share (float): percent of fleet that's AVs
+        @param beta (float): TODO: what's this?
 
+        @rtype: Model object
+        """
         print("calling init function of Model")
         seed1 = 1100  # np.random.randint(0,1000000)
-        self.rs1 = np.random.RandomState(seed1)
-        #
+        self.rs1 = np.random.RandomState(seed1) # random state
         self.zone_ids = zone_ids
         self.zones = []
         self.daily_demand = daily_demand
         self._create_zones()
         print("instantiated zones")
-        self.set_analysis_time(WARMUP_TIME_HOUR)
+
+        self.set_analysis_time(warmup_time_hour)
         print("generated demand")
-        self.WARMUP_TIME_SECONDS = WARMUP_TIME_HOUR / 3600
+
+        self.WARMUP_TIME_SECONDS = warmup_time_hour / 3600
         self.WARMUP_PHASE = True
-        self.ANALYSIS_TIME_HOUR = ANALYSIS_TIME_HOUR
-        self.ANALYSIS_TIME_SECONDS = ANALYSIS_TIME_HOUR * 3600
+        self.ANALYSIS_TIME_HOUR = analysis_time_hour
+        self.ANALYSIS_TIME_SECONDS = analysis_time_hour * 3600
         self.PRO_SHARE = PRO_SHARE
-        self.AV_SHARE = AV_share
+        self.AV_SHARE = av_share
         self.SURGE_MULTIPLIER = SURGE_MULTIPLIER
-        self.FLEET_SIZE = FLEET_SIZE
+        self.FLEET_SIZE = fleet_size #FLEET_SIZE
         _s = str(self.SURGE_MULTIPLIER).split(".")
         _s = "".join(_s)
 
         # get expected number of drivers per zone
         if self.PRO_SHARE > 0:
-            # m= pickle.load(open("outputs/model for fleet size {f} surge {s}fdemand 0.0perc_k 0pro_s 0.0.p".format(f=self.FLEET_SIZE, s= _s), 'rb'))
             m = pickle.load(
                 open(
                     "Outputs/model for fleet size {f} surge {s}fdemand 0.0perc_k 0pro_s 0 repl0.p".format(
@@ -93,10 +102,10 @@ class Model:
         else:
             report = None
 
-        #
-        self.operator = Operator(report, BONUS=BONUS, SURGE_MULTIPLIER=SURGE_MULTIPLIER)
-        #
-        # pro drivers know fares, so perc_know must take this into account
+        # Create operator object
+        self.operator = Operator(report, BONUS=bonus, SURGE_MULTIPLIER=SURGE_MULTIPLIER)
+
+        # Pro drivers know fares, so perc_know must take this into account
         self.fleet_pro_size = int(self.PRO_SHARE * self.FLEET_SIZE)
         self.percent_false_demand = percent_false_demand
         self.fleet_deceived_size = int(self.percent_false_demand * self.FLEET_SIZE)
@@ -110,14 +119,21 @@ class Model:
         self._create_vehicles(beta)
 
         print(Counter(v.ozone for v in self.vehilcs))
-        # debug, delete this
+
+        # TODO: debug, delete this
         self.targets = []
         self.performance_results = {}
-        ####
 
     def __calc_s(self, df):
+        """
+        Computes average number of drivers, clips values between 0 and 1.
+        Calculates probability of finding a match.
+
+        @param df (pd dataframe):
+        @return: pd dataframe with zone ids and corresponding probabilities
+        """
         df.loc[:, "avg_num_drivers"] = df.idle + df.incoming
-        s = df.total / df.avg_num_drivers
+        s = df.total / df.avg_num_drivers # df.total := amount of demand
         s[s > 1] = 1
         s[np.isnan(s)] = 0.0001
         s[np.isinf(s)] = 1
@@ -127,8 +143,9 @@ class Model:
         return df
 
     def _create_zones(self):
-        """ 
-        make the zones, initiate their demand matrix
+        """
+        Make the zones, and initiates their demand matrix.
+        Updates the self.zones attribute in-place.
         """
         for z_id in self.zone_ids:
             Z = Zone(z_id, rs=self.rs1)
@@ -137,6 +154,11 @@ class Model:
 
     def _create_vehicles(self, beta=1):
         """
+        Creates list of Vehicles and assigns random sets of them to be
+        pro, deceived, fare-aware, and AV.
+
+        @param beta: TODO: what's this?
+        @return: None; modifies self.vehilcs in place.
         """
         self.vehilcs = [
             Veh(self.rs1, self.operator, beta) for i in range(self.FLEET_SIZE)
@@ -187,16 +209,21 @@ class Model:
             remaining_veh = list(set(remaining_veh) - set(self.av_vehs))
 
     def set_analysis_time(self, t):
-        """ 
         """
-
+        Sets the demand rate per zone given an hour of day.
+        @param t: hour of day
+        @return: None; sets values in-place.
+        """
         for z in self.zones:
             z.set_demand_rate_per_t(t)
 
     def generate_zonal_demand(self, t):
         """
-        first check and see if should change the demand rates
-        then generate demand
+        First checks to see if should change the demand rates,
+        then generates demand for each zone.
+
+        @param t: time of day
+        @return: None; sets values in place
         """
         if self.WARMUP_PHASE and t >= self.ANALYSIS_TIME_SECONDS:
             print("changing demand rate from warmup to analysis")
@@ -207,22 +234,39 @@ class Model:
         for z in self.zones:
             z.generate_requests_to_time(t)
 
-    def move_fleet(self, t, WARMUP_PHASE, action):
+    def move_fleet(self, t, warmup_phase, action):
+        """
+        Applies action to each vehicle.
+
+        @param t: time of day
+        @param warmup_phase (bool): whether we are in the warmup phase
+        @param action: (unused)
+        @return: None
+        """
         for veh in self.vehilcs:
-            _ = veh.act(t, self.zones, WARMUP_PHASE)
+            _ = veh.act(t, self.zones, warmup_phase)
             # if not veh.is_AV:  # AV is already being moved by the engine
             #     _ = veh.act(t, self.zones, WARMUP_PHASE)
             # if veh.is_AV:
             #     # if veh.should_move(): this causes errors, since move is not just moving, but also rebalancing, waiting, etc.
             #     veh.act(t, self.zones, WARMUP_PHASE, action)
 
-    def assign_zone_veh(self, t, WARMUP_PHASE, penalty):
+    def assign_zone_veh(self, t, warmup_phase, penalty):
+        """
+        Assigns zone to each vehicle.
 
+        @param t: time of day
+        @param warmup_phase (bool): whether we are in the warmup phase
+        @param penalty (float): penalty amount
+        @return: None
+        """
         for z in self.zones:
-            z.assign(self.zones, t, WARMUP_PHASE, penalty)
+            z.assign(self.zones, t, warmup_phase, penalty)
 
     def get_service_rate_per_zone(self):
-
+        """
+        @return (df): observations for each zone, including demand, number served, total, etc.
+        """
         performance_results = {}
         for z in self.zones:
             w = len(z.demand)
@@ -248,10 +292,16 @@ class Model:
 
         return performance_results
 
-    # dispatch the AMoD system: move vehicles, generate requests, assign, reoptimize and rebalance
+
     # @profile
     def dispatch_at_time(self, t, penalty=-10, action=None):
-        #
+        """
+        Dispatches the AMoD system: move vehicles, generate requests, assign, reoptimize and rebalance.
+        @param t: time of day
+        @param penalty (float)
+        @param action
+        @return: None
+        """
         self.generate_zonal_demand(t)
         self.operator.update_zonal_info(t)
         # self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
@@ -263,9 +313,11 @@ class Model:
 
     @lru_cache(maxsize=None)
     def _get_demand_per_zone(self, t):
-        """ 
-        
-        Dataframe with zone_id as index and demand column
+        """
+        Gets demand per zone.
+
+        @param t: time of day
+        @return (df): Dataframe with zone_id as index and demand column
         """
         a = {z.id: len(z.demand) for z in self.zones}
         demand_df = pd.DataFrame.from_dict(a, orient="index", columns=["demand"])
@@ -276,11 +328,15 @@ class Model:
 
     @lru_cache(maxsize=None)
     def _get_supply_per_zone(self, t):
-        """ 
-        Dataframe with zone_id as index and supply column
+        """
+        Gets supply per zone.
+
+        @param t: time of day
+        @returns (df): Dataframe with zone_id as index and supply column
         """
         b = {z.id: len(z.idle_vehicles) for z in self.zones}
         supply_df = pd.DataFrame.from_dict(b, orient="index", columns=["supply"])
+
         # normalize it 
         supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1)
         return supply_df
@@ -289,7 +345,11 @@ class Model:
     def _calc_rebl_cost(self, ozone, max_cost=7):
         """
         This should be based on the value of time and time it took to get to the destination
-        max_cost = 7 # just a preliminary attempt at normalizing the costs 
+
+        @param ozone (int): original pickup location ID
+        @param max_cost (float): 7 is just a preliminary attempt at normalizing the costs
+
+        @return (df): distance to all zones with costs
         """
 
         dist = Veh._get_dist_to_all_zones(ozone)[["DOLocationID", "trip_distance_meter"]]
@@ -303,12 +363,21 @@ class Model:
 
     @lru_cache(maxsize=None)
     def _get_both_supply_and_demand_per_zone(self, t):
+        """
+        @param t: time of day
+        @return (df): merged dataframe of demand and supply for all zones
+        """
         demand_df = self._get_demand_per_zone(t)
         supply_df = self._get_supply_per_zone(t)
         return (pd.merge(demand_df, supply_df, left_index=True, right_index=True))
 
     @lru_cache(maxsize=None)
     def _get_demand_supply_costs_df(self, ozone, t):
+        """
+        @param ozone (int): original pickup location id
+        @param t: time of day
+        @return: df with demand, supply, and costs for all zones
+        """
         dist = self._calc_rebl_cost(ozone)
         d_s = self._get_both_supply_and_demand_per_zone(t)
         # d_s_c = pd.merge(d_s, dist, left_index=True, right_on="DOLocationID")[["demand", "supply", "costs"]].values
@@ -319,11 +388,11 @@ class Model:
 
     def get_state(self, veh, t):
         """
-        veh: an object
-        returns: matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij) 
+        Gets the model state.
 
+        @param veh: an object
+        @return : matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij)
         """
-
         return self._get_demand_supply_costs_df(veh.ozone, t)
 
 

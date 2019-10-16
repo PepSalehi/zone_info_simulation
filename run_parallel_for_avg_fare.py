@@ -94,7 +94,7 @@ def main():
                         print('Percentage of professional drivers {}'.format(pro_s))
             
                         m = Model(ZONE_IDS, DEMAND_SOURCE, WARMUP_TIME_HOUR, ANALYSIS_TIME_HOUR, FLEET_SIZE=fleet_size, PRO_SHARE=pro_s,
-                                SURGE_MULTIPLIER=surge, BONUS=bonus, percent_false_demand=percent_false_demand, percentage_know_fare = perc_k, beta=beta)
+                                  SURGE_MULTIPLIER=surge, bonus=bonus, percent_false_demand=percent_false_demand, percentage_know_fare = perc_k, beta=beta)
                         
                         # start time
                         stime = time.time()

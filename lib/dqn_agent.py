@@ -1,8 +1,3 @@
-"""Trains a DQN/DDQN to solve CartPole-v0 problem
-
-
-"""
-
 from keras.layers import Dense, Input, Conv2D, Flatten, BatchNormalization, MaxPooling2D
 from keras.models import Model
 from keras.optimizers import Adam
@@ -19,8 +14,19 @@ from time import time
 
 
 class DQNAgent():
-    def __init__(self, state_space, action_space, args=None, episodes=500):
+    """
+    Trains a DQN/DDQN to solve CartPole-v0 problem, applicable to the rideshare case.
+    """
 
+    def __init__(self, state_space, action_space, args=None, episodes=500):
+        """
+        Creates an agent that interacts with the gym environment.
+
+        @param state_space
+        @param action_space
+        @param args
+        @param episodes (int)
+        """
         self.action_space = action_space
         self.ddqn = True
         # experience buffer
@@ -58,8 +64,13 @@ class DQNAgent():
         else:
             print("-------------DQN------------")
 
-    # Q Network
     def build_model(self, n_inputs, n_outputs):
+        """
+        Builds Q-network architecture.
+        @param n_inputs: (int) input dimensions
+        @param n_outputs: (int) output dimensions
+        @return: (Model) q-network object
+        """
         inputs = Input(shape=(n_inputs[0], n_inputs[1], 1), name='state')
         x = Conv2D(32, kernel_size=(3, 3), strides=(1, 1), padding='same', activation='relu')(inputs)
         # x = MaxPooling2D(pool_size=2)(x)
@@ -74,20 +85,35 @@ class DQNAgent():
         return q_model
 
     def load_weights(self, f):
+        """
+        Assigns weights to q-network given filename f.
+        @param f: (str) filename
+        """
         assert isinstance(f, str)
         self.q_model.load_weights(f)
         print("used prior weights")
 
-    # save Q Network params to a file
     def save_weights(self, f):
+        """
+        Save Q Network params to a file
+        @param f: (str) filename
+        """
         self.q_model.save_weights(f)
 
-    # copy trained Q Network params to target Q Network
     def update_weights(self):
+        """
+        Copy trained Q Network params to target Q Network
+        """
         self.target_q_model.set_weights(self.q_model.get_weights())
 
-    # eps-greedy policy
     def act(self, state):
+        """
+        Eps-greedy policy. With probability epsilon, performs a random action. With
+        probability 1- epsilon, exploits by choosing the action with the maximum
+        Q-value.
+        @param state
+        @return: the chosen action
+        """
         if np.random.rand() < self.epsilon:
             # explore - do random action
             return self.action_space.sample()
@@ -98,14 +124,26 @@ class DQNAgent():
         # select the action with max Q-value
         return np.argmax(q_values[0])
 
-    # store experiences in the replay buffer
     def remember(self, state, action, reward, next_state, done):
+        """
+        Store experiences in the replay buffer
+        @param state
+        @param action
+        @param reward: (float)
+        @param next_state
+        @param done: (bool) indicator whether simulation is done
+        """
         item = (state, action, reward, next_state, done)
         self.memory.append(item)
 
-    # compute Q_max
-    # use of target Q Network solves the non-stationarity problem
     def get_target_q_value(self, next_state, reward):
+        """
+        Computes Q_max
+        Use of target Q Network solves the non-stationarity problem.
+        @param next_state
+        @param reward: (float)
+        @return: the maximized q-value
+        """
         # max Q value among next state's actions
         if self.ddqn:
             # DDQN
@@ -126,8 +164,12 @@ class DQNAgent():
         q_value += reward
         return q_value
 
-    # experience replay addresses the correlation issue between samples
     def replay(self, batch_size):
+        """
+        Fits DQN using experience replay, which addresses the correlation issue between samples
+        @param batch_size: (int)
+        @return: None
+        """
         # sars = state, action, reward, state' (next_state)
         sars_batch = random.sample(self.memory, batch_size)
         state_batch, q_values_batch = [], []
@@ -175,7 +217,9 @@ class DQNAgent():
 
         self.replay_counter += 1
 
-    # decrease the exploration, increase exploitation
     def update_epsilon(self):
+        """
+        Decreases the exploration, increase exploitation by updating epsilon.
+        """
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay

@@ -1,0 +1,434 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib.utils_with_rel_engine &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.utils_with_rel_engine</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span>
+<span class="kn">from</span> <span class="nn">lib.Zones</span> <span class="k">import</span> <span class="n">Zone</span>
+<span class="kn">from</span> <span class="nn">lib.configs</span> <span class="k">import</span> <span class="n">configs</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ZONE_IDS</span><span class="p">,</span>
+    <span class="n">DEMAND_SOURCE</span><span class="p">,</span>
+    <span class="n">INT_ASSIGN</span><span class="p">,</span>
+    <span class="n">FLEET_SIZE</span><span class="p">,</span>
+    <span class="n">PRO_SHARE</span><span class="p">,</span>
+    <span class="n">SURGE_MULTIPLIER</span><span class="p">,</span>
+    <span class="n">BONUS</span><span class="p">,</span>
+    <span class="n">PERCENT_FALSE_DEMAND</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">T_TOTAL_SECONDS</span><span class="p">,</span>
+    <span class="n">WARMUP_TIME_SECONDS</span><span class="p">,</span>
+    <span class="n">ANALYSIS_TIME_SECONDS</span><span class="p">,</span>
+    <span class="n">ANALYSIS_TIME_HOUR</span><span class="p">,</span>
+    <span class="n">WARMUP_TIME_HOUR</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">lib.Constants</span> <span class="k">import</span> <span class="n">PERCE_KNOW</span><span class="p">,</span> <span class="n">CONST_FARE</span><span class="p">,</span> <span class="n">AV_SHARE</span>
+<span class="kn">from</span> <span class="nn">lib.Operator</span> <span class="k">import</span> <span class="n">Operator</span>
+<span class="kn">from</span> <span class="nn">lib.Vehicles</span> <span class="k">import</span> <span class="n">Veh</span>
+
+<span class="c1"># models creates all the zones. initializes the daily demand. this should be later be confined to hourly/15 mins demand</span>
+<span class="c1"># Zones must then create Requests from the matrix row by row</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">    encompassing object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">zone_ids</span><span class="p">,</span>
+        <span class="n">daily_demand</span><span class="p">,</span>
+        <span class="n">WARMUP_TIME_HOUR</span><span class="p">,</span>
+        <span class="n">ANALYSIS_TIME_HOUR</span><span class="p">,</span>
+        <span class="n">FLEET_SIZE</span><span class="o">=</span><span class="n">FLEET_SIZE</span><span class="p">,</span>
+        <span class="n">PRO_SHARE</span><span class="o">=</span><span class="n">PRO_SHARE</span><span class="p">,</span>
+        <span class="n">SURGE_MULTIPLIER</span><span class="o">=</span><span class="n">SURGE_MULTIPLIER</span><span class="p">,</span>
+        <span class="n">BONUS</span><span class="o">=</span><span class="n">BONUS</span><span class="p">,</span>
+        <span class="n">percent_false_demand</span><span class="o">=</span><span class="n">PERCENT_FALSE_DEMAND</span><span class="p">,</span>
+        <span class="n">percentage_know_fare</span><span class="o">=</span><span class="n">PERCE_KNOW</span><span class="p">,</span>
+        <span class="n">AV_share</span><span class="o">=</span><span class="n">AV_SHARE</span><span class="p">,</span>
+        <span class="n">RL_engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">beta</span><span class="o">=</span><span class="n">configs</span><span class="p">[</span><span class="s2">&quot;BETA&quot;</span><span class="p">],</span>
+    <span class="p">):</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;calling init function of Model&quot;</span><span class="p">)</span>
+        <span class="n">seed1</span> <span class="o">=</span> <span class="mi">100</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rs1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">RandomState</span><span class="p">(</span><span class="n">seed1</span><span class="p">)</span>
+        <span class="c1">#</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zone_ids</span> <span class="o">=</span> <span class="n">zone_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zones</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">daily_demand</span> <span class="o">=</span> <span class="n">daily_demand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_zones</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;instantiated zones&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_analysis_time</span><span class="p">(</span><span class="n">WARMUP_TIME_HOUR</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;generated demand&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_TIME_SECONDS</span> <span class="o">=</span> <span class="n">WARMUP_TIME_HOUR</span> <span class="o">/</span> <span class="mi">3600</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_PHASE</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_HOUR</span> <span class="o">=</span> <span class="n">ANALYSIS_TIME_HOUR</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_SECONDS</span> <span class="o">=</span> <span class="n">ANALYSIS_TIME_HOUR</span> <span class="o">*</span> <span class="mi">3600</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PRO_SHARE</span> <span class="o">=</span> <span class="n">PRO_SHARE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">AV_SHARE</span> <span class="o">=</span> <span class="n">AV_share</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SURGE_MULTIPLIER</span> <span class="o">=</span> <span class="n">SURGE_MULTIPLIER</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span> <span class="o">=</span> <span class="n">FLEET_SIZE</span>
+        <span class="n">_s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SURGE_MULTIPLIER</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">_s</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_s</span><span class="p">)</span>
+
+        <span class="c1"># get expected number of drivers per zone</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">PRO_SHARE</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="nb">open</span><span class="p">(</span>
+                    <span class="s2">&quot;outputs/model for fleet size </span><span class="si">{f}</span><span class="s2"> surge </span><span class="si">{s}</span><span class="s2">fdemand 0.0perc_k 1pro_s 0.p&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">_s</span>
+                    <span class="p">),</span>
+                    <span class="s2">&quot;rb&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">get_service_rate_per_zone</span><span class="p">()</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__calc_s</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">report</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1">#</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">BONUS</span><span class="o">=</span><span class="n">BONUS</span><span class="p">,</span> <span class="n">SURGE_MULTIPLIER</span><span class="o">=</span><span class="n">SURGE_MULTIPLIER</span><span class="p">)</span>
+        <span class="c1">#</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">RL_engine</span> <span class="o">=</span> <span class="n">RL_engine</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fleet_AV</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">AV_SHARE</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_av_fleet_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_AV</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fleet_pro_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PRO_SHARE</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_av_fleet_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percent_false_demand</span> <span class="o">=</span> <span class="n">percent_false_demand</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fleet_deceived_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">percent_false_demand</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_av_fleet_size</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percentage_know_fare</span> <span class="o">=</span> <span class="n">percentage_know_fare</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fleet_know_fare</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">percentage_know_fare</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fleet_DONT_know_fare</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">percentage_know_fare</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_av_fleet_size</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AV_Share is &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">AV_SHARE</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;av fleet size is &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_AV</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_vehicles</span><span class="p">()</span>
+
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;the number of AV vehicles are &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span> <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">is_AV</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">Counter</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">ozone</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span><span class="p">))</span>
+        <span class="c1"># debug, delete this</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">performance_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1">####</span>
+
+        <span class="c1"># m= pickle.load(open(&quot;outputs/model for fleet size 2500 surge 20fdemand 0.6.p&quot;, &#39;rb&#39;))</span>
+
+    <span class="k">def</span> <span class="nf">__calc_s</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">):</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;avg_num_drivers&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">idle</span> <span class="o">+</span> <span class="n">df</span><span class="o">.</span><span class="n">incoming</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">total</span> <span class="o">/</span> <span class="n">df</span><span class="o">.</span><span class="n">avg_num_drivers</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">s</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0001</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">s</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span> <span class="s2">&quot;prob_of_s&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s2">&quot;zone_id&quot;</span><span class="p">,</span> <span class="s2">&quot;prob_of_s&quot;</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span> <span class="nf">_create_zones</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        make the zones, initiate their demand matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">z_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zone_ids</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">Zone</span><span class="p">(</span><span class="n">z_id</span><span class="p">,</span> <span class="n">rs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rs1</span><span class="p">)</span>
+            <span class="n">Z</span><span class="o">.</span><span class="n">read_daily_demand</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">daily_demand</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_vehicles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Veh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rs1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span><span class="p">)]</span>
+        <span class="c1"># None of the below ones are mutually exclusive; a vehicle might be pro and don&#39;t know fare</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_pro_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="c1"># vs = random.choices(self.vehilcs, k=self.fleet_pro_size)</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_pro_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">professional</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">know_fare</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">remaining_veh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;size of the remaining veh&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_deceived_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">&quot;remaining_veh&quot;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()):</span>
+                <span class="n">remaining_veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span>
+            <span class="c1"># vs = random.choices(remaining_veh, k=self.fleet_deceived_size)</span>
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span>
+                <span class="n">remaining_veh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_deceived_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">true_demand</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">remaining_veh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">remaining_veh</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_know_fare</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;fleet know fare&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_know_fare</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">&quot;remaining_veh&quot;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()):</span>
+                <span class="n">remaining_veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span>
+
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">remaining_veh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_know_fare</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">know_fare</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">remaining_veh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">remaining_veh</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_AV</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="s2">&quot;remaining_veh&quot;</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()):</span>
+                <span class="n">remaining_veh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span>
+
+            <span class="n">vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">remaining_veh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fleet_AV</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vs</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">is_AV</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">RL_engine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RL_engine</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;av fleet size is &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+            <span class="n">remaining_veh</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">remaining_veh</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">vs</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Model.set_analysis_time"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.set_analysis_time">[docs]</a>    <span class="k">def</span> <span class="nf">set_analysis_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">set_demand_rate_per_t</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.generate_zonal_demand"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.generate_zonal_demand">[docs]</a>    <span class="k">def</span> <span class="nf">generate_zonal_demand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        first check and see if should change the demand rates</span>
+<span class="sd">        then generate demand</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_PHASE</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_SECONDS</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;changing time&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_analysis_time</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_HOUR</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_PHASE</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># update drivers infor/expectations</span>
+
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">generate_requests_to_time</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+
+    <span class="c1"># this is to be called by the RL algorithm</span>
+<div class="viewcode-block" id="Model.act"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.act">[docs]</a>    <span class="k">def</span> <span class="nf">act</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">veh</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">veh</span><span class="o">.</span><span class="n">should_move</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">veh</span><span class="o">.</span><span class="n">is_AV</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">(</span><span class="n">veh</span><span class="p">)</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RL_engine</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="c1"># print( &quot; action is &quot;, action)</span>
+        <span class="k">return</span> <span class="n">action</span></div>
+
+<div class="viewcode-block" id="Model.move_fleet"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.move_fleet">[docs]</a>    <span class="k">def</span> <span class="nf">move_fleet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="c1"># print(&quot;called move_fleet&quot;)</span>
+        <span class="c1"># i=0</span>
+        <span class="k">for</span> <span class="n">veh</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vehilcs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">veh</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>  <span class="c1"># AV is already being moved by the engine</span>
+                <span class="n">_</span> <span class="o">=</span> <span class="n">veh</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">veh</span><span class="o">.</span><span class="n">is_AV</span><span class="p">:</span>
+                <span class="s2">&quot;deciding whether to move the AV or not &quot;</span>
+                <span class="k">if</span> <span class="n">veh</span><span class="o">.</span><span class="n">should_move</span><span class="p">():</span>
+                    <span class="s2">&quot;AV, MOVE! &quot;</span>
+                    <span class="c1"># get the action from rl</span>
+                    <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">act</span><span class="p">(</span><span class="n">veh</span><span class="p">)</span>
+
+                <span class="n">veh</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.assign_zone_veh"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.assign_zone_veh">[docs]</a>    <span class="k">def</span> <span class="nf">assign_zone_veh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">penalty</span><span class="p">):</span>
+
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span>
+            <span class="n">z</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">penalty</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.get_service_rate_per_zone"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.get_service_rate_per_zone">[docs]</a>    <span class="k">def</span> <span class="nf">get_service_rate_per_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">performance_results</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">:</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">demand</span><span class="p">)</span>
+            <span class="n">served</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">served_demand</span><span class="p">)</span>
+            <span class="n">los</span> <span class="o">=</span> <span class="n">served</span> <span class="o">/</span> <span class="p">(</span><span class="n">served</span> <span class="o">+</span> <span class="n">w</span><span class="p">)</span> <span class="k">if</span> <span class="p">(</span><span class="n">served</span> <span class="o">+</span> <span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;zone_id&quot;</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">w</span><span class="p">,</span>
+                <span class="s2">&quot;served&quot;</span><span class="p">:</span> <span class="n">served</span><span class="p">,</span>
+                <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="n">w</span> <span class="o">+</span> <span class="n">served</span><span class="p">,</span>
+                <span class="s2">&quot;LOS&quot;</span><span class="p">:</span> <span class="n">los</span><span class="p">,</span>
+                <span class="s2">&quot;idle&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">idle_vehicles</span><span class="p">),</span>
+                <span class="s2">&quot;incoming&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">incoming_vehicles</span><span class="p">),</span>
+                <span class="s2">&quot;times_surged&quot;</span><span class="p">:</span> <span class="n">z</span><span class="o">.</span><span class="n">num_surge</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">performance_results</span><span class="p">[</span><span class="n">z</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
+
+        <span class="n">performance_results</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+            <span class="n">performance_results</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span>
+        <span class="p">)</span>
+        <span class="n">performance_results</span> <span class="o">=</span> <span class="n">performance_results</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">&quot;LOS&quot;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">performance_results</span></div>
+
+    <span class="c1"># dispatch the AMoD system: move vehicles, generate requests, assign, reoptimize and rebalance</span>
+<div class="viewcode-block" id="Model.dispatch_at_time"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.dispatch_at_time">[docs]</a>    <span class="k">def</span> <span class="nf">dispatch_at_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1">#</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_zonal_demand</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">update_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="c1"># self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assign_zone_veh</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">penalty</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_fleet</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_PHASE</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">t</span> <span class="o">%</span> <span class="mi">500</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time is </span><span class="si">{time}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">t</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_demand_per_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        </span>
+<span class="sd">        Dataframe with zone_id as index and demand column</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">{</span><span class="n">z</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">demand</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">}</span>
+        <span class="n">demand_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;demand&quot;</span><span class="p">])</span>
+        <span class="c1"># normalize it </span>
+        <span class="n">demand_df</span><span class="p">[</span><span class="s2">&quot;demand&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">demand_df</span><span class="p">[</span><span class="s2">&quot;demand&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">demand_df</span><span class="p">[</span><span class="s2">&quot;demand&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;normalized demand &quot;</span><span class="p">,</span> <span class="n">demand_df</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">demand_df</span>
+
+    <span class="k">def</span> <span class="nf">_get_supply_per_zone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">        Dataframe with zone_id as index and supply column</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">{</span><span class="n">z</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">idle_vehicles</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">zones</span><span class="p">}</span>
+        <span class="n">supply_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s2">&quot;index&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;supply&quot;</span><span class="p">])</span>
+        <span class="c1"># normalize it </span>
+        <span class="n">supply_df</span><span class="p">[</span><span class="s2">&quot;supply&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">supply_df</span><span class="p">[</span><span class="s2">&quot;supply&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">supply_df</span><span class="p">[</span><span class="s2">&quot;supply&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> 
+        <span class="k">return</span> <span class="n">supply_df</span>
+
+<div class="viewcode-block" id="Model.get_state"><a class="viewcode-back" href="../../lib.html#lib.utils_with_rel_engine.Model.get_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">veh</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        returns: matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij) </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">max_cost</span> <span class="o">=</span> <span class="mi">7</span> <span class="c1"># just a preliminary attempt at normalizing the costs </span>
+
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">veh</span><span class="o">.</span><span class="n">_get_dist_to_all_zones</span><span class="p">()[[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">,</span> <span class="s2">&quot;trip_distance_meter&quot;</span><span class="p">]]</span>
+        <span class="n">dist</span><span class="p">[</span><span class="s2">&quot;costs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">trip_distance_meter</span> <span class="o">*</span> <span class="n">veh</span><span class="o">.</span><span class="n">rebl_cost</span>
+        <span class="n">dist</span><span class="p">[</span><span class="s2">&quot;costs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="s2">&quot;costs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="n">dist</span><span class="p">[</span><span class="s2">&quot;costs&quot;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">max_cost</span>
+
+        <span class="n">demand_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_demand_per_zone</span><span class="p">()</span>
+        <span class="n">supply_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_supply_per_zone</span><span class="p">()</span>
+        <span class="n">d_s</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">demand_df</span><span class="p">,</span> <span class="n">supply_df</span><span class="p">,</span> <span class="n">left_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">d_s_c</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">d_s</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">left_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">)</span>
+        <span class="n">d_s_c</span> <span class="o">=</span> <span class="n">d_s_c</span><span class="p">[[</span><span class="s2">&quot;demand&quot;</span><span class="p">,</span> <span class="s2">&quot;supply&quot;</span><span class="p">,</span> <span class="s2">&quot;costs&quot;</span><span class="p">]]</span>
+        <span class="n">d_s_c</span> <span class="o">=</span> <span class="n">d_s_c</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">d_s_c</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../lib/trial.html">All about me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lib.html">lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lib</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

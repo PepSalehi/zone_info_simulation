@@ -43,6 +43,11 @@ class RebalancingEnv(gym.Env):
     """
 
     def __init__(self, config, penalty=-10):
+        """
+
+        @param config:
+        @param penalty:
+        """
         print("INSIDE INIT FUNCTION")
         self.config = config
         self.model = Model(
@@ -53,7 +58,7 @@ class RebalancingEnv(gym.Env):
             FLEET_SIZE=config["fleet_size"],
             PRO_SHARE=config["pro_s"],
             SURGE_MULTIPLIER=config["surge"],
-            BONUS=config["bonus"],
+            bonus=config["bonus"],
             percent_false_demand=config["percent_false_demand"],
             percentage_know_fare=config["perc_k"],
         )
@@ -79,10 +84,14 @@ class RebalancingEnv(gym.Env):
         self.old_income = 0
 
     def step(self, action):
-        """ 
-        action: a vector of length N_AV, which contains the target zone for idle veh, and inaction for busy ones
-        impelements action, returns new state, reward. 
-        Currently the DQN is inside the model.dispatch_at_time function 
+        """
+        Performs one step of the environment.
+
+        @param action: a vector of length N_AV, which contains the target zone for idle veh, and inaction for busy ones
+        implements action, returns new state, reward.
+        @return: observed state, reward, flag
+
+        @note: Currently the DQN is inside the model.dispatch_at_time function
         """
         flag = False
         self.step_count += 1
@@ -122,10 +131,20 @@ class RebalancingEnv(gym.Env):
         return self.state, reward, flag, {}
 
     def update_state(self, vid=-1):
+        """
+        Updates the state to be the state of a vehicle.
+
+        @param vid: "vehicle list index" that chooses a vehicle for which to get the state.
+        @return: state of the vehicle
+        """
         veh = self.model.vehilcs[vid]
         self.state = self.model.get_state(veh)
 
     def reset(self):
+        """
+        Restarts the gym environment by resetting all parameters to default.
+        @return: the modified state.
+        """
         print("Calling the reset method! ")
         self.model = Model(
             ZONE_IDS,
@@ -135,7 +154,7 @@ class RebalancingEnv(gym.Env):
             FLEET_SIZE=self.config["fleet_size"],
             PRO_SHARE=self.config["pro_s"],
             SURGE_MULTIPLIER=self.config["surge"],
-            BONUS=self.config["bonus"],
+            bonus=self.config["bonus"],
             percent_false_demand=self.config["percent_false_demand"],
             percentage_know_fare=self.config["perc_k"],
         )

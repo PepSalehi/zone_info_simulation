@@ -1,0 +1,805 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib package &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="lib" href="modules.html" />
+    <link rel="prev" title="All about me" href="lib/trial.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="lib-package">
+<h1>lib package<a class="headerlink" href="#lib-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.Constants">
+<span id="lib-constants-module"></span><h2>lib.Constants module<a class="headerlink" href="#module-lib.Constants" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.Data">
+<span id="lib-data-module"></span><h2>lib.Data module<a class="headerlink" href="#module-lib.Data" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Data.Data">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Data.</code><code class="sig-name descname">Data</code><span class="sig-paren">(</span><em class="sig-param">path_zone_neighbors, path_dist_mat, path_zones_w_neighbors, path_daily_demand, phi=0.25, fleet_size=[1500], pro_share=0, percent_false_demand=0.0, av_share=0, penalty=0, perce_know=0, const_fare=6, surge_multiplier=2, bonus=0, constant_speed=8, ini_wait=400, ini_detour=1.25, max_idle=300, int_assign=30, int_rebl=150, fuel_cost=0.00033, analysis_time_hour=8, warmup_time_hour=7, demand_update_interval=3600, policy_update_interval=600, min_demand=40, analysis_duration=14400, t=15</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Data.html#Data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Data.Data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Replaces Constants.py. Container for all constants, reference data that
+other modules will use.</p>
+<dl class="method">
+<dt id="lib.Data.Data.bin_demand">
+<code class="sig-name descname">bin_demand</code><span class="sig-paren">(</span><em class="sig-param">bin_width='15T'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Data.html#Data.bin_demand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Data.Data.bin_demand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Counts the number of pickups/dropoffs per time interval, sectioned by zone.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>bin_width (str): e.g. ‘5T’== 5 minutes, ‘1H’ == 1 hour</p>
+</dd>
+<dt>Returns:</dt><dd><p>pandas df (indices: datetime, locationID. columns: frequency)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.Env">
+<span id="lib-env-module"></span><h2>lib.Env module<a class="headerlink" href="#module-lib.Env" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Env.RebalancingEnv">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Env.</code><code class="sig-name descname">RebalancingEnv</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">penalty=-10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env.html#RebalancingEnv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env.RebalancingEnv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">gym.core.Env</span></code></p>
+<p>RebalancingEnv is the environment class for DQN
+Attributes:</p>
+<blockquote>
+<div><p>model: AMoD system to train
+dT: time interval for training
+penalty: penalty of rebalancing a vehicle
+action_space: action space
+state: the system state. It’s (ui, vi, cik) for every zone, where cik is the cost of going to i. e.g., 67 zones -&gt; 67  * 3.
+center: the centroid of cells
+input_dim: input dimension</p>
+</div></blockquote>
+<dl class="method">
+<dt id="lib.Env.RebalancingEnv.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env.html#RebalancingEnv.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env.RebalancingEnv.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restarts the gym environment by resetting all parameters to default.
+&#64;return: the modified state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Env.RebalancingEnv.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env.html#RebalancingEnv.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env.RebalancingEnv.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs one step of the environment.</p>
+<p>&#64;param action: a vector of length N_AV, which contains the target zone for idle veh, and inaction for busy ones
+implements action, returns new state, reward.
+&#64;return: observed state, reward, flag</p>
+<p>&#64;note: Currently the DQN is inside the model.dispatch_at_time function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Env.RebalancingEnv.update_state">
+<code class="sig-name descname">update_state</code><span class="sig-paren">(</span><em class="sig-param">vid=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env.html#RebalancingEnv.update_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env.RebalancingEnv.update_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the state to be the state of a vehicle.</p>
+<p>&#64;param vid: “vehicle list index” that chooses a vehicle for which to get the state.
+&#64;return: state of the vehicle</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.Env_aggregate_step_func">
+<span id="lib-env-aggregate-step-func-module"></span><h2>lib.Env_aggregate_step_func module<a class="headerlink" href="#module-lib.Env_aggregate_step_func" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Env_aggregate_step_func.RebalancingEnv">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Env_aggregate_step_func.</code><code class="sig-name descname">RebalancingEnv</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env_aggregate_step_func.html#RebalancingEnv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env_aggregate_step_func.RebalancingEnv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">gym.core.Env</span></code></p>
+<p>RebalancingEnv is the environment class for DQN
+Attributes:</p>
+<blockquote>
+<div><p>model: AMoD system to train
+dT: time interval for training
+penalty: penalty of rebalancing a vehicle
+action_space: action space
+state: the system state. It’s (ui, vi, cik) for every zone, where cik is the cost of going to i. e.g., 67 zones -&gt; 67  * 3.
+center: the centroid of cells
+input_dim: input dimension</p>
+</div></blockquote>
+<dl class="method">
+<dt id="lib.Env_aggregate_step_func.RebalancingEnv.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env_aggregate_step_func.html#RebalancingEnv.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env_aggregate_step_func.RebalancingEnv.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the state of the environment and returns an initial observation.</p>
+<dl class="simple">
+<dt>Returns: </dt><dd><p>observation (object): the initial observation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Env_aggregate_step_func.RebalancingEnv.step">
+<code class="sig-name descname">step</code><span class="sig-paren">(</span><em class="sig-param">actions</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Env_aggregate_step_func.html#RebalancingEnv.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Env_aggregate_step_func.RebalancingEnv.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>actions: a vector of length N_AV, which contains the target zone for idle veh, 
+and inaction for busy ones
+impelements action, returns new state, reward. 
+Currently the DQN is inside the model.dispatch_at_time function</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.Operator">
+<span id="lib-operator-module"></span><h2>lib.Operator module<a class="headerlink" href="#module-lib.Operator" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Operator.Operator">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Operator.</code><code class="sig-name descname">Operator</code><span class="sig-paren">(</span><em class="sig-param">report</em>, <em class="sig-param">which_day_numerical=2</em>, <em class="sig-param">name='Uber'</em>, <em class="sig-param">BONUS=0</em>, <em class="sig-param">SURGE_MULTIPLIER=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the actions of the company operating the ride-share vehicles.</p>
+<dl class="method">
+<dt id="lib.Operator.Operator.expected_fare_totaldemand_per_zone_over_days">
+<code class="sig-name descname">expected_fare_totaldemand_per_zone_over_days</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.expected_fare_totaldemand_per_zone_over_days"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.expected_fare_totaldemand_per_zone_over_days" title="Permalink to this definition">¶</a></dt>
+<dd><p>A professional driver will query this one time per (hour) to use as prior
+&#64;param t: time
+&#64;return: (df) demand fare prior dataframe for the given time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.false_zonal_info_over_t">
+<code class="sig-name descname">false_zonal_info_over_t</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.false_zonal_info_over_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.false_zonal_info_over_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the false zonal info over t
+&#64;param t
+&#64;return: (df) false zonal info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.get_zonal_info">
+<code class="sig-name descname">get_zonal_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.get_zonal_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.get_zonal_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param t:
+&#64;return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.set_bonus_for_zones">
+<code class="sig-name descname">set_bonus_for_zones</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">zones</em>, <em class="sig-param">target_zone_ids</em>, <em class="sig-param">bonus</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.set_bonus_for_zones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.set_bonus_for_zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets bonus for the zones
+self.zones, coming from model
+&#64;param t: time
+&#64;param zones: list of zones
+&#64;param target_zone_ids: list of target zone ids (int)
+&#64;param bonus: (float)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.set_surge_multipliers_for_zones">
+<code class="sig-name descname">set_surge_multipliers_for_zones</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">zones</em>, <em class="sig-param">target_zone_ids</em>, <em class="sig-param">surge</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.set_surge_multipliers_for_zones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.set_surge_multipliers_for_zones" title="Permalink to this definition">¶</a></dt>
+<dd><p>self.zones, coming from model. NOT USED!
+&#64;param t:
+&#64;param zones:
+&#64;param target_zone_ids:
+&#64;param surge:
+&#64;return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.surge_step_function">
+<code class="sig-name descname">surge_step_function</code><span class="sig-paren">(</span><em class="sig-param">ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.surge_step_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.surge_step_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the surge charge based on an assumed step-wise function
+0.9-1 : 1.2
+1-1.2 : 1.5
+1.2-2: 2
+&gt;2: 3
+&#64;param ratio: (float)
+&#64;return: the surge charge according to the function.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.true_zonal_info_over_t">
+<code class="sig-name descname">true_zonal_info_over_t</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.true_zonal_info_over_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.true_zonal_info_over_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the correct zone demand.
+&#64;param t: time
+&#64;return: (df) zonal demand over t</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.update_zonal_info">
+<code class="sig-name descname">update_zonal_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.update_zonal_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.update_zonal_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the zonal information if it’s a new demand update interval.
+&#64;param t: current time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.update_zone_policy">
+<code class="sig-name descname">update_zone_policy</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">zones</em>, <em class="sig-param">WARMUP_PHASE</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.update_zone_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.update_zone_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is meant to be called with the main simulation.
+It automatically sets pricing policies for each zone.
+e.g., surge pricing
+&#64;param t:
+&#64;param zones:
+&#64;param WARMUP_PHASE:
+&#64;return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Operator.Operator.zonal_info_for_veh">
+<code class="sig-name descname">zonal_info_for_veh</code><span class="sig-paren">(</span><em class="sig-param">true_demand</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.zonal_info_for_veh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.zonal_info_for_veh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the zonal info for vehicles.
+&#64;param true_demand: (bool)
+&#64;return: (df)</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.Requests">
+<span id="lib-requests-module"></span><h2>lib.Requests module<a class="headerlink" href="#module-lib.Requests" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Requests.Req">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Requests.</code><code class="sig-name descname">Req</code><span class="sig-paren">(</span><em class="sig-param">id, Tr, fare, ozone=4, dzone=12, DIST_MAT=      PULocationID  DOLocationID  trip_distance_meter 0                4             4          1124.199140 1                4            12          5802.000000 2                4            13          6471.456790 3                4            24         11505.555556 4                4            41         11405.105263 ...            ...           ...                  ... 4484           263           246          7812.354237 4485           263           249          8929.794643 4486           263           261         12956.572193 4487           263           262          1021.384818 4488           263           263          1015.084149  [4489 rows x 3 columns]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Requests.html#Req"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Requests.Req" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Req is a class for requests
+Attributes:</p>
+<blockquote>
+<div><p>id: sequential unique id
+Tr: request time
+ozone: origin zone
+dzone: destination zone
+Ds: shortest travel distance
+Ts: shortest travel time
+Tp: pickup time
+Td: dropoff time
+DR: distance rejected (true if distance O-&gt;D is less than DISTANCE_THRESHOLD)</p>
+</div></blockquote>
+<dl class="method">
+<dt id="lib.Requests.Req.get_destination">
+<code class="sig-name descname">get_destination</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Requests.html#Req.get_destination"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Requests.Req.get_destination" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: (int) the destination zone id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Requests.Req.get_origin">
+<code class="sig-name descname">get_origin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Requests.html#Req.get_origin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Requests.Req.get_origin" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: (int) the origin zone id</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.Vehicles">
+<span id="lib-vehicles-module"></span><h2>lib.Vehicles module<a class="headerlink" href="#module-lib.Vehicles" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Vehicles.Veh">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Vehicles.</code><code class="sig-name descname">Veh</code><span class="sig-paren">(</span><em class="sig-param">rs, operator, beta=1, true_demand=True, professional=False, ini_loc=None, know_fare=False, is_AV=False, dist_mat=      PULocationID  DOLocationID  trip_distance_meter 0                4             4          1124.199140 1                4            12          5802.000000 2                4            13          6471.456790 3                4            24         11505.555556 4                4            41         11405.105263 ...            ...           ...                  ... 4484           263           246          7812.354237 4485           263           249          8929.794643 4486           263           261         12956.572193 4487           263           262          1021.384818 4488           263           263          1015.084149  [4489 rows x 3 columns]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class encapsulating a vehicle.</p>
+<dl class="method">
+<dt id="lib.Vehicles.Veh.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">Zones</em>, <em class="sig-param">WARMUP_PHASE</em>, <em class="sig-param">action=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.act" title="Permalink to this definition">¶</a></dt>
+<dd><ol class="arabic simple">
+<li><p>just started or has been idle for too long -&gt; choose zone</p></li>
+<li><p>if it’s rebalancing (i.e., on the way to the target zone) -&gt; check whether or not it has gotten there</p></li>
+<li><p>if it’s idle, but the waiting time has not yet exceeded the threshold -&gt;  keep waiting</p></li>
+<li><p>if it’s currently serving a demand -&gt; update status</p></li>
+</ol>
+<p>5. idling is also an option 
+action is the INDEX of the zone, needs to be converted to the actual zone_id</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.cal_profit_per_zone_per_app">
+<code class="sig-name descname">cal_profit_per_zone_per_app</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.cal_profit_per_zone_per_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.cal_profit_per_zone_per_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param t: time of day
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.choose_target_zone">
+<code class="sig-name descname">choose_target_zone</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.choose_target_zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.choose_target_zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>This has to be based on the information communicated by the app, as well as the prior experience
+It should have the option of not moving. Maybe include that in the neighbors list
+&#64;param t: time of day
+&#64;return</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lib.Vehicles.Veh.get_data_from_operator">
+<code class="sig-name descname">get_data_from_operator</code><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.get_data_from_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.get_data_from_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param t: time
+&#64;param true_demand (bool)
+&#64;return: dataframe with zonal info for vehicle</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lib.Vehicles.Veh.get_neighboring_zone_ids">
+<code class="sig-name descname">get_neighboring_zone_ids</code><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.get_neighboring_zone_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.get_neighboring_zone_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;param ozone (int): pickup zone
+&#64;return: a list of ids (ints) of the neighboring zones</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.is_busy">
+<em class="property">property </em><code class="sig-name descname">is_busy</code><a class="headerlink" href="#lib.Vehicles.Veh.is_busy" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: bool</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.is_rebalancing">
+<em class="property">property </em><code class="sig-name descname">is_rebalancing</code><a class="headerlink" href="#lib.Vehicles.Veh.is_rebalancing" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: (bool)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.is_waiting_to_be_matched">
+<em class="property">property </em><code class="sig-name descname">is_waiting_to_be_matched</code><a class="headerlink" href="#lib.Vehicles.Veh.is_waiting_to_be_matched" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: (bool)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.keep_serving">
+<code class="sig-name descname">keep_serving</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.keep_serving"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.keep_serving" title="Permalink to this definition">¶</a></dt>
+<dd><p># TODO: what’s going on here?
+&#64;return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.keep_waiting">
+<code class="sig-name descname">keep_waiting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.keep_waiting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.keep_waiting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the waiting time of a vehicle.
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.match_w_req">
+<code class="sig-name descname">match_w_req</code><span class="sig-paren">(</span><em class="sig-param">req</em>, <em class="sig-param">Zones</em>, <em class="sig-param">WARMUP_PHASE</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.match_w_req"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.match_w_req" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches with request if possible and returns an indicator whether the vehicle is matched.</p>
+<p>&#64;param req: (Request)
+&#64;param Zones: list of zones (ints)
+&#64;param WARMUP_PHASE: bool
+&#64;return: bool (matched or not)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.set_action">
+<code class="sig-name descname">set_action</code><span class="sig-paren">(</span><em class="sig-param">action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.set_action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.set_action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the RL agent to decide on the target.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.set_prior_info">
+<code class="sig-name descname">set_prior_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.set_prior_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.set_prior_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets prior demand/fare info.
+&#64;param t: time
+&#64;return (df): prior</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.should_move">
+<code class="sig-name descname">should_move</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.should_move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.should_move" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return: bool, true if just started or has been idle for too long</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.update_rebalancing">
+<code class="sig-name descname">update_rebalancing</code><span class="sig-paren">(</span><em class="sig-param">WARMUP_PHASE</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.update_rebalancing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.update_rebalancing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates when the vehicle state is rebalancing.</p>
+<p>&#64;param WARMUP_PHASE (bool)
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Vehicles.Veh.waited_too_long">
+<code class="sig-name descname">waited_too_long</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.waited_too_long"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.waited_too_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes sure it’s not idle nor rebalancing, then if it has been idle for too long returns True
+&#64;return: (bool)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lib.Vehicles.VehState">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Vehicles.</code><code class="sig-name descname">VehState</code><a class="reference internal" href="_modules/lib/Vehicles.html#VehState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.VehState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Enum describing the state of a vehicle, where
+IDLE = waiting to be matched
+REBAL = travelling, but without a passenger. Upon arrival, should wait to be matched
+SERVING = currently saving demand. Should make a decision to move upon arrival at the req’s destination
+DECISION = should make a decision</p>
+<dl class="attribute">
+<dt id="lib.Vehicles.VehState.DECISION">
+<code class="sig-name descname">DECISION</code><em class="property"> = 4</em><a class="headerlink" href="#lib.Vehicles.VehState.DECISION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lib.Vehicles.VehState.IDLE">
+<code class="sig-name descname">IDLE</code><em class="property"> = 1</em><a class="headerlink" href="#lib.Vehicles.VehState.IDLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lib.Vehicles.VehState.REBAL">
+<code class="sig-name descname">REBAL</code><em class="property"> = 2</em><a class="headerlink" href="#lib.Vehicles.VehState.REBAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="lib.Vehicles.VehState.SERVING">
+<code class="sig-name descname">SERVING</code><em class="property"> = 3</em><a class="headerlink" href="#lib.Vehicles.VehState.SERVING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="lib-visualize-module">
+<h2>lib.Visualize module<a class="headerlink" href="#lib-visualize-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.Zones">
+<span id="lib-zones-module"></span><h2>lib.Zones module<a class="headerlink" href="#module-lib.Zones" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.Zones.Zone">
+<em class="property">class </em><code class="sig-prename descclassname">lib.Zones.</code><code class="sig-name descname">Zone</code><span class="sig-paren">(</span><em class="sig-param">ID</em>, <em class="sig-param">rs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl>
+<dt>Attributes:</dt><dd><p>rs1: a seeded random generator for requests
+id: zone_id
+DD : daily demand (every trip)
+M: demand matrix
+D: demand volume (trips/hour)
+V: number of vehicles
+K: capacity of vehicles
+vehs: the list of vehicles
+N: number of requests</p>
+<p>mid: row number of the demand file
+reqs: the list of requests
+rejs: the list of rejected requests
+distance_rejs: the list of requests rejected because the distance from O to D</p>
+<blockquote>
+<div><p>was below the distance threshold (not included in rejs)</p>
+</div></blockquote>
+<p>queue: requests in the queue
+assign: assignment method</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="lib.Zones.Zone.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">Zones</em>, <em class="sig-param">t</em>, <em class="sig-param">WARMUP_PHASE</em>, <em class="sig-param">penalty</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Identifies idle vehicles, then amends history and matches vehicle demand.</p>
+<p>&#64;param Zones:
+&#64;param t:
+&#64;param WARMUP_PHASE:
+&#64;param penalty:
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.calculate_demand_function">
+<code class="sig-name descname">calculate_demand_function</code><span class="sig-paren">(</span><em class="sig-param">surge</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.calculate_demand_function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.calculate_demand_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates demand as a function of current demand, elasticity, and surge.</p>
+<p>This should be a decreasing function of price 
+use elasticities instead 
+-0.6084 for NYC
+&#64;param surge (float): surge multiplier.
+&#64;requires surge &gt;= 1</p>
+<p>&#64;return (float): new demand according to surge</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.generate_requests_to_time">
+<code class="sig-name descname">generate_requests_to_time</code><span class="sig-paren">(</span><em class="sig-param">T</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.generate_requests_to_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.generate_requests_to_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate requests up to time T, following Poisson process
+&#64;param T: time
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.identify_idle_vehicles">
+<code class="sig-name descname">identify_idle_vehicles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.identify_idle_vehicles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.identify_idle_vehicles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the idle vehicles and incoming vehicle list.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.join_incoming_vehicles">
+<code class="sig-name descname">join_incoming_vehicles</code><span class="sig-paren">(</span><em class="sig-param">veh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.join_incoming_vehicles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.join_incoming_vehicles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds incoming vehicle to list of incoming vehicles.
+&#64;param veh (Vehicle)
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.join_undecided_vehicles">
+<code class="sig-name descname">join_undecided_vehicles</code><span class="sig-paren">(</span><em class="sig-param">veh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.join_undecided_vehicles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.join_undecided_vehicles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds vehicle to list of undecided vehicles.
+&#64;param veh (Vehicle)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.match_veh_demand">
+<code class="sig-name descname">match_veh_demand</code><span class="sig-paren">(</span><em class="sig-param">Zones</em>, <em class="sig-param">t</em>, <em class="sig-param">WARMUP_PHASE</em>, <em class="sig-param">penalty=-10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.match_veh_demand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.match_veh_demand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matches idle vehicles to requests via a queue.
+&#64;param Zones:
+&#64;param t: time
+&#64;param WARMUP_PHASE (bool)
+&#64;param penalty (float)
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.read_daily_demand">
+<code class="sig-name descname">read_daily_demand</code><span class="sig-paren">(</span><em class="sig-param">demand_df</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.read_daily_demand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.read_daily_demand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the daily demand of this zone.
+&#64;param demand_df: df describing demand for all zones.
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.remove_veh_from_waiting_list">
+<code class="sig-name descname">remove_veh_from_waiting_list</code><span class="sig-paren">(</span><em class="sig-param">veh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.remove_veh_from_waiting_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.remove_veh_from_waiting_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes vehicle from idle vehicles.
+&#64;param veh (Vehicle)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.set_demand_rate_per_t">
+<code class="sig-name descname">set_demand_rate_per_t</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.set_demand_rate_per_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.set_demand_rate_per_t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the demand per time period.
+This should use self.demand as the (hourly) demand, and then generate demand according to a Poisson distribution
+&#64;param t: hour of day</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.Zones.Zone.set_surge_multiplier">
+<code class="sig-name descname">set_surge_multiplier</code><span class="sig-paren">(</span><em class="sig-param">m</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Zones.html#Zone.set_surge_multiplier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Zones.Zone.set_surge_multiplier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the surge multiplier.
+&#64;param m: (float) desired surge multiplier</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.configs">
+<span id="lib-configs-module"></span><h2>lib.configs module<a class="headerlink" href="#module-lib.configs" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="lib-dqn-agent-module">
+<h2>lib.dqn_agent module<a class="headerlink" href="#lib-dqn-agent-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="lib-train-rl-module">
+<h2>lib.train_rl module<a class="headerlink" href="#lib-train-rl-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-lib.utils">
+<span id="lib-utils-module"></span><h2>lib.utils module<a class="headerlink" href="#module-lib.utils" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.utils.Model">
+<em class="property">class </em><code class="sig-prename descclassname">lib.utils.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param">zone_ids, daily_demand, warmup_time_hour, analysis_time_hour, fleet_size=[1500], pro_share=0, surge_multiplier=2, bonus=0, percent_false_demand=0.0, percentage_know_fare=0, av_share=0, beta=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Encompassing object for simulation. Creates all the zones, initializes daily demand.
+Zone objects then create Requests from the matrix row by row.</p>
+<dl class="method">
+<dt id="lib.utils.Model.assign_zone_veh">
+<code class="sig-name descname">assign_zone_veh</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">warmup_phase</em>, <em class="sig-param">penalty</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.assign_zone_veh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.assign_zone_veh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assigns zone to each vehicle.</p>
+<p>&#64;param t: time of day
+&#64;param warmup_phase (bool): whether we are in the warmup phase
+&#64;param penalty (float): penalty amount
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.dispatch_at_time">
+<code class="sig-name descname">dispatch_at_time</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">penalty=-10</em>, <em class="sig-param">action=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.dispatch_at_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.dispatch_at_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dispatches the AMoD system: move vehicles, generate requests, assign, reoptimize and rebalance.
+&#64;param t: time of day
+&#64;param penalty (float)
+&#64;param action
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.generate_zonal_demand">
+<code class="sig-name descname">generate_zonal_demand</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.generate_zonal_demand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.generate_zonal_demand" title="Permalink to this definition">¶</a></dt>
+<dd><p>First checks to see if should change the demand rates,
+then generates demand for each zone.</p>
+<p>&#64;param t: time of day
+&#64;return: None; sets values in place</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.get_service_rate_per_zone">
+<code class="sig-name descname">get_service_rate_per_zone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.get_service_rate_per_zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.get_service_rate_per_zone" title="Permalink to this definition">¶</a></dt>
+<dd><p>&#64;return (df): observations for each zone, including demand, number served, total, etc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.get_state">
+<code class="sig-name descname">get_state</code><span class="sig-paren">(</span><em class="sig-param">veh</em>, <em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.get_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.get_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the model state.</p>
+<p>&#64;param veh: an object
+&#64;return : matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.move_fleet">
+<code class="sig-name descname">move_fleet</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">warmup_phase</em>, <em class="sig-param">action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.move_fleet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.move_fleet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies action to each vehicle.</p>
+<p>&#64;param t: time of day
+&#64;param warmup_phase (bool): whether we are in the warmup phase
+&#64;param action: (unused)
+&#64;return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils.Model.set_analysis_time">
+<code class="sig-name descname">set_analysis_time</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils.html#Model.set_analysis_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils.Model.set_analysis_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the demand rate per zone given an hour of day.
+&#64;param t: hour of day
+&#64;return: None; sets values in-place.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib.utils_with_rel_engine">
+<span id="lib-utils-with-rel-engine-module"></span><h2>lib.utils_with_rel_engine module<a class="headerlink" href="#module-lib.utils_with_rel_engine" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lib.utils_with_rel_engine.Model">
+<em class="property">class </em><code class="sig-prename descclassname">lib.utils_with_rel_engine.</code><code class="sig-name descname">Model</code><span class="sig-paren">(</span><em class="sig-param">zone_ids, daily_demand, WARMUP_TIME_HOUR, ANALYSIS_TIME_HOUR, FLEET_SIZE=[1500], PRO_SHARE=0, SURGE_MULTIPLIER=2, BONUS=0, percent_false_demand=0.0, percentage_know_fare=0, AV_share=0, RL_engine=None, beta=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>encompassing object</p>
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.act">
+<code class="sig-name descname">act</code><span class="sig-paren">(</span><em class="sig-param">veh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.act"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.act" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.assign_zone_veh">
+<code class="sig-name descname">assign_zone_veh</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">WARMUP_PHASE</em>, <em class="sig-param">penalty</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.assign_zone_veh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.assign_zone_veh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.dispatch_at_time">
+<code class="sig-name descname">dispatch_at_time</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">penalty=-10</em>, <em class="sig-param">action=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.dispatch_at_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.dispatch_at_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.generate_zonal_demand">
+<code class="sig-name descname">generate_zonal_demand</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.generate_zonal_demand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.generate_zonal_demand" title="Permalink to this definition">¶</a></dt>
+<dd><p>first check and see if should change the demand rates
+then generate demand</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.get_service_rate_per_zone">
+<code class="sig-name descname">get_service_rate_per_zone</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.get_service_rate_per_zone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.get_service_rate_per_zone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.get_state">
+<code class="sig-name descname">get_state</code><span class="sig-paren">(</span><em class="sig-param">veh</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.get_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.get_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns: matrix of size (#zones * 3), where each row is  (u_i, v_i, c_ij)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.move_fleet">
+<code class="sig-name descname">move_fleet</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">WARMUP_PHASE</em>, <em class="sig-param">action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.move_fleet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.move_fleet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="lib.utils_with_rel_engine.Model.set_analysis_time">
+<code class="sig-name descname">set_analysis_time</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/utils_with_rel_engine.html#Model.set_analysis_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.utils_with_rel_engine.Model.set_analysis_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-lib">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-lib" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="lib/trial.html">All about me</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">lib package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Constants">lib.Constants module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Data">lib.Data module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Env">lib.Env module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Env_aggregate_step_func">lib.Env_aggregate_step_func module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Operator">lib.Operator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Requests">lib.Requests module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Vehicles">lib.Vehicles module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lib-visualize-module">lib.Visualize module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.Zones">lib.Zones module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.configs">lib.configs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lib-dqn-agent-module">lib.dqn_agent module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lib-train-rl-module">lib.train_rl module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.utils">lib.utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib.utils_with_rel_engine">lib.utils_with_rel_engine module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-lib">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">lib</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">lib package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="lib/trial.html" title="previous chapter">All about me</a></li>
+      <li>Next: <a href="modules.html" title="next chapter">lib</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/lib.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

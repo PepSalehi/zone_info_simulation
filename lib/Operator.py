@@ -11,6 +11,9 @@ from lib.Constants import (
 
 
 class Operator:
+    """
+    Represents the actions of the company operating the ride-share vehicles.
+    """
     def __init__(
         self,
         report,
@@ -19,6 +22,14 @@ class Operator:
         BONUS=BONUS,
         SURGE_MULTIPLIER=SURGE_MULTIPLIER,
     ):
+        """
+        Creates an operator instance.
+        @param report: (df)
+        @param which_day_numerical: (int)
+        @param name: (str) name of operator
+        @param BONUS: (float)
+        @param SURGE_MULTIPLIER: (float)
+        """
         self.name = name
         self.demand_fare_stats_prior = pd.read_csv(
             "./Data/df_hourly_stats_over_days.csv"
@@ -39,27 +50,31 @@ class Operator:
 
     def surge_step_function(self, ratio):
         """
-        Calculates the surge charge based on an assumed step-wise function 
+        Calculates the surge charge based on an assumed step-wise function
         0.9-1 : 1.2
         1-1.2 : 1.5
         1.2-2: 2
         >2: 3
-    
+        @param ratio: (float)
+        @return: the surge charge according to the function.
         """
         if ratio < 0.9:
             return 1
-        if ratio <= 1 and ratio >= 0.9:
+        if 1 >= ratio >= 0.9:
             return 1.2
-        if ratio <= 1.2 and ratio > 1:
+        if 1.2 >= ratio > 1:
             return 1.5
-        if ratio < 2 and ratio > 1.2:
+        if 2 > ratio > 1.2:
             return 2
         else:
             return 3
 
     def true_zonal_info_over_t(self, t):
         """
-        return the correct demand 
+        TODO: modify for 15 min
+        Returns the correct zone demand.
+        @param t: time
+        @return: (df) zonal demand over t
         """
         # df = self.demand_fare_stats_of_the_day.query("Hour == {hour}".format(hour=t))
         df = self.demand_fare_stats_of_the_day[self.demand_fare_stats_of_the_day["Hour"] == t]
@@ -75,8 +90,10 @@ class Operator:
         return df
 
     def false_zonal_info_over_t(self, t):
-        """ 
-        
+        """
+        Calculates the false zonal info over t
+        @param t
+        @return: (df) false zonal info
         """
         False_mult = 3
         zone_ids = np.loadtxt("outputs/zones_los_less_50_f_2500.csv")
@@ -97,18 +114,30 @@ class Operator:
         return df
 
     def update_zonal_info(self, t):
-
+        """
+        Updates the zonal information if it's a new demand update interval.
+        @param t: current time
+        """
         if t % DEMAND_UPDATE_INTERVAL == 0:
             self.get_zonal_info(t)
 
     def zonal_info_for_veh(self, true_demand):
+        """
+        Gets the zonal info for vehicles.
+        @param true_demand: (bool)
+        @return: (df)
+        """
         if true_demand:
             return self.live_data
         else:
             return self.live_data_false
 
     def get_zonal_info(self, t):
-        
+        """
+
+        @param t:
+        @return:
+        """
         hour = int(np.floor(t / 3600))
         self.true_zonal_info_over_t(hour)
         # self.false_zonal_info_over_t(hour)
@@ -117,9 +146,13 @@ class Operator:
 
     def update_zone_policy(self, t, zones, WARMUP_PHASE):
         """
-        This is meant to be called with the main simulation. 
+        This is meant to be called with the main simulation.
         It automatically sets pricing policies for each zone.
         e.g., surge pricing
+        @param t:
+        @param zones:
+        @param WARMUP_PHASE:
+        @return:
         """
         if t % POLICY_UPDATE_INTERVAL == 0:
             for z in zones:
@@ -138,6 +171,11 @@ class Operator:
     def set_surge_multipliers_for_zones(self, t, zones, target_zone_ids, surge):
         """
         self.zones, coming from model. NOT USED!
+        @param t:
+        @param zones:
+        @param target_zone_ids:
+        @param surge:
+        @return:
         """
         df = self.get_zonal_info(t)
 
@@ -149,7 +187,12 @@ class Operator:
 
     def set_bonus_for_zones(self, t, zones, target_zone_ids, bonus):
         """
-        self.zones, coming from model. 
+        Sets bonus for the zones
+        self.zones, coming from model
+        @param t: time
+        @param zones: list of zones
+        @param target_zone_ids: list of target zone ids (int)
+        @param bonus: (float)
         """
         df = self.get_zonal_info(t)
 
@@ -159,7 +202,7 @@ class Operator:
                 if zone.id == zid:
                     zone.bonus = bonus
 
-    # def dissiminate_zonal_demand_info(self, t, tell_truth=True):
+    # def disseminate_zonal_demand_info(self, t, tell_truth=True):
     #     """
     #     Drivers will use this function to access the demand data. 
     #     #TODO this can be potentially updated to include supply as well. An Uber driver told me that he would switch to pax mode
@@ -170,12 +213,11 @@ class Operator:
     #         self.true_zonal_info(t)
 
     def expected_fare_totaldemand_per_zone_over_days(self, t):
-
-        """ 
-        A professional driver will query this one time per (hour) to use as prior
-        
         """
-
+        A professional driver will query this one time per (hour) to use as prior
+        @param t: time
+        @return: (df) demand fare prior dataframe for the given time
+        """
         df = self.demand_fare_stats_prior.query("Hour == {hour}".format(hour=t))
         return df
 

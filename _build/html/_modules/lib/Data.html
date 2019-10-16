@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>lib.Data &#8212; Rideshare RL 1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for lib.Data</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+
+<div class="viewcode-block" id="Data"><a class="viewcode-back" href="../../lib.html#lib.Data.Data">[docs]</a><span class="k">class</span> <span class="nc">Data</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replaces Constants.py. Container for all constants, reference data that</span>
+<span class="sd">    other modules will use.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">path_zone_neighbors</span><span class="p">,</span> <span class="n">path_dist_mat</span><span class="p">,</span> <span class="n">path_zones_w_neighbors</span><span class="p">,</span>
+                 <span class="n">path_daily_demand</span><span class="p">,</span> <span class="n">phi</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">fleet_size</span><span class="o">=</span><span class="p">[</span><span class="mi">1500</span><span class="p">],</span> <span class="n">pro_share</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">percent_false_demand</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">av_share</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">penalty</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">perce_know</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">const_fare</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">surge_multiplier</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">bonus</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">constant_speed</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+                 <span class="n">ini_wait</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">ini_detour</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span>
+                 <span class="n">max_idle</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">int_assign</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">int_rebl</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
+                 <span class="n">fuel_cost</span><span class="o">=</span><span class="mf">0.033</span><span class="o">*</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">analysis_time_hour</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">warmup_time_hour</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                 <span class="n">demand_update_interval</span><span class="o">=</span><span class="mi">3600</span><span class="p">,</span> <span class="n">policy_update_interval</span><span class="o">=</span><span class="mi">10</span><span class="o">*</span><span class="mi">60</span><span class="p">,</span>
+                 <span class="n">min_demand</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">analysis_duration</span><span class="o">=</span><span class="mi">4</span><span class="o">*</span><span class="mi">3600</span><span class="p">,</span>
+                 <span class="n">t</span><span class="o">=</span><span class="mi">15</span>
+                 <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates Data instance.</span>
+<span class="sd">        @param path_zone_neighbors: path to zone neighbors file</span>
+<span class="sd">        @param path_dist_mat: path to distance matrix file</span>
+<span class="sd">        @param path_zones_w_neighbors: path to zone w neighbors file</span>
+<span class="sd">        @param path_daily_demand: path to daily demand file</span>
+<span class="sd">        @param phi: (float) operator commission</span>
+<span class="sd">        @param fleet_size: (list of int) fleet size and breakdown #TODO: of what?</span>
+<span class="sd">        @param pro_share: (float) proportion of pro drivers</span>
+<span class="sd">        @param percent_false_demand: (float)</span>
+<span class="sd">        @param av_share: (float) proportion of AVs</span>
+<span class="sd">        @param penalty: (float)</span>
+<span class="sd">        @param perce_know: (float) proportion of fare-aware vehicles</span>
+<span class="sd">        @param const_fare: (float)</span>
+<span class="sd">        @param surge_multiplier: (float)</span>
+<span class="sd">        @param bonus: (float)</span>
+<span class="sd">        @param constant_speed: (float) in meters per second</span>
+<span class="sd">        @param ini_wait: (float) initial wait time when starting the interaction</span>
+<span class="sd">        @param ini_detour: (float) initial detour factor when starting the interaction</span>
+<span class="sd">        @param max_idle:</span>
+<span class="sd">        @param int_assign: (int) interval for vehicle-request assignment</span>
+<span class="sd">        @param int_rebl: (int) interval for rebalancing</span>
+<span class="sd">        @param fuel_cost: (float) dollars/meter</span>
+<span class="sd">            https://www.marketwatch.com/story/heres-how-much-uber-drivers-really-make-2017-12-01</span>
+<span class="sd">        @param analysis_time_hour: (int) e.g. 8 (am)</span>
+<span class="sd">        @param warmup_time_hour: (int)</span>
+<span class="sd">        @param demand_update_interval: (int) in seconds</span>
+<span class="sd">        @param policy_update_interval: (int) in seconds</span>
+<span class="sd">        @param min_demand: (float) min demand to have surge</span>
+<span class="sd">        @param analysis_duration: (int) in seconds</span>
+<span class="sd">        @param t: (int) number of minutes for demand binning</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># SET ZONE INFORMATION</span>
+        <span class="c1"># Zone neighbors dict, keys are strings</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_zone_neighbors</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ZONES_NEIGHBORS</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Distance matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DIST_MAT</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_dist_mat</span><span class="p">)</span>
+
+        <span class="c1"># Get zone ids</span>
+        <span class="n">zone_ids_file</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_zones_w_neighbors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ZONES_IDS</span> <span class="o">=</span> <span class="n">zone_ids_file</span><span class="o">.</span><span class="n">LocationID</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ZONES_IDS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ZONES_IDS</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DIST_MAT</span><span class="o">.</span><span class="n">PULocationID</span><span class="o">.</span><span class="n">unique</span><span class="p">()))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The number of zones is &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ZONES_IDS</span><span class="p">))</span>
+
+        <span class="c1"># Get demand source</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">DEMAND_SOURCE</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_daily_demand</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The number of requests over all days is  &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEMAND_SOURCE</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+        <span class="c1"># Bins demand into 15 minute periods, populates variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BINNED_DEMAND</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_demand</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="c1"># SET OTHER CONSTANTS</span>
+        <span class="c1"># Operators commission</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PHI</span> <span class="o">=</span> <span class="n">phi</span>
+
+        <span class="c1"># fleet size and its breakdown</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLEET_SIZE</span> <span class="o">=</span> <span class="n">fleet_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PRO_SHARE</span> <span class="o">=</span> <span class="n">pro_share</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PERCENT_FALSE_DEMAND</span> <span class="o">=</span> <span class="n">percent_false_demand</span>  <span class="c1"># given wrong demand info</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">AV_SHARE</span> <span class="o">=</span> <span class="n">av_share</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PENALTY</span> <span class="o">=</span> <span class="n">penalty</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PERCE_KNOW</span> <span class="o">=</span> <span class="n">perce_know</span> <span class="c1"># percentage of drivers that know the avg fare</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CONST_FARE</span> <span class="o">=</span> <span class="n">const_fare</span>  <span class="c1"># fare used when they don&#39;t know the true avg fare</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SURGE_MULTIPLIER</span> <span class="o">=</span> <span class="n">surge_multiplier</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">BONUS</span> <span class="o">=</span> <span class="n">bonus</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">CONSTANT_SPEED</span> <span class="o">=</span> <span class="n">constant_speed</span>  <span class="c1"># meters per second</span>
+
+        <span class="c1"># initial wait time and detour factor when starting the interaction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INI_WAIT</span> <span class="o">=</span> <span class="n">ini_wait</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INI_DETOUR</span> <span class="o">=</span> <span class="n">ini_detour</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MAX_IDLE</span> <span class="o">=</span> <span class="n">max_idle</span>
+
+        <span class="c1"># intervals for vehicle-request assignment and rebalancing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INT_ASSIGN</span> <span class="o">=</span> <span class="n">int_assign</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INT_REBL</span> <span class="o">=</span> <span class="n">int_rebl</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">FUEL_COST</span> <span class="o">=</span> <span class="n">fuel_cost</span>  <span class="c1"># dollors per meter. roughly 54 cents/mile</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_HOUR</span> <span class="o">=</span> <span class="n">analysis_time_hour</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_SECONDS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_TIME_HOUR</span> <span class="o">*</span> <span class="mi">3600</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_TIME_HOUR</span> <span class="o">=</span> <span class="n">warmup_time_hour</span>  <span class="c1"># used for setting up the demand 8am</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_TIME_SECONDS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_TIME_HOUR</span> <span class="o">*</span> <span class="mi">3600</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">DEMAND_UPDATE_INTERVAL</span> <span class="o">=</span> <span class="n">demand_update_interval</span> <span class="c1"># seconds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">POLICY_UPDATE_INTERVAL</span> <span class="o">=</span> <span class="n">policy_update_interval</span>  <span class="c1"># 10 minutes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">MIN_DEMAND</span> <span class="o">=</span> <span class="n">min_demand</span>  <span class="c1"># min demand to have surge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_DURATION</span> <span class="o">=</span> <span class="n">analysis_duration</span>  <span class="c1"># hours</span>
+
+        <span class="c1"># warm-up time, study time and cool-down time of the simulation (in seconds)</span>
+        <span class="c1"># start_time_offset + 1 hour warm up + 1 hour analysis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_TOTAL_SECONDS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WARMUP_TIME_SECONDS</span> <span class="o">+</span> <span class="mi">3600</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANALYSIS_DURATION</span>
+
+        <span class="c1"># TODO: what to do with this?</span>
+        <span class="c1"># T_WARM_UP = 60*30</span>
+        <span class="c1"># T_STUDY = 60*60</span>
+        <span class="c1"># T_COOL_DOWN = 60*30</span>
+        <span class="c1"># T_TOTAL = (T_WARM_UP + T_STUDY + T_COOL_DOWN)</span>
+
+<div class="viewcode-block" id="Data.bin_demand"><a class="viewcode-back" href="../../lib.html#lib.Data.Data.bin_demand">[docs]</a>    <span class="k">def</span> <span class="nf">bin_demand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bin_width</span><span class="o">=</span><span class="s1">&#39;15T&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Counts the number of pickups/dropoffs per time interval, sectioned by zone.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            bin_width (str): e.g. &#39;5T&#39;== 5 minutes, &#39;1H&#39; == 1 hour</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            pandas df (indices: datetime, locationID. columns: frequency)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="s1">&#39;tpep_pickup_datetime&#39;</span>
+        <span class="n">locationID</span> <span class="o">=</span> <span class="s1">&#39;PULocationID&#39;</span>
+
+        <span class="c1"># Keep relevant columns</span>
+        <span class="n">pickups_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEMAND_SOURCE</span><span class="p">[[</span><span class="n">times</span><span class="p">,</span> <span class="n">locationID</span><span class="p">,</span> <span class="s1">&#39;passenger_count&#39;</span><span class="p">]]</span>
+        <span class="n">pickups_df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Resample and summarize</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">pickups_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">locationID</span><span class="p">)</span><span class="o">.</span><span class="n">resample</span><span class="p">(</span>
+                <span class="n">bin_width</span><span class="p">)[</span><span class="s1">&#39;passenger_count&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;locationID&#39;</span><span class="p">,</span> <span class="s1">&#39;times&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">BINNED_DEMAND</span> <span class="o">=</span> <span class="n">result</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">Rideshare RL</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../lib/trial.html">All about me</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../lib.html">lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">lib</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Peyman Noursalehi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
