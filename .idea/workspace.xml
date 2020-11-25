@@ -2,23 +2,58 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="tidy up&#10;">
-      <change afterPath="$PROJECT_DIR$/lib/Data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/peyman.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/remote-mappings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/sshConfigs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/webServers.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Analysis/basic_analysis_1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/AvDriver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/Exploratory analysis.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/InexperiencedDriver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/NaiveDriver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/ProfessionalDriver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/behavioral_optimizer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/testing_pandas_speedup_techniques.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/Simulation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Simulation.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/README.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Untitled.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Untitled.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/genindex.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/genindex.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/lib.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/lib.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analysis_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/analysis_2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Data.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Env.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Env_aggregate_step_func.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Env_aggregate_step_func.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Operator.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Operator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Requests.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Requests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Vehicles.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Vehicles.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Zones.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Zones.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/dqn_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/dqn_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/configs.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/configs.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/train_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/train_rl.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_parallel.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_parallel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/utils_with_rel_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils_with_rel_engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/my_agent.p" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian_cache.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian_cache2.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian_cache3.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian_cache3_minor.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mydqntrian_cache4.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript.cprof" beforeDir="false" afterPath="$PROJECT_DIR$/myscript.cprof" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/notes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_rl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_rl_with_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_rl_with_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_dqn_agent.py.lprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_rl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_rl_cmd_temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_rl_cmd_temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tt.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/tt.ipynb" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -34,12 +69,18 @@
     <option name="PATCH_PATH" value="" />
   </component>
   <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
     <option name="GROUP_SCHEMA" value="true" />
     <option name="GROUP_CONTENTS" value="false" />
     <option name="SORT_POSITIONED" value="false" />
-    <option name="SHOW_TABLE_DETAILS" value="true" />
     <option name="SHOW_EMPTY_GROUPS" value="false" />
     <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
   </component>
   <component name="FavoritesManager">
     <favorites_list name="Simulation" />
@@ -56,25 +97,40 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1PhnlqvZQgZD2RdvAdJR0DS7jGB" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
     <property name="js.eslint.eslintPackage" value="" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/lib" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
-    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
-      <console-settings module-name="Simulation" sdk-home="C:\Users\Emily\Dropbox (MIT)\urop_dusp\venv\Scripts\python.exe">
-        <option name="mySdkHome" value="C:\Users\Emily\Dropbox (MIT)\urop_dusp\venv\Scripts\python.exe" />
+      <console-settings module-name="Simulation" is-module-sdk="true" working-directory="$PROJECT_DIR$">
+        <option name="myUseModuleSdk" value="true" />
         <option name="myModuleName" value="Simulation" />
+        <option name="myWorkingDirectory" value="$PROJECT_DIR$" />
       </console-settings>
     </option>
+    <option name="myShowDebugConsoleByDefault" value="true" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/lib" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
@@ -90,16 +146,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run">
-    <configuration default="true" type="js.build_tools.gulp">
-      <node-interpreter>project</node-interpreter>
-      <node-options />
-      <gulpfile />
-      <tasks />
-      <arguments />
-      <envs />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.run_parallel_for_avg_fare">
     <configuration default="true" type="tests" factoryName="Attests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -119,6 +166,28 @@
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <method />
+    </configuration>
+    <configuration name="Data" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Simulation" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lib" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/lib/Data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="Simulation" />
@@ -164,6 +233,25 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="run_parallel_for_avg_fare" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="Simulation" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_parallel_for_avg_fare.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="train_dqn_agent" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Simulation" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -186,16 +274,33 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration default="true" type="js.build_tools.gulp">
+      <node-interpreter>project</node-interpreter>
+      <node-options />
+      <gulpfile />
+      <tasks />
+      <arguments />
+      <envs />
+      <method v="2" />
+    </configuration>
     <list>
+      <item itemvalue="Python.Data" />
       <item itemvalue="Python.run" />
+      <item itemvalue="Python.run_parallel_for_avg_fare" />
       <item itemvalue="Python.train_dqn_agent" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.run_parallel_for_avg_fare" />
+        <item itemvalue="Python.Data" />
         <item itemvalue="Python.run" />
         <item itemvalue="Python.train_dqn_agent" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="StructureViewFactory">
+    <option name="AUTOSCROLL_FROM_SOURCE" value="true" />
+    <option name="ACTIVE_ACTIONS" value=",SHOW_INHERITED" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -215,6 +320,31 @@
       <workItem from="1566338595426" duration="22000" />
       <workItem from="1566338640458" duration="46000" />
       <workItem from="1566405227107" duration="1771000" />
+      <workItem from="1574889254895" duration="62000" />
+      <workItem from="1575920498174" duration="7961000" />
+      <workItem from="1576525180357" duration="5829000" />
+      <workItem from="1587595133790" duration="530000" />
+      <workItem from="1588952011531" duration="67000" />
+      <workItem from="1589232430474" duration="223000" />
+      <workItem from="1589232727644" duration="359000" />
+      <workItem from="1589233184877" duration="16000" />
+      <workItem from="1589233233298" duration="21000" />
+      <workItem from="1589233269842" duration="563000" />
+      <workItem from="1589392389590" duration="1695000" />
+      <workItem from="1589593264029" duration="30499000" />
+      <workItem from="1589661450977" duration="2786000" />
+      <workItem from="1589734309916" duration="20067000" />
+      <workItem from="1590252938679" duration="1417000" />
+      <workItem from="1590426727085" duration="1521000" />
+      <workItem from="1590689364518" duration="1079000" />
+      <workItem from="1602703751921" duration="743000" />
+      <workItem from="1603899989371" duration="3362000" />
+      <workItem from="1606148291950" duration="931000" />
+      <workItem from="1606149263419" duration="674000" />
+      <workItem from="1606150002359" duration="878000" />
+      <workItem from="1606150900529" duration="20666000" />
+      <workItem from="1606245671173" duration="1428000" />
+      <workItem from="1606250104573" duration="18897000" />
     </task>
     <servers />
   </component>
@@ -240,13 +370,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/lib/utils.py</url>
-          <line>108</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -255,5 +378,9 @@
         </breakpoint>
       </default-breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_parallel_for_avg_fare Coverage Results" MODIFIED="1606274918160" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Simulation$Data.coverage" NAME="Data Coverage Results" MODIFIED="1574709682627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lib" />
   </component>
 </project>

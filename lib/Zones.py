@@ -5,8 +5,9 @@ import pandas as pd
 from collections import deque
 # from functools import lru_cache
 from lib.Requests import Req
-from lib.Constants import WARMUP_TIME_SECONDS, BONUS, zones_neighbors
+from lib.Constants import WARMUP_TIME_SECONDS, BONUS
 from lib.Vehicles import VehState
+
 
 class Zone:
     """
@@ -29,6 +30,7 @@ class Zone:
         queue: requests in the queue
         assign: assignment method
     """
+
     def __init__(self, ID, rs=None):
         """
         Initializes a zone object.
@@ -52,6 +54,8 @@ class Zone:
         self.N = 0
         self.M = None
         self.DD = None
+        self.D = None
+        self.pickup_binned = None
         self.mid = 0
         self.surge = 1
         self.bonus = 0
@@ -61,7 +65,7 @@ class Zone:
         self._n_matched = 0
         self.revenue_generated = 0
         self._demand_history = []
-        self._serverd_demand_history = []
+        self._served_demand_history = []
         self._supply_history = []
         self._incoming_supply_history = []
         # for debugging
@@ -69,32 +73,38 @@ class Zone:
 
     def read_daily_demand(self, demand_df):
         """
-        Updates the daily demand of this zone.
-        @param demand_df: df describing demand for all zones.
+        Updates the daily OD demand of this zone.
+        @param pickup_df: df pick ups
+        @param demand_df: df describing OD demand for all zones.
         @return: None
         """
         # self.DD = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
-        self.DD = demand_df[demand_df["PULocationID"] == self.id]
+        self.DD = demand_df[demand_df["PULocationID"] == self.id]  ## OD data
+        # self.pickup_binned = pickup_df[pickup_df["PULocationID"] == self.id]
 
-    def calculate_demand_function(self, surge):
+    def calculate_demand_function(self, demand, surge):
         """
         Calculates demand as a function of current demand, elasticity, and surge.
 
         This should be a decreasing function of price 
         use elasticities instead 
         -0.6084 for NYC
+        @param demand:
         @param surge (float): surge multiplier.
         @requires surge >= 1
 
         @return (float): new demand according to surge
         """
-        base_demand = self.D
+        base_demand = demand
         change = self.DEMAND_ELASTICITY * (
-            surge - 1
+                surge - 1
         )  # percent change in price * elascticity
         new_demand = int((1 + change) * base_demand)  # since change is negative
         new_demand = np.max([0, new_demand])
         assert new_demand <= base_demand
+        # print("surge was ", surge)
+        # print("change in demand as calculated by elasticity ", change)
+
         return new_demand
 
     def join_incoming_vehicles(self, veh):
@@ -151,7 +161,7 @@ class Zone:
                 self.idle_vehicles.append(v)
                 self.incoming_vehicles.remove(v)
 
-    def match_veh_demand(self, Zones, t, WARMUP_PHASE, penalty=-10):
+    def match_veh_demand(self, Zones, t, WARMUP_PHASE, operator, penalty=-10):
         """
         Matches idle vehicles to requests via a queue.
         @param Zones:
@@ -162,26 +172,32 @@ class Zone:
         """
         for v in self.idle_vehicles[:]:
             if len(self.demand) > 0:
-                req = self.demand.popleft()
-                status = v.match_w_req(req, Zones, WARMUP_PHASE)
-                if status:  # if matched, remove from the zone's idle list
-                    #                    print("matched")
-                    self._n_matched += 1
-                    self.idle_vehicles.remove(v)
-                    assert v.ozone == req.dzone
-                    req.Tp = t
-                    # if not WARMUP_PHASE:
-                    self.served_demand.append(req)
-                    self.revenue_generated += req.fare * self.surge
-                else:
-                    print("Not mathced by zone ", self.id)
-                    if v.is_AV:
-                        "should be penalized"
-                        # v.profits.append(penalty)
+                # check see if it's time
+                if self.demand[0].Tr <= t:
+                    req = self.demand.popleft()
+                    status = v.match_w_req(req, Zones, t, WARMUP_PHASE)
+                    if status:  # if matched, remove from the zone's idle list
+                        #                    print("matched")
+                        self._n_matched += 1
+                        self.idle_vehicles.remove(v)
+                        assert v.ozone == req.dzone
+                        req.Tp = t
+                        # if not WARMUP_PHASE:
+                        self.served_demand.append(req)
+                        self.revenue_generated += req.fare * self.surge
+                        #
+                        operator.budget -= self.bonus
+
+
+                    else:
+                        print("Not matched by zone ", self.id)
+                        if v.is_AV:
+                            "should be penalized"
+                            # v.profits.append(penalty)
 
     # break
 
-    def assign(self, Zones, t, WARMUP_PHASE, penalty):
+    def assign(self, Zones, t, WARMUP_PHASE, penalty, operator):
         """
         Identifies idle vehicles, then amends history and matches vehicle demand.
 
@@ -194,21 +210,23 @@ class Zone:
         self.identify_idle_vehicles()
         # bookkeeping
         self._demand_history.append(len(self.demand))
-        self._serverd_demand_history.append(len(self.served_demand))
+        self._served_demand_history.append(len(self.served_demand))
         self._supply_history.append(len(self.idle_vehicles))
         self._incoming_supply_history.append(len(self.incoming_vehicles))
-        self.match_veh_demand(Zones, t, WARMUP_PHASE, penalty)
+        self.match_veh_demand(Zones, t, WARMUP_PHASE, operator, penalty)
 
     def set_demand_rate_per_t(self, t):
         """
         Sets the demand per time period.
         This should use self.demand as the (hourly) demand, and then generate demand according to a Poisson distribution
-        @param t: hour of day
+        @param t: seconds
         """
-        # print (self.DD.shape)
-        demand = self.DD.query("Hour == {T}".format(T=t))
-        # print (demand)
-        self.D = demand.shape[0]  # number of rows, i.e., transactions
+        t_15_min = np.floor(t / 900)
+        # demand = self.DD.query("Hour == {T}".format(T=t))
+        self.this_t_demand = self.DD[self.DD['time_of_day_index_15m'] == t_15_min]
+        self.D = self.this_t_demand.shape[0]  # number of rows, i.e., transactions
+        # print(self.D, "inside set demand")
+        # self.D = self.pickup_binned[self.pickup_binned["total_seconds"] == t].shape[0]
         self.mid = 0
 
     def set_surge_multiplier(self, m):
@@ -218,76 +236,160 @@ class Zone:
         """
         self.surge = m
 
-    # @profile 
-    def _generate_request(self, d=None):
+    # @profile
+    def _generate_request(self, d, t_15):
         """
         Generate one request, following exponential arrival interval.
-        @param d: demand
+        https://github.com/ipython-books/cookbook-2nd-code/blob/master/chapter13_stochastic/02_poisson.ipynb
+        @param d: demand (number)
         @return: request
+        when would it return None??
+            1. where there is no demand
+            2. when it cannot find the demand info in the df
         """
         # check if there is any demand first
         if self.D == 0:  # i.e., no demand
-            return None
-        if d is None:
-            d = self.D
+            print("no demand")
+            return
 
-        scale = 3600.0 / d
+        time_interval = 900.0  # 15 minutes. TODO: make sure this imports from constants.py
+        t_15_start = t_15 * time_interval
+        # print("t_15_start :", t_15_start)
+        rate = d
+        scale = time_interval / d
         # inter-arrival time is generated according to the exponential distribution
-        dt = np.int(self.rs1.exponential(scale))
-        try:
-            destination = self.DD.iloc[self.mid]["DOLocationID"]
-            # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
-            fare = self.DD.iloc[self.mid]["fare_amount"] * self.surge + self.bonus
-        except:
-            # if there are no more rows in the data
-            return None
+        # y is the arrival times, between 0-time_interval
+        y = np.cumsum(self.rs1.exponential(scale,
+                                           size=int(rate)))
+        y += t_15_start
+        # print("arrival times are :", y)
+        self.__generate_exact_req_object2(y)
 
-        req = Req(
-            id=0 if self.N == 0 else self.reqs[-1].id + 1,
-            Tr=WARMUP_TIME_SECONDS + dt if self.N == 0 else self.reqs[-1].Tr + dt,
+        # dt = np.int(self.rs1.exponential(scale))
+        # try:
+        #     # destination = self.DD.iloc[self.mid]["DOLocationID"]
+        #     destination = self.DD.iloc[self.mid]["DOLocationID"]
+        #     # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
+        #     fare = self.DD.iloc[self.mid]["fare_amount"] * self.surge + self.bonus
+        # except:
+        #     # if there are no more rows in the data
+        #     print("couldn't find anymore rows")
+        #     return None
+        #
+        # req = Req(
+        #     id=0 if self.N == 0 else self.reqs[-1].id + 1,
+        #     Tr=WARMUP_TIME_SECONDS + dt if self.N == 0 else self.reqs[-1].Tr + dt,
+        #     ozone=self.id,
+        #     dzone=destination,
+        #     fare=fare,
+        # )
+        # #                    dist = distance)
+        # self.mid += 1
+        # return req
+
+    def __generate_exact_req_object2(self, y):
+        # self.mid = 0
+        # print("mid", self.mid)
+        # def __generate_exact_req_object(self, y):
+
+        two_d_array = self.this_t_demand.iloc[0:len(y)][["DOLocationID", "fare_amount"]].values
+        two_d_array[:, 1] = two_d_array[:, 1] * self.surge + self.bonus
+        id_counter_start = 0 if self.N == 0 else self.reqs[-1].id + 1
+        ids = [id_counter_start + i for i in range(y.shape[0])]
+        reqs = [Req(
+            id=ids[i],
+            Tr=y[i],
             ozone=self.id,
-            dzone=destination,
-            fare=fare,
+            dzone=int(two_d_array[i][0]),
+            fare=two_d_array[i][1]
         )
-        #                    dist = distance)
-        self.mid += 1
-        return req
+            for i in range(y.shape[0])]
 
+        self.reqs.extend(reqs)
+        self.demand.extend(reqs)
 
     # @profile
-    def generate_requests_to_time(self, T):
+    def __generate_exact_req_object(self, y):
+        self.mid = 0
+        # print("mid", self.mid)
+        # def __generate_exact_req_object(self, y):
+        for arr_time in y:
+            # print("mid", self.mid)
+            # destination = self.DD.iloc[self.mid]["DOLocationID"]
+            try:
+                destination = self.this_t_demand.iloc[self.mid]["DOLocationID"]
+            except IndexError:
+                print("sss")
+            # distance = self.DD.iloc[self.mid]["trip_distance_meter"]
+            # try:
+            fare = self.this_t_demand.iloc[self.mid]["fare_amount"] * self.surge + self.bonus
+            # except (IndexError, TypeError):
+            #     print("fare error")
+
+            req = Req(
+                id=0 if self.N == 0 else self.reqs[-1].id + 1,
+                # Tr=WARMUP_TIME_SECONDS + arr_time if self.N == 0 else self.reqs[-1].Tr + arr_time,
+                Tr=arr_time,
+                ozone=self.id,
+                dzone=destination,
+                fare=fare
+            )
+            self.reqs.append(req)
+            self.demand.append(req)
+            # print("len of reqs", len(self.reqs))
+            self.mid += 1
+            # except:
+            #     # if there are no more rows in the data
+            #     print("couldn't find anymore rows")
+
+    # @profile
+    def generate_requests_to_time(self, t):
         """
         Generate requests up to time T, following Poisson process
-        @param T: time
+        @param t: time (seconds)
         @return: None
         """
-        if self.N == 0:
-            req = self._generate_request()
-            if req is not None:
-                self.reqs.append(req)
-                self.N += 1
+        t_15_min = np.floor(t / 900)
 
-        d = self.calculate_demand_function(self.surge)
+        self.set_demand_rate_per_t(t)
+        # print("demand before possible surge in zone", self.id, self.D)
+        demand = self.calculate_demand_function(self.D, self.surge)
+        # print("demand after possible surge in zone", self.id, demand)
+
         before_demand = len(self.demand)
-        while d != 0 and self.reqs[-1].Tr <= T:  # self.N <= self.D:
-            req = self._generate_request(d)
-            if req is not None:
-                # self.demand.append(self.reqs[-1]) # hmm, what?
-                self.demand.append(req)
-                self.reqs.append(req)
-                self.N += 1
-                # for debugging, number of requests per 5 minutes
-                self._time_demand.append(
-                    np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60))
-                )
-            else:
-                break
-        after_demand = len(self.demand)
-        if after_demand - before_demand > 100:
-            print("Huge increase in the number of requests over 30 seconds!!")
-            print("d ", d)
-            print("T ", T)
-            print("zone id ", self.id)
+        # print("self.D", self.D)
+        # print("demand after surge computation", demand)
+        self._generate_request(self.D, t_15_min)
+
+        # if there has not been a previous demand, just create one
+        # if self.N == 0:
+        #     req = self._generate_request()
+        #     if req is not None:
+        #         self.reqs.append(req)
+        #         self.N += 1
+        #
+        # d = self.calculate_demand_function(self.D, self.surge)
+        # before_demand = len(self.demand)
+        # while d != 0 and self.reqs[-1].Tr <= t:
+        #     # if there was a prior demand, check and see if the time was handled correctly
+        #     req = self._generate_request(d)
+        #     if req is not None:
+        #         self.demand.append(req)
+        #         self.reqs.append(req)
+        #         self.N += 1
+        #         # for debugging, number of requests per 5 minutes
+        #         self._time_demand.append(
+        #             np.floor((req.Tr - WARMUP_TIME_SECONDS) / (5 * 60))
+        #         )
+        #     else:
+        #         break
+        #
+        # after_demand = len(self.demand)
+        # if after_demand - before_demand > 100:
+        #     print("Huge increase in the number of requests over 30 seconds!!")
+        #     print("d ", d)
+        #     print("T ", T)
+        #     print("zone id ", self.id)
 
 # TODO: df_hourly_stats_over_days is what a professional driver knows
 # TODO: df_hourly_stats is stats per hour per day. Can be the true information provided by the operator (although how are they gonna know it in advance?)

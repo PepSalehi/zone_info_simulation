@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from lib.Constants import DIST_MAT, CONSTANT_SPEED
+from lib.Constants import DIST_MAT, CONSTANT_SPEED, my_dist_class
 
 
 class Req:
@@ -52,20 +52,23 @@ class Req:
         @return: tuple (distance, time)
         """
         try:
-            Ds = np.ceil(
-                # self.DIST_MAT.query(
-                #     "PULocationID == {origin} & DOLocationID == {destination} ".format(
-                #         origin=self.ozone, destination=self.dzone
-                #     )
-                # )["trip_distance_meter"].values[0]
-                DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)][
-                    "trip_distance_meter"].values[0]
-            )
+
+            ds = my_dist_class.return_distance(self.ozone, self.dzone)
+            # ds = np.ceil(
+            #     # self.DIST_MAT.query(
+            #     #     "PULocationID == {origin} & DOLocationID == {destination} ".format(
+            #     #         origin=self.ozone, destination=self.dzone
+            #     #     )
+            #     # )["trip_distance_meter"].values[0]
+            #     # DIST_MAT[(DIST_MAT["PULocationID"] == self.ozone) & (DIST_MAT["DOLocationID"] == self.dzone)][
+            #     #     "trip_distance_meter"].values[0]
+            #     DIST_MAT.loc[self.ozone,  self.dzone]["trip_distance_meter"].values
+            # )
         except:
-            Ds = 10 * 1609  # meter
+            ds = 10 * 1609  # meter
             print("didn't find the distance")
-        Ts = np.int(Ds / CONSTANT_SPEED)
-        return Ds, Ts
+        # Ts = np.int(ds / CONSTANT_SPEED)
+        return ds, np.int(ds / CONSTANT_SPEED)
 
     def get_origin(self):
         """

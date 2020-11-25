@@ -193,9 +193,9 @@
 <span class="sd">        @param ozone (int): current zone</span>
 <span class="sd">        @return: df of distances to neighboring zones</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># neighbors_list = self.get_neighboring_zone_ids()</span>
+        <span class="c1"># neighbors_list = self._get_neighboring_zone_ids()</span>
         <span class="n">dists</span> <span class="o">=</span> <span class="n">DIST_MAT</span><span class="p">[(</span><span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;PULocationID&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ozone</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span>
-        <span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)))]</span>
+        <span class="n">DIST_MAT</span><span class="p">[</span><span class="s2">&quot;DOLocationID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)))]</span>
         <span class="c1"># dists = DIST_MAT.query(</span>
         <span class="c1">#     &quot;PULocationID=={o} &amp; DOLocationID.isin({destinations})&quot;.format(</span>
         <span class="c1">#         o=self.ozone, destinations=neighbors_list</span>
@@ -239,7 +239,7 @@
 
         <span class="k">return</span> <span class="n">dist</span>
 
-<div class="viewcode-block" id="Veh.set_prior_info"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.set_prior_info">[docs]</a>    <span class="k">def</span> <span class="nf">set_prior_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="Veh.set_prior_info"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.set_prior_info">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_prior_fare_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets prior demand/fare info.</span>
 <span class="sd">        @param t: time</span>
@@ -323,7 +323,7 @@
                     <span class="k">raise</span> <span class="ne">AssertionError</span></div>
 
 <div class="viewcode-block" id="Veh.get_neighboring_zone_ids"><a class="viewcode-back" href="../../lib.html#lib.Vehicles.Veh.get_neighboring_zone_ids">[docs]</a>    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">get_neighboring_zone_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_neighboring_zone_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ozone</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        @param ozone (int): pickup zone</span>
 <span class="sd">        @return: a list of ids (ints) of the neighboring zones</span>
@@ -568,7 +568,7 @@
         <span class="c1"># a = pd.merge(df.set_index(&#39;Origin&#39;), dist.set_index(&#39;DOLocationID&#39;),  how=&quot;left&quot;, </span>
         <span class="c1"># left_index=True, right_index=True)</span>
 
-        <span class="n">neighbors_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)</span>
+        <span class="n">neighbors_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_neighboring_zone_ids</span><span class="p">(</span><span class="n">ozone</span><span class="p">)</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">neighbors_list</span><span class="p">)]</span>
         <span class="c1"># a = a[a.index.isin(neighbors_list)] </span>
 
@@ -643,7 +643,7 @@
         <span class="c1"># df = self.get_data_from_operator(t, self.true_demand)</span>
         <span class="c1"># a = pd.merge(df, dist, left_on=&quot;Origin&quot;, right_on=&quot;DOLocationID&quot;, how=&quot;left&quot;)</span>
 
-        <span class="c1"># neighbors_list = self.get_neighboring_zone_ids(self.ozone)</span>
+        <span class="c1"># neighbors_list = self._get_neighboring_zone_ids(self.ozone)</span>
         <span class="c1"># # assert len(neighbors_list) &gt; 0</span>
         <span class="c1"># # so that it can only choose from its neighboring zones</span>
         <span class="c1"># # TODO : this line bumped the running time of the code from 5 to 63 minutes!</span>

@@ -110,7 +110,7 @@ def main():
                               percentage_know_fare=perc_k)
 
                     # make one veh to be AV 
-                    veh = m.vehilcs[-1]
+                    veh = m.vehicles[-1]
                     veh.is_AV = True
                     # 
                     env = RebalancingEnv(m, penalty=-0)

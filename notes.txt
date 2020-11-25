@@ -1,4 +1,7 @@
-For deterministic case (i.e., driver knowledge of fare and supply), explore the following formulations when it comes to drivers' decision makings 
+https://medium.com/@erikhallstrm/work-remotely-with-pycharm-tensorflow-and-ssh-c60564be862d
+
+
+For deterministic case (i.e., driver knowledge of fare and supply), explore the following formulations when it comes to drivers' decision makings
 
 1. use total demand * avg fare
 1.1 How effective is chaning avg fare in this situation? 
@@ -33,3 +36,23 @@ Reward description is vague.
 
 Flow: model with a dqn -> dispatch -> run dqn 
 how to get rewards?
+
+# setting up remote server
+https://stackoverflow.com/questions/34359415/pycharm-ssh-interpter-no-such-file-or-directory
+# logging design
+Each driver should record the following info in a dict, to be collected and converted to a df at the end
+1. type (naive, pro, adhoc)
+2. estimated zone fare from experience
+3. app's estimate of the fare
+4. w1
+5. w2
+6. current zone id
+7. destination zone id
+8. combined fare estimate
+9. updated fare estimate (after finishing a trip)
+10. prior matching prob
+11. apps matching prob
+12. apps reliability
+13. experience's reliability
+14. combined estimate of matching prob
+

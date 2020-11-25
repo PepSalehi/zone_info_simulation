@@ -172,7 +172,7 @@ Currently the DQN is inside the model.dispatch_at_time function</p>
 
 <dl class="method">
 <dt id="lib.Operator.Operator.get_zonal_info">
-<code class="sig-name descname">get_zonal_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.get_zonal_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.get_zonal_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_true_zonal_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.get_zonal_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.get_zonal_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>&#64;param t:
 &#64;return:</p>
 </dd></dl>
@@ -213,7 +213,7 @@ self.zones, coming from model
 
 <dl class="method">
 <dt id="lib.Operator.Operator.true_zonal_info_over_t">
-<code class="sig-name descname">true_zonal_info_over_t</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.true_zonal_info_over_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.true_zonal_info_over_t" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_true_zonal_info_over_t</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Operator.html#Operator.true_zonal_info_over_t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Operator.Operator.true_zonal_info_over_t" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the correct zone demand.
 &#64;param t: time
 &#64;return: (df) zonal demand over t</p>
@@ -329,7 +329,7 @@ It should have the option of not moving. Maybe include that in the neighbors lis
 
 <dl class="attribute">
 <dt id="lib.Vehicles.Veh.get_neighboring_zone_ids">
-<code class="sig-name descname">get_neighboring_zone_ids</code><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.get_neighboring_zone_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.get_neighboring_zone_ids" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_get_neighboring_zone_ids</code><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.get_neighboring_zone_ids"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.get_neighboring_zone_ids" title="Permalink to this definition">¶</a></dt>
 <dd><p>&#64;param ozone (int): pickup zone
 &#64;return: a list of ids (ints) of the neighboring zones</p>
 </dd></dl>
@@ -384,7 +384,7 @@ It should have the option of not moving. Maybe include that in the neighbors lis
 
 <dl class="method">
 <dt id="lib.Vehicles.Veh.set_prior_info">
-<code class="sig-name descname">set_prior_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.set_prior_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.set_prior_info" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">initialize_prior_fare_info</code><span class="sig-paren">(</span><em class="sig-param">t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lib/Vehicles.html#Veh.set_prior_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lib.Vehicles.Veh.set_prior_info" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets prior demand/fare info.
 &#64;param t: time
 &#64;return (df): prior</p>

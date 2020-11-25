@@ -63,7 +63,7 @@ class RebalancingEnv(gym.Env):
             percentage_know_fare=config["perc_k"],
         )
 
-        veh = self.model.vehilcs[-1]
+        veh = self.model.vehicles[-1]
         veh.is_AV = True
         # else:
         #     print
@@ -97,7 +97,7 @@ class RebalancingEnv(gym.Env):
         self.step_count += 1
         reward = 0
         # AV
-        veh = self.model.vehilcs[-1]
+        veh = self.model.vehicles[-1]
         # As long as a decision for AV is not needed, keep simulating
         while not veh.should_move():
             T = self.T
@@ -137,7 +137,7 @@ class RebalancingEnv(gym.Env):
         @param vid: "vehicle list index" that chooses a vehicle for which to get the state.
         @return: state of the vehicle
         """
-        veh = self.model.vehilcs[vid]
+        veh = self.model.vehicles[vid]
         self.state = self.model.get_state(veh)
 
     def reset(self):
@@ -159,7 +159,7 @@ class RebalancingEnv(gym.Env):
             percentage_know_fare=self.config["perc_k"],
         )
 
-        veh = self.model.vehilcs[-1]
+        veh = self.model.vehicles[-1]
         veh.is_AV = True
         self.total_reward = 0.0
         self.T = WARMUP_TIME_SECONDS

@@ -102,7 +102,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">3</span></div>
 
-<div class="viewcode-block" id="Operator.true_zonal_info_over_t"><a class="viewcode-back" href="../../lib.html#lib.Operator.Operator.true_zonal_info_over_t">[docs]</a>    <span class="k">def</span> <span class="nf">true_zonal_info_over_t</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="Operator.true_zonal_info_over_t"><a class="viewcode-back" href="../../lib.html#lib.Operator.Operator.true_zonal_info_over_t">[docs]</a>    <span class="k">def</span> <span class="nf">_true_zonal_info_over_t</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the correct zone demand.</span>
 <span class="sd">        @param t: time</span>
@@ -151,7 +151,7 @@
 <span class="sd">        @param t: current time</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">t</span> <span class="o">%</span> <span class="n">DEMAND_UPDATE_INTERVAL</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_true_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Operator.zonal_info_for_veh"><a class="viewcode-back" href="../../lib.html#lib.Operator.Operator.zonal_info_for_veh">[docs]</a>    <span class="k">def</span> <span class="nf">zonal_info_for_veh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">true_demand</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -164,14 +164,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">live_data_false</span></div>
 
-<div class="viewcode-block" id="Operator.get_zonal_info"><a class="viewcode-back" href="../../lib.html#lib.Operator.Operator.get_zonal_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_zonal_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+<div class="viewcode-block" id="Operator.get_zonal_info"><a class="viewcode-back" href="../../lib.html#lib.Operator.Operator.get_zonal_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_true_zonal_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        @param t:</span>
 <span class="sd">        @return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">hour</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">true_zonal_info_over_t</span><span class="p">(</span><span class="n">hour</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_true_zonal_info_over_t</span><span class="p">(</span><span class="n">hour</span><span class="p">)</span>
         <span class="c1"># self.false_zonal_info_over_t(hour)</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">live_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">live_data</span></div>
@@ -209,7 +209,7 @@
 <span class="sd">        @param surge:</span>
 <span class="sd">        @return:</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_true_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">zid</span> <span class="ow">in</span> <span class="n">target_zone_ids</span><span class="p">:</span>
             <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">zid</span><span class="p">,</span> <span class="s2">&quot;surge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">surge</span>
@@ -226,7 +226,7 @@
 <span class="sd">        @param target_zone_ids: list of target zone ids (int)</span>
 <span class="sd">        @param bonus: (float)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_true_zonal_info</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">zid</span> <span class="ow">in</span> <span class="n">target_zone_ids</span><span class="p">:</span>
             <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">zid</span><span class="p">,</span> <span class="s2">&quot;bonus&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bonus</span>

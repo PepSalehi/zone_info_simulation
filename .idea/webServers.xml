@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="5636c11f-a6fd-4d7a-90cf-ceb0c845c63f" name="trlab_correct" url="http://transitlab2.mit.edu">
+        <fileTransfer host="transitlab2.mit.edu" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" rootFolder="/home/peymano/zone_info_simulation" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="8318c7d3-614f-4c21-865d-2d370615606d" name="my_remote" url="http://transitlab2.mit.edu">
+        <fileTransfer host="transitlab2.mit.edu" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" rootFolder="/home/peymano/zone_info_simulation" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

@@ -62,7 +62,7 @@ def main():
     #         SURGE_MULTIPLIER=surge, BONUS=bonus, percent_false_demand=percent_false_demand, percentage_know_fare = perc_k)
 
     # make one veh to be AV 
-    # veh  = m.vehilcs[-1]
+    # veh  = m.vehicles[-1]
     # veh.is_AV = True
     # 
     # env = RebalancingEnv(m, penalty=-10, config=config )

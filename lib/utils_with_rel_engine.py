@@ -150,7 +150,7 @@ class Model:
         # None of the below ones are mutually exclusive; a vehicle might be pro and don't know fare
         if self.fleet_pro_size > 0:
 
-            # vs = random.choices(self.vehilcs, k=self.fleet_pro_size)
+            # vs = random.choices(self.vehicles, k=self.fleet_pro_size)
             vs = np.random.choice(self.vehilcs, self.fleet_pro_size, replace=False)
             for v in vs:
                 v.professional = True

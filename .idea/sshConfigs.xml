@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="transitlab2.mit.edu" id="ad4023b1-d5a7-4b1e-a24e-a92515e1174e" keyPath="$USER_HOME$/Documents/MIT database credentials/id_rsa_mit_db" port="22" customName="Mytransitlab2" nameFormat="CUSTOM" username="peymano" />
+      <sshConfig host="transitlab2.mit.edu" id="df047e25-f7f7-4077-adbd-4ae1834dbfc6" keyPath="$USER_HOME$/Documents/MIT database credentials/id_rsa_mit_db" port="22" customName="Mytransitlab2" nameFormat="CUSTOM" username="peymano" />
+    </configs>
+  </component>
+</project>
