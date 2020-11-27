@@ -15,10 +15,10 @@ from lib.Constants import (
     PENALTY,
     my_dist_class
 )
+from lib.ProfessionalDriver import ProfessionalDriver
 
 from lib.Requests import Req
 from lib.Vehicles import Veh, DriverType, VehState, _convect_time_to_peak_string, _choice, _convert_reporting_dict_to_df
-from lib.configs import configs
 from functools import lru_cache
 from enum import Enum, unique, auto
 import pickle
@@ -27,14 +27,14 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh = logging.FileHandler('drivers_inexperienced.log')
+fh = logging.FileHandler('drivers_inexperienced.log', mode='w')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 
-class InexperiencedDriver(Veh):
+class InexperiencedDriver(ProfessionalDriver):
     """
-    Class encapsulating a vehicle.
+    This acts as a naive one in the beginning, but as it gains more experience starts behaving like the pro
     """
 
     def __init__(self, rs, operator, beta=1, true_demand=True, driver_type=DriverType.INEXPERIENCED,
@@ -43,10 +43,10 @@ class InexperiencedDriver(Veh):
         """
         Creates a Vehicle object.
 
-        @param rs: # TODO: what is this
+        @param rs: #
         @param operator (Operator): object describing operator-specific details (e.g. Uber)
         @param beta (float):
-        @param true_demand (bool): # TODO: what is this
+        @param true_demand (bool): #
         @param driver_type (enum): whether the driver is professional, naive, or inexperienced
         @param ini_loc (int): initial location (zone) of the driver
         @param know_fare (bool): whether the driver knows the fare
@@ -84,15 +84,14 @@ class InexperiencedDriver(Veh):
             return neighbors_list[0]
 
         fare_to_use = CONST_FARE  # they should use the app's info, if it's given
-        match_prob = 1
         # 4) compute the expected revenue
-        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values * match_prob + df.bonus.values
+        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values  + df.bonus.values
         # 5) compute the expected cost
         expected_cost = (
                 dist.trip_distance_meter.values * self.unit_rebalancing_cost)  # doesn't take into account the distance travelled once the demand is picked up
         # 6) compute the expected profit
         # https://github.com/numpy/numpy/issues/14281
-        prof = np.core.umath.clip((expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
+        prof = np.core.umath.clip(np.exp(expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
         # prof = np.clip((expected_revenue - expected_cost) * df["total_pickup"].values, a_min=0, a_max=None)
         # 7) compute the probability of moving to each zone
         # http://cs231n.github.io/linear-classify/#softmax

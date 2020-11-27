@@ -1,59 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="tidy up&#10;">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/dictionaries/peyman.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/remote-mappings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sshConfigs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/webServers.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Analysis/basic_analysis_1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/AvDriver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/Exploratory analysis.ipynb" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/InexperiencedDriver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/NaiveDriver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/ProfessionalDriver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/behavioral_optimizer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/testing_pandas_speedup_techniques.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Simulation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Simulation.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="tidy up">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/README.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Untitled.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Untitled.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_build/html/genindex.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/genindex.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_build/html/lib.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/lib.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/analysis_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/analysis_2.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Data.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Data.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Env.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Env.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/InexperiencedDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/InexperiencedDriver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/NaiveDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/NaiveDriver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Operator.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Operator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Requests.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Requests.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/ProfessionalDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ProfessionalDriver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Vehicles.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Vehicles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/Zones.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Zones.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/configs.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/configs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/train_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/train_rl.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/utils_with_rel_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils_with_rel_engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_agent.p" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian_cache.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian_cache2.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian_cache3.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian_cache3_minor.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mydqntrian_cache4.cprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/myscript.cprof" beforeDir="false" afterPath="$PROJECT_DIR$/myscript.cprof" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notes.txt" beforeDir="false" afterPath="$PROJECT_DIR$/notes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_rl.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_rl_with_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_rl_with_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_dqn_agent.py.lprof" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_rl.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_rl.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_rl_cmd_temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_rl_cmd_temp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tt.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/tt.ipynb" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -344,12 +301,23 @@
       <workItem from="1606150002359" duration="878000" />
       <workItem from="1606150900529" duration="20666000" />
       <workItem from="1606245671173" duration="1428000" />
-      <workItem from="1606250104573" duration="18897000" />
+      <workItem from="1606250104573" duration="62312000" />
     </task>
+    <task id="LOCAL-00001" summary="tidy up">
+      <created>1606330736701</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1606330736701</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.log" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -366,7 +334,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="tidy up&#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="tidy up&#10;" />
+    <MESSAGE value="tidy up" />
+    <option name="LAST_COMMIT_MESSAGE" value="tidy up" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -380,7 +349,7 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_parallel_for_avg_fare Coverage Results" MODIFIED="1606274918160" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_parallel_for_avg_fare Coverage Results" MODIFIED="1606501611566" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Simulation$Data.coverage" NAME="Data Coverage Results" MODIFIED="1574709682627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lib" />
   </component>
 </project>

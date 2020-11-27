@@ -162,56 +162,14 @@ class Model:
         #     Veh(self.rs1, self.operator, beta) for i in range(self.FLEET_SIZE)
         # ]
         self.vehicles = [
-            ProfessionalDriver(self.rs1, self.operator, beta) for _ in range(self.FLEET_SIZE)
+            NaiveDriver(self.rs1, self.operator, beta) for _ in range(100)
         ]
         self.vehicles.extend(
-            [NaiveDriver(self.rs1, self.operator, beta) for _ in range(100)] )
-        self.vehicles.extend(
-            [InexperiencedDriver(self.rs1, self.operator, beta) for _ in range(300)])
-        # # None of the below ones are mutually exclusive; a vehicle might be pro and don't know fare (which is wrong)
-        # if self.fleet_pro_size > 0:
-        #     print("fleet pro size", self.fleet_pro_size)
-        #     # vs = random.choices(self.vehicles, k=self.fleet_pro_size)
-        #     vs = np.random.choice(self.vehicles, self.fleet_pro_size, replace=False)
-        #     for v in vs:
-        #         v.professional = True
-        #         v.know_fare = True
-        #     remaining_veh = list(set(self.vehicles) - set(vs))
-        #
-        # if self.fleet_deceived_size > 0:
-        #     if not ("remaining_veh" in locals()):
-        #         remaining_veh = self.vehicles
-        #     # vs = random.choices(remaining_veh, k=self.fleet_deceived_size)
-        #     vs = np.random.choice(
-        #         remaining_veh, self.fleet_deceived_size, replace=False
-        #     )
-        #     for v in vs:
-        #         v.true_demand = False
-        #
-        #     remaining_veh = list(set(remaining_veh) - set(vs))
-        #
-        # if self.fleet_know_fare > 0:
-        #     print("fleet know fare", self.fleet_know_fare)
-        #     if not ("remaining_veh" in locals()):
-        #         remaining_veh = self.vehicles
-        #
-        #     vs = np.random.choice(remaining_veh, self.fleet_know_fare, replace=False)
-        #     for v in vs:
-        #         v.know_fare = True
-        #
-        #     remaining_veh = list(set(remaining_veh) - set(vs))
-        #
-        # if self.fleet_AV > 0:
-        #     if not ("remaining_veh" in locals()):
-        #         remaining_veh = self.vehicles
-        #     # vs = random.choices(remaining_veh, k=self.AV_SHARE)
-        #     self.av_vehs = np.random.choice(remaining_veh, self.fleet_AV, replace=False)
-        #
-        #     for v in self.av_vehs:
-        #         v.is_AV = True
-        #         # v.RL_engine = self.RL_engine
-        #
-        #     remaining_veh = list(set(remaining_veh) - set(self.av_vehs))
+            [ProfessionalDriver(self.rs1, self.operator, beta) for _ in range(150)] )
+        # self.vehicles.extend(
+        #     [InexperiencedDriver(self.rs1, self.operator, beta) for _ in range(300)])
+
+
 
     def set_analysis_time(self, t):
         """

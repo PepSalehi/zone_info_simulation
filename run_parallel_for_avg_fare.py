@@ -18,7 +18,7 @@ from lib.Data import Data
 #     WARMUP_TIME_HOUR
 # from lib.Constants import PERCE_KNOW
 from lib.Vehicles import DriverType
-from lib.configs import configs
+from lib.configs import configs_dict
 from lib.utils import Model
 
 
@@ -70,7 +70,7 @@ def main():
     if args.beta:
         beta = float(args.beta)
     else:
-        beta = configs["BETA"]
+        beta = configs_dict["BETA"]
 
     if args.pro:
         pro_share = [float(x) for x in args.pro.split(',')]
@@ -118,7 +118,7 @@ def main():
                         data_instance.PERCENT_FALSE_DEMAND = percent_false_demand
                         data_instance.PERCE_KNOW = perc_k
 
-                        m = Model(data_instance, beta, configs)
+                        m = Model(data_instance, configs_dict, beta)
 
                         # start time
                         stime = time.time()

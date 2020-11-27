@@ -18,19 +18,18 @@ from lib.Constants import (
 
 from lib.Requests import Req
 from lib.Vehicles import Veh, DriverType, VehState, _convect_time_to_peak_string, _choice, _convert_reporting_dict_to_df
-from lib.configs import configs
 from functools import lru_cache
 from enum import Enum, unique, auto
 import pickle
 
 import logging
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh2 = logging.FileHandler('drivers_naive.log')
+fh2 = logging.FileHandler('drivers_naive.log', mode='w')
 fh2.setFormatter(formatter)
 logger.addHandler(fh2)
-
 
 
 class NaiveDriver(Veh):
@@ -44,10 +43,10 @@ class NaiveDriver(Veh):
         """
         Creates a Vehicle object.
 
-        @param rs: # TODO: what is this
+        @param rs: #
         @param operator (Operator): object describing operator-specific details (e.g. Uber)
         @param beta (float):
-        @param true_demand (bool): # TODO: what is this
+        @param true_demand (bool): #
         @param driver_type (enum): whether the driver is professional, naive, or inexperienced
         @param ini_loc (int): initial location (zone) of the driver
         @param know_fare (bool): whether the driver knows the fare
@@ -65,14 +64,11 @@ class NaiveDriver(Veh):
         @return: (df) attractiveness to all zones and (df) probability to go to each zone
         """
         # 1)  get demand and distances
+        # index is zone, trip_distance_meter is the only column
         dist = self._get_dist_to_all_zones(ozone)
         # 1.1) demand as told by the app
         df = (self.get_data_from_operator(t, true_demand))  # .set_index('Origin')
         assert dist.shape[0] == df.shape[0]
-        # 1.2) demand as expected from experience
-        # PRO: get estimates based on the prior
-        # naive: solely base decision on the app's info
-        # inexperienced: the first day, act naively. Then start to act like a PRO, with inferior estimates of course
 
         if df.empty:
             print(
@@ -84,20 +80,24 @@ class NaiveDriver(Veh):
             neighbors_list = self._get_neighboring_zone_ids(ozone)
             return neighbors_list[0]
 
-        fare_to_use = CONST_FARE # they should use the app's info, if it's given
-        match_prob = 1
+        # 1.2) demand as expected from experience
+        # naive: solely base decision on the app's info
+
+        fare_to_use = CONST_FARE  # they should use the app's info, if it's given
         # 4) compute the expected revenue
-        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values * match_prob + df.bonus.values
+
+        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values + df.bonus.values
         # 5) compute the expected cost
+        # is an array
         expected_cost = (
                 dist.trip_distance_meter.values * self.unit_rebalancing_cost)  # doesn't take into account the distance travelled once the demand is picked up
         # 6) compute the expected profit
         # https://github.com/numpy/numpy/issues/14281
-        prof = np.core.umath.clip((expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
+        prof = np.core.umath.clip(np.exp(expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
         # prof = np.clip((expected_revenue - expected_cost) * df["total_pickup"].values, a_min=0, a_max=None)
         # 7) compute the probability of moving to each zone
         # http://cs231n.github.io/linear-classify/#softmax
         prob = prof / prof.sum()
         # return a.index.get_level_values(1).values, prob
-        return df["PULocationID"], prob
+        return df["PULocationID"].values, prob, None
         # return a, prob, a["Origin"]

@@ -17,23 +17,22 @@ from lib.Constants import (
 )
 
 from lib.Requests import Req
-from lib.configs import configs
 from functools import lru_cache
 from enum import Enum, unique, auto
 import pickle
 
 import logging
 
-logging.basicConfig(filename='drivers.log', level=logging.INFO, filemode='w',
+logging.basicConfig(filename='drivers_all.log', level=logging.INFO, filemode='w',
                     format='%(asctime)s - %(message)s')
 
 # from lib.rl_policy import DQNAgent
 driver_id = 0
 
 
-# https://stackoverflow.com/a/57516323/2005352
 class VehState(Enum):
     """
+    https://stackoverflow.com/a/57516323/2005352
     Enum describing the state of a vehicle, where
     IDLE = waiting to be matched
     REBAL = travelling, but without a passenger. Upon arrival, should wait to be matched
@@ -47,7 +46,7 @@ class VehState(Enum):
 
 
 class DriverType(Enum):
-    '''
+    """
     There are 3 types:
     Pro:
     they are experienced drivers, and have accurate estimates of fare and matching probabilities.
@@ -57,15 +56,22 @@ class DriverType(Enum):
     importantly, they don't learn anything as they gather more experience.
     inexperienced:
     These start just like naives, but start to learn immediately
-    '''
+    """
     PROFESSIONAL = auto()
     NAIVE = auto()
     INEXPERIENCED = auto()
     AV = auto()
 
 
-# https://stackoverflow.com/questions/18622781/why-is-numpy-random-choice-so-slow
 def _choice(options, probs):
+    """
+    chooses randomly with probability probs from options
+    https://stackoverflow.com/questions/18622781/why-is-numpy-random-choice-so-slow
+
+    @param options:
+    @param probs:
+    @return:
+    """
     x = np.random.rand()
     cum = 0
     for i, p in enumerate(probs):
@@ -80,11 +86,11 @@ def compute_mae(y, yhat):
 
 
 def _convert_reporting_dict_to_df(dic):
-    '''
-
+    """
+    Converts df into dictionary. Used for the distance matrix
     @param dic: this is the self.REPORTING_DICT
     @return: pandas dataframe, with columns being the keys of the dic
-    '''
+    """
     return pd.DataFrame.from_dict(
         dic, orient="columns"
     )
@@ -92,7 +98,7 @@ def _convert_reporting_dict_to_df(dic):
 
 def _convect_time_to_peak_string(t):
     """
-
+    "converts t in seconds to t in (off_peak, morning_peak, evening_peak)
     @param t: in seconds
     @return: morning_peak, evening_peak, off_peak
     """
@@ -150,7 +156,7 @@ class Veh:
         self.know_fare = know_fare  # TODO: REMOVE
 
         self.prior_fare_dict = None
-        self.initialize_prior_fare_info()
+        self.prior_m_dict = None
 
         self.locations = []
         self.req = None
@@ -177,6 +183,7 @@ class Veh:
         self.zone = None
         self.collected_fares = []
         self.collected_fare_per_zone = defaultdict(list)
+        self.observed_matching_per_zone = defaultdict(list) #{(zone-id, t) : m}
 
         self.REPORTING_DICT = {'driver_id': [self.id],
                                'driver_type': [self.driver_type],
@@ -259,15 +266,6 @@ class Veh:
         neighbors_list.append(self.ozone)
         return neighbors_list
 
-    def _calc_matching_prob(self):
-        """
-        If the driver is not professional, it will be matched.
-        @return: int if the car is not professional, else None. (currently just 1?)
-        TODO: this is not good design
-        """
-        if not self.driver_type == DriverType.PROFESSIONAL:
-            return 1
-
     @lru_cache(maxsize=None)
     def get_data_from_operator(self, t, true_demand):
         """
@@ -285,13 +283,16 @@ class Veh:
         #        df = self.get_data_from_operator(t)
         pass
 
-    def waited_too_long(self):
+    def waited_too_long(self, t):
         """
         Makes sure it's not idle nor rebalancing, then if it has been idle for too long returns True
         @return: (bool)
         """
+        if self._state == VehState.IDLE and self.time_idled > self.MAX_IDLE:
+            logging.info("Driver {} of type {} waited too long at zone {} after waiting for {} seconds".format(
+                self.id, self.driver_type, self.ozone, self.time_idled))
+
         return self._state == VehState.IDLE and self.time_idled > self.MAX_IDLE
-        # return self.idle and not self.rebalancing and self.time_idled > self.MAX_IDLE
 
     def update_rebalancing(self, WARMUP_PHASE):
         """
@@ -391,9 +392,10 @@ class Veh:
 
     def should_move(self):
         """
+        VehState.DECISION is set to true when 1) at the very beginning, 2) after is done serving a trip
         @return: bool, true if just started or has been idle for too long
         """
-        return self.waited_too_long() or self._state == VehState.DECISION
+        return self._state == VehState.DECISION
 
     def act(self, t, Zones, WARMUP_PHASE, action=None):
         """ 
@@ -438,8 +440,9 @@ class Veh:
                     dist = self._get_distance_to_destination(self.ozone, target_zone)
                     z.join_incoming_vehicles(self)
                     self.zone = z
-
+                    self.ozone = z.id # added Nov 27 2020, I think it's correct but maybe I missed sth
                     break
+
             if dist is None:
                 print("z.id: ", z.id)
                 print("target_zone", target_zone)
@@ -460,18 +463,21 @@ class Veh:
             # self.time_idled = 0
             return target_zone
 
-        if self.should_move():
+        if self.waited_too_long(t):
+            _ = _make_a_decision(t)
+
+        elif self.should_move():
             _ = _make_a_decision(t)
             # self.update_rebalancing(WARMUP_PHASE)
             # return 
-        if self.is_busy:
+        elif self.is_busy:
             self.keep_serving()
             return
-        if self.is_waiting_to_be_matched:
+        elif self.is_waiting_to_be_matched:
             # it's sitting somewhere
             self.keep_waiting()
             return
-        if self.is_rebalancing:  # and not self.busy:
+        elif self.is_rebalancing:  # and not self.busy:
             self.update_rebalancing(WARMUP_PHASE)
             return
 
@@ -516,17 +522,8 @@ class Veh:
                 self.collect_fare(req.fare)
                 self.add_to_experienced_zonal_fares(req.fare, req.ozone, t)
                 self.operator.collect_fare(req.fare)
-                self.update_posterior_fare_info(req.fare, req.ozone, t)
-                # if (self.driver_type != DriverType.PROFESSIONAL) and not self.is_AV:
-                #     self.collect_fare(req.fare)
-                #     self.operator.revenues.append(PHI * req.fare)
-                #
-                #     self.collected_fare_per_zone[req.ozone] += (1 - PHI) * req.fare
-                #
-                # elif self.driver_type == DriverType.PROFESSIONAL:
-                #     self.collected_fares.append(req.fare)
-                #     self.operator.collect_fare(req.fare)
-                #     self.collected_fare_per_zone[req.ozone] += req.fare
+                # self.update_posterior_fare_info(req.fare, req.ozone, t)
+
 
                 self.locations.append(dest)
                 self.distance_travelled += dist
@@ -574,114 +571,6 @@ class Veh:
         # why and when would it return False?
         return False
 
-    def get_fare_based_on_prior(self, t):
-        """
-
-        @param t:
-        @return:
-        """
-        t = _convect_time_to_peak_string(t)
-        # returns {zone_id: avg_fare}
-        return {k[0]: v[0] for k, v in self.prior_fare_dict.items() if k[1] == t}
-
-    def estimate_matching_prob_based_on_prior_LR(self, t):
-        """
-        this should logistic regression to estimate the matching probability as conveyed by the app.
-        params of the LR should be (Q_app, t, surge_mult, bonus). removed zone_id bc there might not be enough experience
-        per zone.
-        @param t:
-        @return:
-        """
-        t = _convect_time_to_peak_string(t)
-        # returns {zone_id: matching_prob}
-        # return {k[0]: v[0] for k, v in self.prior_fare_dict.items() if k[1] == t}
-        pass
-
-    def compute_prior_expected_revenue(self, prior_fare_dict, prior_matching_dict):
-        """
-
-        @param prior_fare_dict: from self.get_fare_based_on_prior
-        @return:
-        """
-        {z_id: (1 - PHI) * fare for z_id, fare in prior_fare_dict.items()}
-        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values * match_prob + df.bonus.values
-
-    @lru_cache(maxsize=None)
-    # @profile
-    def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
-        """
-        @param t: time
-        @param ozone: (int) current zone
-        @param true_demand: (bool)
-        @return: (df) attractiveness to all zones and (df) probability to go to each zone
-        """
-        # 1)  get demand and distances
-        dist = self._get_dist_to_all_zones(ozone)
-        # 1.1) demand as told by the app
-        df = (self.get_data_from_operator(t, true_demand))  # .set_index('Origin')
-        assert dist.shape[0] == df.shape[0]
-        # 1.2) demand as expected from experience
-        # PRO: get estimates based on the prior
-        # naive: solely base decision on the app's info
-        # inexperienced: the first day, act naively. Then start to act like a PRO, with inferior estimates of course
-        if self.driver_type == DriverType.PROFESSIONAL:
-            df_prior = None
-
-        # a = pd.merge(df, dist, left_on='PULocationID', right_on="DOLocationID", how="left")
-        # neighbors_list = self._get_neighboring_zone_ids(ozone)
-        # a = a[a["Origin"].isin(neighbors_list)]
-        # a = a[[i in neighbors_list for i in a.index.get_level_values(1)]]
-
-        if df.empty:
-            print(
-                "corner case: take zone 127. there and no demand is left, df and therefore a will be empty. "
-                "in this situation, it should just move to one of its neighbors"
-            )
-            print("ozone", self.ozone)
-            # print("destination", neighbors_list[0])
-            neighbors_list = self._get_neighboring_zone_ids(ozone)
-            return neighbors_list[0]
-
-        # 2) get the fare
-        # Does the app tell them about fares?
-        if not self.know_fare:  # they don't know the average fare for an area, they use one for all
-            fare_to_use = CONST_FARE
-        else:
-            fare_to_use = np.ceil(df.avg_fare.values)
-        # 3 )get matching probabilities
-        if not self.driver_type == DriverType.PROFESSIONAL:
-            # if not professional, you don't consider supply in your decision making
-            match_prob = 1
-        else:
-            try:
-                match_prob = df.match_prob.values
-            except:
-                # replace all these with logging
-                # https://docs.python.org/3.8/howto/logging.html#configuring-logging
-                print(df)
-                print("that was df")
-                # print(a)
-                # print("that was a")
-                print(self.driver_type)
-                raise NotImplementedError
-
-        # a["relative_demand"] = a["total_pickup"] / a["total_pickup"].sum()
-        # 4) compute the expected revenue
-        expected_revenue = (1 - PHI) * fare_to_use * df.surge.values * match_prob + df.bonus.values
-        # 5) compute the expected cost
-        expected_cost = (
-                dist.trip_distance_meter.values * self.unit_rebalancing_cost)  # doesn't take into account the distance travelled once the demand is picked up
-        # 6) compute the expected profit
-        # https://github.com/numpy/numpy/issues/14281
-        prof = np.core.umath.clip((expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
-        # prof = np.clip((expected_revenue - expected_cost) * df["total_pickup"].values, a_min=0, a_max=None)
-        # 7) compute the probability of moving to each zone
-        # http://cs231n.github.io/linear-classify/#softmax
-        prob = prof / prof.sum()
-        # return a.index.get_level_values(1).values, prob
-        return df["PULocationID"], prob
-        # return a, prob, a["Origin"]
-
     def choose_target_zone(self, t):
         """
         This has to be based on the information communicated by the app, as well as the prior experience
@@ -689,37 +578,33 @@ class Veh:
         @param t: time of day
         @return
         """
-
-        a, prob = self._compute_attractiveness_of_zones(t, self.ozone, self.true_demand)
-        try:
-            selected_destination = _choice(a.values, prob)
-            while selected_destination not in ZONE_IDS:
-                # this seems to happen for zone 202
-                print("the selected destination was not in the list of zones: ", selected_destination)
-                # print("this is happened {} times".format(count_occourance))
-                # selected_destination = np.random.choice(a, size=1, p=prob, replace=True)[0]
-                selected_destination = _choice(a.values, prob)
-
-        except:
-            raise Exception("selected was empty, here is a {}".format(a))
+        zone_ids, prob, info_dict = self._compute_attractiveness_of_zones(t, self.ozone, self.true_demand)
+        selected_destination = self._choose_based_on_prob(zone_ids, prob, info_dict)
 
         return selected_destination
 
-    def _calculate_fare(self, request, surge):
+    def _choose_based_on_prob(self, z_ids, probs, info_dict):
         """
-        From Yellow Cab taxi webpage
-        @param request (Request)
-        @param surge (float): surge multiplier
-        @return: (float) fare
+        helper function. selects a zone based on its choice probability
+        @param z_ids: list of zone ids
+        @param probs: probability of choosing each of the zones
+        @return:
         """
-        distance_meters = request.dist
-        p1 = 2.5
-        p2 = 0.5 * 5 * 1609 * distance_meters
-        f = p1 + surge * p2
-        return f
+        try:
+            selected_dest = _choice(z_ids, probs)
+            while selected_dest not in ZONE_IDS:
+                # this seems to happen for zone 202
+                print("the selected destination was not in the list of zones: ", selected_dest)
+                # print("this is happened {} times".format(count_occourance))
+                # selected_dest = np.random.choice(a, size=1, p=prob, replace=True)[0]
+                selected_dest = _choice(z_ids, probs)
+        except:
+            raise Exception(f"selected was empty, here are zones {z_ids} and their probs {probs}")
+        return selected_dest
 
     ###### fare collection and updating methods
     def collect_fare(self, fare):
+        # this ignores bonus/ surge
         self.collected_fares.append((1 - PHI) * fare)
 
     def add_to_experienced_zonal_fares(self, fare, zone_id, t):
@@ -727,73 +612,20 @@ class Veh:
         zone_id = int(zone_id)
         self.collected_fare_per_zone[(zone_id, t)].append(fare)
 
-    ###### prior fare info
-    def initialize_prior_fare_info(self):
-        """
-        Sets prior demand/fare info.
-        @return (df): prior
-        """
-        self.prior_fare_dict = self.operator.expected_fare_total_demand_per_zone_over_days(self.driver_type)
+    # def _calculate_fare(self, request, surge):
+    #     """
+    #     From Yellow Cab taxi webpage
+    #     @param request (Request)
+    #     @param surge (float): surge multiplier
+    #     @return: (float) fare
+    #     """
+    #     distance_meters = request.dist
+    #     p1 = 2.5
+    #     p2 = 0.5 * 5 * 1609 * distance_meters
+    #     f = p1 + surge * p2
+    #     return f
+    def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
+        pass
 
-    def get_prior_experienced_fare_info(self, zone_id, t):
-        '''
-
-        @param zone_id:
-        @param fare:
-        @return:
-        '''
-        # t = _convect_time_to_peak_string(t)
-        zone_id = int(zone_id)
-        try:
-            experienced_fares = self.collected_fare_per_zone[(zone_id, t)]
-        except KeyError:
-            return None, None, None
-        if len(experienced_fares) < 1:
-            return None, None, None
-        elif len(experienced_fares) == 1:
-            return experienced_fares[0], 5, 1  # large std
-        return np.mean(experienced_fares), np.std(experienced_fares), len(experienced_fares)
-
-    def update_posterior_fare_info(self, zone_id, fare, t):
-        """
-        Bayesian update. After serving one zone and observing fare f
-        @param zone_id:
-        @param fare:
-        @return:
-        @param t: time (morning peak ,etc)
-        @return (df): prior
-        """
-        t = _convect_time_to_peak_string(t)
-        zone_id = int(zone_id)
-
-        def bayesian_update(prior_mu, prior_sigma, data_mu, data_sigma, n):
-            _post_mu = (
-                    ((prior_mu / np.power(prior_sigma, 2)) + ((n * data_mu) / np.power(data_sigma, 2))) /
-                    ((1 / np.power(prior_sigma, 2)) + (n / np.power(data_sigma, 2)))
-            )
-            _post_sigma = np.sqrt(1 / ((1 / np.power(prior_sigma, 2)) + (n / np.power(data_sigma, 2))))
-
-            return _post_mu, _post_sigma
-
-        try:
-            p_mu, p_sigma = self.prior_fare_dict[(zone_id, t)]
-        except KeyError:
-            p_mu, p_sigma = 6, 5
-            # print((zone_id, t), ' not in self.prior_fare_dict')
-
-        should_update_bayesian_wise = True
-        d_mu, d_sigma, n_trips = self.get_prior_experienced_fare_info(zone_id, t)
-        if d_mu is None:
-            # this is because there has not been a trip of this zone yet
-            should_update_bayesian_wise = False
-
-        if should_update_bayesian_wise:
-            if self.driver_type == DriverType.PROFESSIONAL:
-                logging.info('PROFESSIONAL DRIVER {} is updating their belief'.format(self.id))
-            logging.info('driver {} is updating their belief'.format(self.id))
-            logging.info('      p_mu = {} and p_sigma ={}'.format(p_mu, p_sigma))
-            logging.info('      d_mu = {} , d_sigma ={} and n_trips={}'.format(d_mu, d_sigma, n_trips))
-            post_mu, post_sigma = bayesian_update(p_mu, p_sigma, d_mu, d_sigma, n_trips)
-            self.prior_fare_dict[(zone_id, t)] = (post_mu, post_sigma)
-            logging.info('      post_mu = {} and post_sigma ={}'.format(self.prior_fare_dict[(zone_id, t)][0],
-                                                                        self.prior_fare_dict[(zone_id, t)][1]))
+    def update_experienced_matching(self, zone_id, t, param):
+        pass

@@ -56,7 +56,7 @@ class Operator:
         self.demand_fare_stats_prior_peak_off_peak_dict = {
             tuple(row[['PULocationID', 'time_period_label']].values): (row.avg_fare, row.std_fare)
             for _, row in self.demand_fare_stats_prior.iterrows()}
-
+        # basically all the same, and random, values. Made to unify the interface
         self.demand_fare_stats_prior_peak_off_peak_dict_naive = {
             tuple(row[['PULocationID', 'time_period_label']].values): (row.avg_fare, row.std_fare)
             for _, row in self.demand_fare_stats_prior_naive.iterrows()}
@@ -64,6 +64,11 @@ class Operator:
         self.demand_fare_stats_of_the_day = pd.read_csv(
             "./Data/Daily_stats/stats_for_day_{}.csv".format(which_day_numerical)
         )
+        # TODO: this is a placeholder file. It should be based on the prior runs of the simulation
+        # TODO: this 20 should ideally come from the actual number of times a zone has been visited
+        self.matching_stats_prior_dict = {
+            tuple(row[['PULocationID', 'time_period_label']].values): ((1 if row['total_pickup'] <= 20 else 0), 15)
+            for _, row in self.demand_fare_stats_prior.iterrows()}
 
         self.live_data = None
         self.revenues = []
@@ -116,8 +121,6 @@ class Operator:
         else:
             return 1.5
 
-
-
     def false_zonal_info_over_t(self, t):
         """
         Calculates the false zonal info over t
@@ -159,7 +162,7 @@ class Operator:
         example df:
         time_of_day_index_15m:
         PULocationID:
-        avg_fare
+    avg_fare
         avg_dist
         total_pickup
         surge
@@ -274,6 +277,20 @@ class Operator:
                 if zone.id == zid:
                     zone.bonus = bonus
 
+    def optimize_rebalancing(self):
+        """
+        does the rebalancing procedure
+        @return:
+        """
+        pass
+
+    def optimize_driver_information(self):
+        """
+        does the optimization
+        @return:
+        """
+        pass
+
     def disseminated_zonal_demand_info(self, t):
         """
         Drivers will use this function to access the demand data.
@@ -287,13 +304,18 @@ class Operator:
         #   3.1) filter the info based on the scenario
         #   3.2) persist that info for the whole 15 mins
         #   3.3) communicate it to drivers whenever called
+        if self.scenario in (3, 4):
+            # run optimization
+            self.optimize_rebalancing()
+            self.optimize_driver_information()
+        if self.scenario in (1, 3):
+            # only demand info
+            pass
         pass
 
     @lru_cache(maxsize=None)
     def expected_fare_total_demand_per_zone_over_days(self, driver_type):
         """
-        TODO: should report std of fare in addition to just avg fare
-        TODO: make t to be morning_peak, off_peak, evening_peak
         A professional driver will query this one time per (hour) to use as prior
         for naive drivers, it has a constant mean and std for every zone
         @param driver_type:
@@ -309,3 +331,13 @@ class Operator:
         else:
             df = self.demand_fare_stats_prior_peak_off_peak_dict_naive
         return df
+
+    @lru_cache(maxsize=None)
+    def expected_matching_per_zone_over_days(self, driver_type):
+        """
+
+        @param driver_type:
+        @return: {(zone_id, t_string):(m, n_obs)}
+        """
+
+        return self.matching_stats_prior_dict
