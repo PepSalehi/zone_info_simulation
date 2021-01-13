@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from lib.Constants import DIST_MAT, CONSTANT_SPEED, my_dist_class
+from lib.Constants import DIST_MAT, CONSTANT_SPEED, my_dist_class, MAX_PAX_WAITING_TIME
 
 
 class Req:
@@ -44,6 +44,16 @@ class Req:
         # self.NS = 0
         # self.NP = 0
         # self.ND = 0
+
+    def has_waited_too_long(self, t):
+        """
+
+        @param t:
+        @return:
+        """
+        if (t - self.Tr) / 60 > MAX_PAX_WAITING_TIME:
+            return True
+        return False
 
     # @profile
     def _get_distance_time(self):

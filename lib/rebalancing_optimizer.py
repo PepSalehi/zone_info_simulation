@@ -1,98 +1,134 @@
 import numpy as np
-from gurobipy import *
 import pandas as pd
 import copy
-from lib.Constants import ZONE_IDS, my_dist_class
+from lib.Constants import ZONE_IDS, my_dist_class, my_travel_time_class, convert_seconds_to_15_min
+import gurobipy as gb
+from gurobipy import GRB
+
+
+import logging
 
 
 class RebalancingOpt:
-    def __init__(self):
-        od_dict = {(x, y): 0 for x in ZONE_IDS for y in ZONE_IDS}
-        ODs = tupledict(od).keys()
+    def __init__(self, output_path):
+        # self.od_pairs = ((x, y) for x in ZONE_IDS for y in ZONE_IDS)
+        self.ODs = gb.tuplelist(
+            [(x, y) for x in ZONE_IDS for y in ZONE_IDS]
+        )
         # self.dist = dist
         self.ongoing_pickups = []
         self.ongoing_rebalancing = []
 
-        self.rebalancing_cost = 5
-        self.denied_cost = 10
-        self.pickup_revenue = 10 # how to do this?
+        self.rebalancing_cost = -1
+        self.denied_cost = -10
+        self.pickup_revenue = 8  # these could be also the avg fare per origin.
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh = logging.FileHandler(output_path + 'MPC optimizer.log', mode='w')
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
 
-
-    def MPC(T_forward, slack, demand):
+    def MPC(self, prediction_times, predicted_demand, current_supply, incoming_supply):
         """
-        standard foirmat shtinx
-        FUNCTION:
-            finds optimal rebalancing flows among zones using predicted demand
+        I get horrible results. The experiments in "rebalacing_experiment" suggest that it is because of limited supply.
+        Which manifests itself in supply variable. Have to verify that
 
-        INPUT:
-            T_Forward : a list of time periods
-            zones: a list of zones
-            slack : a dictionary with keys (i,t) for i in zones and t in T_forward
-            reb_cost, pic_cost, den_cost: dictionaries with keys (i,j,t) for ij in OD and t in T representing rebalancing, pick up and denial costs repsectively
-            demand :
-        OUTPUTS:
-            optimal rebalancing flows for (i,j) in ODs and for t in T_forward
+        @param prediction_times:
+        @param predicted_demand:
+        @param current_supply:
+        @param incoming_supply:
+        @return:
         """
-        pic_cost_sub, den_cost_sub, reb_cost_sub = {}, {}, {}
+
+
+        print("Running the Gurobi code")
+        reb_cost = gb.tupledict()
+        pic_cost = gb.tupledict()
+        den_cost = gb.tupledict()
+        # TODO Ideally these should be generate within the class definition, but how to pass the prediction times?
         for i in ZONE_IDS:
             for j in ZONE_IDS:
-                for t in T_forward:
-                    reb_cost_sub[i, j, t] = reb_cost[i, j, t]
-                    pic_cost_sub[i, j, t] = pic_cost[i, j, t]
-                    den_cost_sub[i, j, t] = den_cost[i, j, t]
+                for t in prediction_times:
+                    reb_cost[(i, j, t)] = self.rebalancing_cost
+                    pic_cost[(i, j, t)] = self.pickup_revenue
+                    den_cost[(i, j, t)] = self.denied_cost
 
-        m = Model("rebalancer")
-        # isnt it better to model them as continuous variables?
+        if 'm' in globals():
+            del m
+        m = gb.Model("rebalancer")
+        rebal = m.addVars(self.ODs, prediction_times, name="rebalancing_flow", vtype=GRB.INTEGER)
+        pickup = m.addVars(self.ODs, prediction_times, name="pickup_flow", vtype=GRB.INTEGER)
+        denied = m.addVars(self.ODs, prediction_times, name="denied_flow", vtype=GRB.INTEGER)
+        # define the objective function
+        obj = gb.LinExpr()
+        obj.add(rebal.prod(reb_cost))
+        obj.add(pickup.prod(pic_cost))
+        obj.add(denied.prod(den_cost))
 
-        reb = m.addVars(ODs, T_forward, name="reb_flow", vtype=GRB.INTEGER)
-        pic = m.addVars(ODs, T_forward, name="pic_flow", vtype=GRB.INTEGER)
-        den = m.addVars(ODs, T_forward, name="den_flow", vtype=GRB.INTEGER)
+        m.addConstrs(
+            (pickup[(i, j, t)] + denied[(i, j, t)] == predicted_demand[(i, j, t)]
+             for i, j, t in rebal.keys()), "conservation of pax"
+        )
 
-        m.addConstrs((pic[(i, j, t)] + den[(i, j, t)] == demand[(i, j, t)]
-                      for (i, j) in ODs for t in T_forward), "conservation of pax")
-
+        supply = gb.tupledict()
         for i in ZONE_IDS:
-            for t in T_forward:
-                temp = LinExpr()
-                for j in ZONE_IDS:
-
-                    temp.add(pic[i, j, t], 1.0)
-                    temp.add(reb[i, j, t], 1.0)
-                    # these variable should be received as input. It should not be the same "pic" and "reb"
-                    if (t - my_dist_class.return_distance(j, i)) >= T_forward[0]:
-                        temp.add(pic[j, i, (t - my_dist_class.return_distance(j, i))], -1.0)
-                        temp.add(reb[j, i, (t - my_dist_class.return_distance(j, i))], -1.0)
-
-                print(temp.size())
-                m.addConstr((temp == slack[(i, t)]), "conservation of veh")
-
-        # slack constraints
-        slack = {}
-        for i in ZONE_IDS:
-            for t in T_forward:
-                if t == 0:
-                    slack[i, t] = int(np.random.uniform(1, 5))
+            for idx, t in enumerate(prediction_times):
+                if idx == 0:
+                    supply[(i, t)] = current_supply[i] + incoming_supply[(i, t)]
                 else:
-                    slack[i,t] = 0
+                    supply[(i, t)] = incoming_supply[(i, t)]
+        # print("max slack value is ", np.max([v for k, v in supply.items()]))
+        # print("min slack value is ", np.min([v for k, v in supply.items()]))
+        # construct veh_to_be_available list
+        pickup_to_be_avail = {}
+        for t_end in prediction_times:
+            for dest in ZONE_IDS:
+                ct = gb.LinExpr()
+                for i, j, t in pickup.keys():
+                    if (t + (my_travel_time_class.return_travel_time_15_min_bin(i, j)) == t_end) \
+                            and \
+                            (dest == j):
+                        # bingo
+                        ct.add(pickup[(j, i, t)])
+                        ct.add(rebal[(j, i, t)])
+                pickup_to_be_avail[(dest, t_end)] = ct
 
-        obj = LinExpr()
-        obj.add(reb.prod(reb_cost_sub))
-        obj.add(pic.prod(pic_cost_sub))
-        obj.add(den.prod(den_cost_sub))
-        print("#####################")
-        print(obj.size())
+        m.addConstrs(
+            (pickup.sum(i, '*', t) + rebal.sum(i, '*', t) - pickup_to_be_avail[(i, t)] == supply[(i, t)]
+             for i in ZONE_IDS for t in prediction_times), "conservation of incoming flows")
 
-        m.setObjective(obj, GRB.MINIMIZE)
+        # self.logger.info(f"total demand is {sum(predicted_demand.values())}")
+        # self.logger.info(f"total supply is {np.sum(supply.values())}")
+        # self.logger.info(f"current supply is {sum(current_supply.values())}")
+        # self.logger.info(f"incoming supply is {sum(incoming_supply.values())}")
+
+        m.setParam('OutputFlag', 0)  # Also dual_subproblem.params.outputflag = 0
+        # print(obj.size())
+        m.setObjective(obj, GRB.MAXIMIZE)
         m.update()
-        print(m)
+        # print(m)
         m.optimize()
-
         if m.status == 2:
-            sol_p = m.getAttr("x", pic)
-            sol_d = m.getAttr("x", den)
-            sol_r = m.getAttr("x", reb)
+            print(f"obj value is {m.objVal}")
+            # self.logger.info(f"obj value is {m.objVal}")
+
+            sol_p = m.getAttr("x", pickup)
+            sol_d = m.getAttr("x", denied)
+            sol_r = m.getAttr("x", rebal)
+            # print("total non-empty assignment solutions: ", len([v for k, v in sol_p.items() if v > 0]))
+            # print("total non-empty denied solution: ", len([v for k, v in sol_d.items() if v > 0]))
+            # print("total non-empty rebal solution: ", len([v for k, v in sol_r.items() if v > 0]))
+            # print("total assignment revenue: ", np.sum([v * self.pickup_revenue for k, v in sol_p.items() if v > 0]))
+            # print("total rebal loss: ", np.sum([v * self.rebalancing_cost for k, v in sol_r.items() if v > 0]))
+            # print("total denied loss: ", np.sum([v * self.denied_cost for k, v in sol_d.items() if v > 0]))
+            #
+            # self.logger.info(f"total assignment revenue: {np.sum([v * self.pickup_revenue for k, v in sol_p.items() if v > 0])}")
+            # self.logger.info(f"total rebal loss:  {np.sum([v * self.rebalancing_cost for k, v in sol_r.items() if v > 0])}")
+            # self.logger.info(f"total denied loss:  {np.sum([v * self.denied_cost for k, v in sol_d.items() if v > 0])}")
+            # self.logger.info("*" * 10)
             return sol_p, sol_d, sol_r
         else:
             print("Gurobi's status is NOT 2, instead is ", m.status)
-            return 0
+            return None, None, None

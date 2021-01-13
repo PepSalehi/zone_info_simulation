@@ -1,0 +1,146 @@
+\ Model Behavioral_copy
+\ LP format - for model browsing. Use MPS format to capture full model detail.
+Minimize
+  + 3465 Constant
+Subject To
+ R14: 6.49548 weights[4,14] <= 0
+ R124: 15.95664 weights[13,14] <= 0
+ R179: 25.70454 weights[24,14] <= 0
+ R344: 34.09656 weights[43,14] <= 0
+ R454: 180.22776 weights[48,14] <= 0
+ R509: 15.72564000000001 weights[50,14] <= 0
+ R564: 23.32992000000001 weights[68,14] <= 0
+ R729: 90.516 weights[79,14] <= 0
+ R784: 31.58304 weights[87,14] <= 0
+ R839: 21.9846 weights[88,14] <= 0
+ R894: 39.3966 weights[90,14] <= 0
+ R949: 83.03208000000001 weights[100,14] <= 0
+ R1004: 47.13768 weights[107,14] <= 0
+ R1059: 27.71975999999999 weights[113,14] <= 0
+ R1279: 3.69924 weights[125,14] <= 0
+ R1444: 144.8712 weights[137,14] <= 0
+ R1499: 179.82246 weights[140,14] <= 0
+ R1554: 107.03856 weights[141,14] <= 0
+ R1609: 100.5933 weights[142,14] <= 0
+ R1664: 73.3068 weights[143,14] <= 0
+ R1719: 22.37184 weights[144,14] <= 0
+ R1774: 36.77783999999999 weights[148,14] <= 0
+ R1829: 69.888 weights[151,14] <= 0
+ R1994: 1.42434 weights[158,14] <= 0
+ R2049: 73.50113999999998 weights[161,14] <= 0
+ R2104: 44.80086 weights[162,14] <= 0
+ R2159: 209.90412 weights[163,14] <= 0
+ R2214: 91.49315999999999 weights[164,14] <= 0
+ R2269: 64.8753 weights[166,14] <= 0
+ R2324: 128.04282 weights[170,14] <= 0
+ R2379: 150.75984 weights[186,14] <= 0
+ R2654: 9.59994 weights[224,14] <= 0
+ R2709: 80.07053999999997 weights[229,14] <= 0
+ R2764: 298.97856 weights[230,14] <= 0
+ R2819: 42.24066000000001 weights[231,14] <= 0
+ R2874: 54.08664 weights[232,14] <= 0
+ R2929: 88.96721999999998 weights[233,14] <= 0
+ R2984: 68.32223999999999 weights[234,14] <= 0
+ R3039: 182.00502 weights[236,14] <= 0
+ R3094: 58.62768 weights[237,14] <= 0
+ R3149: 153.0018 weights[238,14] <= 0
+ R3204: 222.90528 weights[239,14] <= 0
+ R3314: 38.13264 weights[244,14] <= 0
+ R3424: 6.61452 weights[249,14] <= 0
+ R3479: 11.0457 weights[261,14] <= 0
+ R3534: 105.45672 weights[262,14] <= 0
+ R3589: 71.00562000000002 weights[263,14] <= 0
+ adj_budget_pos[14,41]: weights[41,14] - 2.389790322334069 ts[14] <= 0
+ adj_budget_pos[14,42]: weights[42,14] - 1.323116288582912 ts[14] <= 0
+ adj_budget_pos[14,45]: weights[45,14] - 1.50123931420437 ts[14] <= 0
+ adj_budget_pos[14,74]: weights[74,14] - 1.298830288601328 ts[14] <= 0
+ adj_budget_pos[14,75]: weights[75,14] - 1.151967231002045 ts[14] <= 0
+ adj_budget_pos[14,114]: weights[114,14] - 7.727437855292804 ts[14] <= 0
+ adj_budget_pos[14,152]: weights[152,14] - 2.841698635485481 ts[14] <= 0
+ adj_budget_pos[14,246]: weights[246,14] + 5.122873832061816 ts[14] <= 0
+ driver_util_prob[14]: 3.24774 weights[4,14] + 7.97832 weights[13,14]
+   + 12.85227 weights[24,14] + 7.19532 weights[41,14]
+   + 30.9486 weights[42,14] + 17.04828 weights[43,14]
+   + 19.95054 weights[45,14] + 90.11388000000001 weights[48,14]
+   + 7.86282 weights[50,14] + 11.66496 weights[68,14]
+   + 33.4638 weights[74,14] + 65.80364999999999 weights[75,14]
+   + 45.258 weights[79,14] + 15.79152 weights[87,14]
+   + 10.9923 weights[88,14] + 19.6983 weights[90,14]
+   + 41.51604 weights[100,14] + 23.56884 weights[107,14]
+   + 13.85988 weights[113,14] + 1.48644 weights[114,14]
+   + 1.84962 weights[125,14] + 72.4356 weights[137,14]
+   + 89.91123 weights[140,14] + 53.51928000000001 weights[141,14]
+   + 50.29665 weights[142,14] + 36.6534 weights[143,14]
+   + 11.18592 weights[144,14] + 18.38892 weights[148,14]
+   + 34.944 weights[151,14] + 5.42976 weights[152,14]
+   + 0.71217 weights[158,14] + 36.75056999999999 weights[161,14]
+   + 22.40043 weights[162,14] + 104.95206 weights[163,14]
+   + 45.74657999999999 weights[164,14] + 32.43765 weights[166,14]
+   + 64.02140999999999 weights[170,14] + 75.37992 weights[186,14]
+   + 4.79997 weights[224,14] + 40.03526999999998 weights[229,14]
+   + 149.48928 weights[230,14] + 21.12033 weights[231,14]
+   + 27.04332 weights[232,14] + 44.48360999999999 weights[233,14]
+   + 34.16112 weights[234,14] + 91.00250999999999 weights[236,14]
+   + 29.31384 weights[237,14] + 76.5009 weights[238,14]
+   + 111.45264 weights[239,14] + 19.06632 weights[244,14]
+   - 1.63323 weights[246,14] + 3.30726 weights[249,14]
+   + 5.52285 weights[261,14] + 52.72835999999999 weights[262,14]
+   + 35.50281000000001 weights[263,14] = 1
+Bounds
+ weights[4,14] free
+ weights[13,14] free
+ weights[24,14] free
+ weights[41,14] free
+ weights[42,14] free
+ weights[43,14] free
+ weights[45,14] free
+ weights[48,14] free
+ weights[50,14] free
+ weights[68,14] free
+ weights[74,14] free
+ weights[75,14] free
+ weights[79,14] free
+ weights[87,14] free
+ weights[88,14] free
+ weights[90,14] free
+ weights[100,14] free
+ weights[107,14] free
+ weights[113,14] free
+ weights[114,14] free
+ weights[125,14] free
+ weights[137,14] free
+ weights[140,14] free
+ weights[141,14] free
+ weights[142,14] free
+ weights[143,14] free
+ weights[144,14] free
+ weights[148,14] free
+ weights[151,14] free
+ weights[152,14] free
+ weights[158,14] free
+ weights[161,14] free
+ weights[162,14] free
+ weights[163,14] free
+ weights[164,14] free
+ weights[166,14] free
+ weights[170,14] free
+ weights[186,14] free
+ weights[224,14] free
+ weights[229,14] free
+ weights[230,14] free
+ weights[231,14] free
+ weights[232,14] free
+ weights[233,14] free
+ weights[234,14] free
+ weights[236,14] free
+ weights[237,14] free
+ weights[238,14] free
+ weights[239,14] free
+ weights[244,14] free
+ weights[249,14] free
+ weights[261,14] free
+ weights[262,14] free
+ weights[263,14] free
+ ts[14] free
+ Constant = 1
+End

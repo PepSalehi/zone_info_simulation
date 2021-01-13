@@ -37,9 +37,9 @@ class InexperiencedDriver(ProfessionalDriver):
     This acts as a naive one in the beginning, but as it gains more experience starts behaving like the pro
     """
 
-    def __init__(self, rs, operator, beta=1, true_demand=True, driver_type=DriverType.INEXPERIENCED,
+    def __init__(self, rs, operator, beta=1,  driver_type=DriverType.INEXPERIENCED,
                  ini_loc=None, know_fare=False,
-                 is_AV=False, dist_mat=DIST_MAT):
+                  dist_mat=DIST_MAT):
         """
         Creates a Vehicle object.
 
@@ -50,11 +50,11 @@ class InexperiencedDriver(ProfessionalDriver):
         @param driver_type (enum): whether the driver is professional, naive, or inexperienced
         @param ini_loc (int): initial location (zone) of the driver
         @param know_fare (bool): whether the driver knows the fare
-        @param is_AV (bool)
+
         @param dist_mat:
         """
         super().__init__(rs,
-                         operator, beta, true_demand, driver_type, ini_loc, know_fare, is_AV, dist_mat)
+                         operator, beta, driver_type, ini_loc, know_fare,  dist_mat)
 
     def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
         """
@@ -66,7 +66,7 @@ class InexperiencedDriver(ProfessionalDriver):
         # 1)  get demand and distances
         dist = self._get_dist_to_all_zones(ozone)
         # 1.1) demand as told by the app
-        df = (self.get_data_from_operator(t, true_demand))  # .set_index('Origin')
+        df = (self.get_data_from_operator(t))  # .set_index('Origin')
         assert dist.shape[0] == df.shape[0]
         # 1.2) demand as expected from experience
         # PRO: get estimates based on the prior

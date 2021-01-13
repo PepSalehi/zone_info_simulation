@@ -24,12 +24,10 @@ import pickle
 
 import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh2 = logging.FileHandler('drivers_naive.log', mode='w')
-fh2.setFormatter(formatter)
-logger.addHandler(fh2)
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 
 
 class NaiveDriver(Veh):
@@ -37,37 +35,43 @@ class NaiveDriver(Veh):
     Class encapsulating a vehicle.
     """
 
-    def __init__(self, rs, operator, beta=1, true_demand=True, driver_type=DriverType.NAIVE,
-                 ini_loc=None, know_fare=False,
-                 is_AV=False, dist_mat=DIST_MAT):
+    def __init__(self, rs, operator, day_of_run, output_path, beta=1, driver_type=DriverType.NAIVE,
+                 ini_loc=None,
+                 dist_mat=DIST_MAT):
         """
         Creates a Vehicle object.
 
         @param rs: #
         @param operator (Operator): object describing operator-specific details (e.g. Uber)
         @param beta (float):
-        @param true_demand (bool): #
         @param driver_type (enum): whether the driver is professional, naive, or inexperienced
         @param ini_loc (int): initial location (zone) of the driver
         @param know_fare (bool): whether the driver knows the fare
-        @param is_AV (bool)
+
         @param dist_mat:
         """
         super().__init__(rs,
-                         operator, beta, true_demand, driver_type, ini_loc, know_fare, is_AV, dist_mat)
+                         operator, day_of_run, output_path, beta,  driver_type, ini_loc, dist_mat)
 
-    def _compute_attractiveness_of_zones(self, t, ozone, true_demand):
+        # fh2 = logging.FileHandler(output_path + 'drivers_naive.log', mode='w')
+        # fh2.setFormatter(formatter)
+        # logger.addHandler(fh2)
+    def _compute_attractiveness_of_zones(self, t, ozone):
         """
-        @param t: time
+        TODO: inspecting the log, a consequence of considering every zone is that the individual probabilities are very
+        low. Would make sense to limit the decision to just the neighboring zones.
+        two possible issues:
+        1. new bugs
+        2. much slower performance
+        @param t: time in seconds
         @param ozone: (int) current zone
-        @param true_demand: (bool)
         @return: (df) attractiveness to all zones and (df) probability to go to each zone
         """
         # 1)  get demand and distances
         # index is zone, trip_distance_meter is the only column
         dist = self._get_dist_to_all_zones(ozone)
         # 1.1) demand as told by the app
-        df = (self.get_data_from_operator(t, true_demand))  # .set_index('Origin')
+        df = (self.get_data_from_operator(t))  # .set_index('Origin')
         assert dist.shape[0] == df.shape[0]
 
         if df.empty:
@@ -93,7 +97,14 @@ class NaiveDriver(Veh):
                 dist.trip_distance_meter.values * self.unit_rebalancing_cost)  # doesn't take into account the distance travelled once the demand is picked up
         # 6) compute the expected profit
         # https://github.com/numpy/numpy/issues/14281
-        prof = np.core.umath.clip(np.exp(expected_revenue - expected_cost) * df["total_pickup"].values, 0, 10000)
+        # maybe this total pickup is an issue. it shows current and anticipated demand, instead of just current
+        # prof = np.core.umath.clip(np.exp(df["total_pickup"].values), 0, 10000000)
+        # prof = (expected_revenue - expected_cost) * df["total_pickup"].values
+        THETA = 0.02 # 0.1 is too high (concentrated on 1 or 2 zones), 0.01 is too low (everyone is served!)
+        # prof = np.core.umath.clip(np.exp(THETA * (expected_revenue - expected_cost) * df["total_pickup"].values), 0, 1e55)
+        prof = np.exp(THETA * (expected_revenue - expected_cost) * df["total_pickup"].values)
+
+
         # prof = np.clip((expected_revenue - expected_cost) * df["total_pickup"].values, a_min=0, a_max=None)
         # 7) compute the probability of moving to each zone
         # http://cs231n.github.io/linear-classify/#softmax

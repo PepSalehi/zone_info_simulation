@@ -15,6 +15,13 @@ for i in 0.0 0.2 0.4 0.6 0.8 1.0 ; do for b in 0.1 1 ; do  python run_parallel_f
 
 for i in 0.0 0.2 0.4 0.6 0.8 1.0 ; do for f in 1500 2000 2500 ; do  python run_parallel_for_avg_fare.py -k "$i" -r 10 -f "$f" & done ; done
 
+for pros in 0 500 1000 1500 2000 ; do for naive in 2000 1500 1000 500; do for do_opt in 'yes' 'no'; do python run_multiple_days.py -PRO "$pros" -NAIVE "$naive" -BH "$do_opt" & done;done;done
+
+for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
+
+for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
+for pros in 0 500 1000 ; do for s in 'yes'; do python run_multiple_days.py -PRO "$pros"  -SURGE "$s" & done;done
+
 pip install snakeviz
 python -m cProfile -s tottime -o myscript.cprof run.py -f 10 -k 0.2
 python -m cProfile -s tottime -o myscript4.cprof run_parallel_for_avg_fare.py -f 1000 -k 0.2 -r 1
@@ -22,3 +29,5 @@ python -m cProfile -s tottime -o myscript4.cprof run_parallel_for_avg_fare.py -f
 snakeviz myscript.cprof 
 line_profiler
 kernprof -l -v run.py -f 10 -k 0.2
+
+<Project root>→/home/peymano/zone_info_simulation; <Project root>→/home/peymano/zone_info_simulation/home/peymano/zone_info_simulation

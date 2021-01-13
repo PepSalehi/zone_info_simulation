@@ -1,15 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="tidy up">
+    <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="Pro driver is pretty complete">
+      <change afterPath="$PROJECT_DIR$/run_multiple_days.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Simulation.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Simulation.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/README.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Untitled-3.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Operator.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/_modules/lib/Vehicles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/genindex.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/genindex.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_build/html/lib.html" beforeDir="false" afterPath="$PROJECT_DIR$/_build/html/lib.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dqn_weights_1 with AV_share of 0.02 .h5" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/AvDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/AvDriver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Data.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/InexperiencedDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/InexperiencedDriver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/NaiveDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/NaiveDriver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Operator.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Operator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/ProfessionalDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ProfessionalDriver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Requests.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Requests.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Vehicles.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Vehicles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/configs.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/configs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Zones.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Zones.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/behavioral_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/behavioral_optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/my_cython_setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/my_cython_setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript10.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript2.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript3.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript4.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript5.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript6.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript7.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript8.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript9.cprof" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscriptv2.cprof" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_parallel_for_avg_fare.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -83,11 +112,11 @@
     <option name="myShowDebugConsoleByDefault" value="true" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/lib" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
@@ -103,7 +132,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.run_parallel_for_avg_fare">
+  <component name="RunManager" selected="Python.run_multiple">
     <configuration default="true" type="tests" factoryName="Attests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -190,17 +219,20 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="run_parallel_for_avg_fare" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="run_multiple" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Simulation" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_parallel_for_avg_fare.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_multiple_days.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -243,12 +275,12 @@
     <list>
       <item itemvalue="Python.Data" />
       <item itemvalue="Python.run" />
-      <item itemvalue="Python.run_parallel_for_avg_fare" />
+      <item itemvalue="Python.run_multiple" />
       <item itemvalue="Python.train_dqn_agent" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.run_parallel_for_avg_fare" />
+        <item itemvalue="Python.run_multiple" />
         <item itemvalue="Python.Data" />
         <item itemvalue="Python.run" />
         <item itemvalue="Python.train_dqn_agent" />
@@ -301,7 +333,20 @@
       <workItem from="1606150002359" duration="878000" />
       <workItem from="1606150900529" duration="20666000" />
       <workItem from="1606245671173" duration="1428000" />
-      <workItem from="1606250104573" duration="62312000" />
+      <workItem from="1606250104573" duration="99822000" />
+      <workItem from="1606768813419" duration="18212000" />
+      <workItem from="1606917017577" duration="75075000" />
+      <workItem from="1608087843864" duration="14560000" />
+      <workItem from="1608399428576" duration="33963000" />
+      <workItem from="1609354078120" duration="18580000" />
+      <workItem from="1609520460139" duration="16992000" />
+      <workItem from="1609557653977" duration="258000" />
+      <workItem from="1609610256518" duration="52980000" />
+      <workItem from="1610379114361" duration="14440000" />
+      <workItem from="1610408149443" duration="761000" />
+      <workItem from="1610462675981" duration="3817000" />
+      <workItem from="1610476744846" duration="380000" />
+      <workItem from="1610493804522" duration="585000" />
     </task>
     <task id="LOCAL-00001" summary="tidy up">
       <created>1606330736701</created>
@@ -310,7 +355,14 @@
       <option name="project" value="LOCAL" />
       <updated>1606330736701</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Pro driver is pretty complete">
+      <created>1606507564086</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1606507564086</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -335,10 +387,44 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="tidy up&#10;" />
     <MESSAGE value="tidy up" />
-    <option name="LAST_COMMIT_MESSAGE" value="tidy up" />
+    <MESSAGE value="Pro driver is pretty complete" />
+    <option name="LAST_COMMIT_MESSAGE" value="Pro driver is pretty complete" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <condition expression="'morning_peak' not in app_demand_df.columns" language="Python" />
+          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
+          <line>295</line>
+          <option name="timeStamp" value="74" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
+          <line>718</line>
+          <option name="timeStamp" value="82" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/Operator.py</url>
+          <line>181</line>
+          <option name="timeStamp" value="83" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
+          <line>422</line>
+          <option name="timeStamp" value="84" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/utils.py</url>
+          <line>571</line>
+          <option name="timeStamp" value="92" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
+          <line>172</line>
+          <option name="timeStamp" value="94" />
+        </line-breakpoint>
+      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -349,7 +435,8 @@
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_parallel_for_avg_fare Coverage Results" MODIFIED="1606501611566" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_multiple Coverage Results" MODIFIED="1606766417497" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Simulation$run_multiple.coverage" NAME="run_multiple Coverage Results" MODIFIED="1610403570356" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Simulation$Data.coverage" NAME="Data Coverage Results" MODIFIED="1574709682627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lib" />
   </component>
 </project>

@@ -95,7 +95,6 @@ def main():
         budget = data_instance.BUDGET
     # output_path = "./Outputs/avg_fare_info/" + str(beta) + "/"
 
-
     for fleet_size in fleet_sizes:
         for surge in surges:
             for perc_k in perc_know:
@@ -129,7 +128,8 @@ def main():
                                        data_instance.INT_ASSIGN):
                             m.dispatch_at_time(T)
                         print('Total drivers: ', len(m.vehicles))
-                        print('# of Pro drivers: ', len([v for v in m.vehicles if v.driver_type== DriverType.PROFESSIONAL]))
+                        print('# of Pro drivers: ',
+                              len([v for v in m.vehicles if v.driver_type == DriverType.PROFESSIONAL]))
                         print('# of naive drivers: ',
                               len([v for v in m.vehicles if v.driver_type == DriverType.NAIVE]))
                         print('# of inexperienced drivers: ',
@@ -155,6 +155,7 @@ def main():
                         #                  + "fdemand " + str(percent_false_demand) + "perc_k " + str(
                         #                 perc_k) + "pro_s " + str(pro_s) + " repl" + str(repl) + ".p", "wb"))
                         #
+
 
 if __name__ == "__main__":
     main()

@@ -17,9 +17,15 @@ class Data:
                  path_zone_neighbors="./Data/zones_neighbors.json",
                  path_zones_w_neighbors="./Data/zones_w_neighbors.csv",
                  path_daily_demand="./Data/Daily_demand/",
-                 day_of_run = 2,
+                 day_of_run=1,
+                 month='Jan',
                  bonus_policy="random",
-                 budget=10000,
+                 budget=0,
+                 PRO_FLEET_SIZE = 10,
+                 NAIVE_FLEET_SIZE = 500, # total fleet of 2500 is good
+                 AV_FLEET_SIZE = 0,
+                 do_behavioral_opt=False,
+                 do_surge_pricing=False,
                  phi=0.25, fleet_size=None, pro_share=0,
                  percent_false_demand=0.0, av_share=0, penalty=0,
                  perce_know=0, const_fare=6, surge_multiplier=2, bonus=0, constant_speed=8,
@@ -64,10 +70,16 @@ class Data:
         """
 
         # Zone neighbors dict, keys are strings
+        self.MONTH = month
         self.day_of_run = day_of_run
-
+        self.path_daily_demand = path_daily_demand
         self.BUDGET = budget
         self.FLEET_SIZE = None
+        self.PRO_FLEET_SIZE = PRO_FLEET_SIZE
+        self.NAIVE_FLEET_SIZE = NAIVE_FLEET_SIZE
+        self.AV_FLEET_SIZE = AV_FLEET_SIZE
+        self.do_behavioral_opt = do_behavioral_opt
+        self.do_surge_pricing = do_surge_pricing
         if fleet_size is None:
             self.FLEET_SIZE = [1500]
         with open(path_zone_neighbors, 'r') as f:
@@ -80,18 +92,9 @@ class Data:
         # print("The number of zones is ", len(self.ZONES_IDS))
 
         # Get demand source
-
-        # https://stackoverflow.com/questions/13651117/how-can-i-filter-lines-on-load-in-pandas-read-csv-function
-        def __filter_data_to_day(day, fname):
-            iter_csv = pd.read_csv(fname + "demand_for_day_{}.csv".format(day), iterator=True, chunksize=1000)
-            df = pd.concat([chunk[chunk['Day'] == day] for chunk in iter_csv])
-            return df
-
-        # "daily_demand_day_2.csv"
-
-        self.DEMAND_SOURCE = __filter_data_to_day(self.day_of_run, path_daily_demand)
+        self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, path_daily_demand + self.MONTH+"/")
         # self.DEMAND_SOURCE = pd.read_csv(path_daily_demand)
-        print("The number of requests over all days is  ", self.DEMAND_SOURCE.shape)
+        print(f"The number of requests for day {self.day_of_run} over, all t, is  ", self.DEMAND_SOURCE.shape)
 
         # Bins demand into 15 minute periods, populates variable
         self.BINNED_DEMAND = None
@@ -137,7 +140,7 @@ class Data:
         self.POLICY_UPDATE_INTERVAL = policy_update_interval  # 10 minutes
         self.MIN_DEMAND = min_demand  # min demand to have surge
         self.ANALYSIS_DURATION = analysis_duration  # hours
-
+        # TODO: check this makes sense or not
         # warm-up time, study time and cool-down time of the simulation (in seconds)
         # start_time_offset + 1 hour warm up + 1 hour analysis
         self.T_TOTAL_SECONDS = self.WARMUP_TIME_SECONDS + 3600 + self.ANALYSIS_DURATION
@@ -147,6 +150,31 @@ class Data:
         # T_STUDY = 60*60
         # T_COOL_DOWN = 60*30
         # T_TOTAL = (T_WARM_UP + T_STUDY + T_COOL_DOWN)
+    def start_the_next_day(self):
+        """
+        Update the demand file
+        @return:
+        """
+        if self.MONTH == 1:
+            if self.day_of_run <= 30:
+                self.day_of_run += 1
+                self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, self.path_daily_demand + 'Jan/')
+                return 1
+            else:
+                print('moving to Feb')
+                self.MONTH = 2
+                self.day_of_run = 1
+                self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, self.path_daily_demand + 'Feb/')
+                return 1
+
+        elif self.MONTH == 2:
+            if self.day_of_run <= 28:
+                self.day_of_run += 1
+                self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, self.path_daily_demand + 'Feb/')
+                return 1
+            else:
+                print('done')
+                return None
 
     def bin_demand(self, bin_width='15min'):
         """
@@ -201,3 +229,21 @@ class Data:
         self.DEMAND_SOURCE["time_interval"] = np.floor(self.DEMAND_SOURCE["total_seconds"] / (bin_size * 60))
         self.BINNED_DEMAND = pickups_df_binned
         self.BINNED_OD = OD_df_binned
+
+    def _filter_data_to_day(self, day_of_run, path_daily_demand):
+        """
+        Reads demand file for a specific day
+        For req that go either from or to zones that don't exist in my file (forgot why), randomly replace it
+        with another zone
+        the zones that don's exist include 202, 153
+        @param day_of_run:
+        @param path_daily_demand:
+        @return:
+        """
+        # https://stackoverflow.com/questions/13651117/how-can-i-filter-lines-on-load-in-pandas-read-csv-function
+        fname = path_daily_demand
+        day = day_of_run
+        iter_csv = pd.read_csv(fname + "demand_for_day_{}.csv".format(day), iterator=True, chunksize=1000)
+        df = pd.concat([chunk[chunk['Day'] == day] for chunk in iter_csv])
+        return df
+

@@ -10,7 +10,11 @@ from lib.Constants import (
     MAX_BONUS,
     PHI)
 import logging
-from lib.Vehicles import DriverType
+from lib.Vehicles import DriverType, _convect_time_to_peak_string
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 class Operator:
@@ -20,13 +24,16 @@ class Operator:
 
     def __init__(
             self,
-            report,
             bonus_policy,
             bonus,
             surge_multiplier,
             budget,
             scenario,
-            which_day_numerical=2,
+            which_day_numerical,
+            which_month,
+            do_behavioral_opt,
+            do_surge_pricing,
+            output_path,
             name="Uber",
 
     ):
@@ -38,8 +45,16 @@ class Operator:
         @param BONUS: (float)
         @param SURGE_MULTIPLIER: (float)
         """
+        self.do_surge_pricing = do_surge_pricing
         self.scenario = scenario
         self.name = name
+        self.month = which_month
+        self.do_behavioral_opt = do_behavioral_opt
+        self.output_path = output_path
+
+        fh3 = logging.FileHandler(output_path + 'operators_log.log', mode='w')
+        fh3.setFormatter(formatter)
+        logger.addHandler(fh3)
         # self.demand_fare_stats_prior = pd.read_csv(
         #     "./Data/df_hourly_stats_over_days.csv"
         # )
@@ -52,7 +67,6 @@ class Operator:
         self.demand_fare_stats_prior_naive = pd.read_csv(
             "./Data/stats_over_all_days_w_st_for_naive.csv"
         )
-
         self.demand_fare_stats_prior_peak_off_peak_dict = {
             tuple(row[['PULocationID', 'time_period_label']].values): (row.avg_fare, row.std_fare)
             for _, row in self.demand_fare_stats_prior.iterrows()}
@@ -61,27 +75,33 @@ class Operator:
             tuple(row[['PULocationID', 'time_period_label']].values): (row.avg_fare, row.std_fare)
             for _, row in self.demand_fare_stats_prior_naive.iterrows()}
 
-        self.demand_fare_stats_of_the_day = pd.read_csv(
-            "./Data/Daily_stats/stats_for_day_{}.csv".format(which_day_numerical)
-        )
-        # TODO: this is a placeholder file. It should be based on the prior runs of the simulation
-        # TODO: this 20 should ideally come from the actual number of times a zone has been visited
+        self.demand_fare_stats_of_the_month = pd.read_csv('./Data/stats_for_{}_18.csv'.format(self.month))
+        self.demand_fare_stats_of_the_day = self.demand_fare_stats_of_the_month.query('Day=={}'.format(which_day_numerical))
+
+        vs = self.demand_fare_stats_of_the_day.time_of_day_index_15m.values * 15 * 60
+        vs = np.vectorize(_convect_time_to_peak_string)(vs)
+        self.demand_fare_stats_of_the_day["time_of_day_label"] = vs
+        ports = pd.get_dummies(self.demand_fare_stats_of_the_day.time_of_day_label)
+        self.demand_fare_stats_of_the_day = self.demand_fare_stats_of_the_day.join(ports)
+        # self.demand_fare_stats_of_the_day.time_of_day_label.drop(['time_of_day_label'], axis=1, inplace=True)
+
         self.matching_stats_prior_dict = {
             tuple(row[['PULocationID', 'time_period_label']].values): ((1 if row['total_pickup'] <= 20 else 0), 15)
             for _, row in self.demand_fare_stats_prior.iterrows()}
 
         self.live_data = None
+        self.optimal_si = None
         self.revenues = []
         # these should be probably enums, and accessed via functions
-        self.SHOULD_SURGE = True
-        self.SHOULD_BONUS = False
-        self.SHOULD_LIE_DEMAND = False
+
         self.SURGE_MULTIPLIER = surge_multiplier
-        self.BONUS = bonus
         self.BONUS_POLICY = bonus_policy
         self.budget = budget
-
-        self.report = report
+        self.revenue_report_dict = {
+            'name': [self.name],
+            'total_day_earning': None,
+            'day': None
+        }
 
     @staticmethod
     def random_bonus_function(ratio):
@@ -115,35 +135,11 @@ class Operator:
         if 1 >= ratio >= 0.9:
             return 1.1
         if 1.2 >= ratio > 1:
-            return 1.2
-        # if 2 > ratio > 1.2:
-        #     return 1.5
-        else:
             return 1.5
-
-    def false_zonal_info_over_t(self, t):
-        """
-        Calculates the false zonal info over t
-        @param t
-        @return: (df) false zonal info
-        """
-        False_mult = 3
-        zone_ids = np.loadtxt("outputs/zones_los_less_50_f_2500.csv")
-        df = self.demand_fare_stats_of_the_day.query("Hour == {hour}".format(hour=t))
-        #
-        df.loc[df["Origin"].isin(zone_ids), "total_pickup"] = (
-                df[df["Origin"].isin(zone_ids)]["total_pickup"] * False_mult
-        )
-        df.loc[~df["Origin"].isin(zone_ids), "total_pickup"] = (
-                df[~df["Origin"].isin(zone_ids)]["total_pickup"] / False_mult
-        )
-        df = df.assign(surge=1)
-        df = df.assign(bonus=0)
-        df = df.assign(match_prob=df["total_pickup"] / 60)  # pax/min just the default
-        #        df = df.assign(match_prob=df['total_pickup']/df.total_pickup.sum())  # pax/min just the default
-
-        self.live_data_false = df
-        return df
+        if 2 > ratio > 1.2:
+            return 2
+        else:
+            return 2.5
 
     def update_zonal_info(self, t):
         """
@@ -153,58 +149,92 @@ class Operator:
         if t % DEMAND_UPDATE_INTERVAL == 0:
             self.get_true_zonal_info(t)
 
-    def zonal_info_for_veh(self, true_demand):
+    def get_zonal_info_for_general(self):
         """
-        Gets the zonal info for vehicles.
+        Gets the zonal info, no manipulation
+
         @param true_demand: (bool)
         @return: (df)
-
-        example df:
-        time_of_day_index_15m:
-        PULocationID:
-    avg_fare
-        avg_dist
-        total_pickup
-        surge
-        bonus
-        match_prob
         """
-        if true_demand:
+        return self.live_data
+
+    def get_zonal_info_for_veh(self, zone_id, driver_information_count, t_seconds):
+        """
+        Gets the zonal info for driver # driver_information_count
+        as asked by zone z_id
+
+        @param t_seconds:
+        @param zone_id:
+        @param driver_information_count:
+        @return: (df)
+        """
+        # filter based on time. if time is after optimization has started, then go ahead.
+        # Otherwise, just return the raw data
+        if t_seconds < (8 * 3600):
             return self.live_data
-        else:
-            return self.live_data_false
+        if self.do_behavioral_opt is not True:
+            # print("dont do beh opt")
+            return self.live_data
+        # optimal_si is
+        try:
+            assert self.optimal_si is not None
+        except AssertionError:
+            self.optimal_si
+            raise AssertionError
+
+        info_adjustments = self.optimal_si[zone_id]
+        # logger.info(f"zonal info requested for zone {zone_id}")
+        # logger.info(f"driver_information count is {driver_information_count}")
+        # logger.info(f"info adjustment is {info_adjustments}")
+        # logger.info("####################")
+
+        # info_adjustments is {(dest, driver_id): adj}
+        driver_adjustments = {k[0]: v for k, v in info_adjustments.items() if k[1] == driver_information_count}
+        if len(driver_adjustments) == 0:
+            # all optimized information has already been given. return the raw data
+            # logger.info(f"all optimized information has already been given. return the raw data at time {t_seconds} ")
+            num_expected_drivers = len(info_adjustments) / 66
+            logger.info(f'num_expected_drivers {num_expected_drivers}')
+            logger.info(f'driver_information_count:  {driver_information_count}')
+            logger.info(f'difference is {num_expected_drivers - driver_information_count}')
+            # print('all optimized information has already been given. return the raw data')
+            return self.live_data
+
+        # logger.info(f"driver adjustments is {driver_adjustments}")
+
+        data_t = self.live_data.copy(deep=True)
+        for k, v in driver_adjustments.items():
+            data_t.at[k, 'total_pickup'] = data_t.at[k, 'total_pickup'] * v
+            # should log the before/after pickups
+        return data_t
 
     def get_true_zonal_info(self, t_sec):
         """
 
-        @param t:
+        @param t_sec:
         @return:
         """
 
-        def _true_zonal_info_over_t(t):
+        def _true_zonal_info_over_t(t_15):
             """
             Returns the correct zone demand.
             @param t: time (15 min index)
             @return: (df) zonal demand over t
             """
             # The below does not fill missing time periods per zone, i.e., the length is not fixed s
-            df = self.demand_fare_stats_of_the_day[self.demand_fare_stats_of_the_day["time_of_day_index_15m"] == t]
+            df = self.demand_fare_stats_of_the_day[self.demand_fare_stats_of_the_day["time_of_day_index_15m"] == t_15]
             df = df.assign(surge=1)
             df = df.assign(bonus=0)
             df = df.assign(match_prob=1)
-            # df = df.assign(match_prob=df['total_pickup']/60)  # pax/min just the default
-            # For professional drivers
-            # if self.report is not None:
-            #     # get the avg # of drivers per zone per price
-            #     df = pd.merge(df, self.report, left_on="Origin", right_on="zone_id")
-            #
+            df.index = df.PULocationID.values  # this  must be done for information manipulation to work
+
             self.live_data = df
             return df
 
-        hour = int(np.floor(t_sec / 3600))
         fifteen_min = int(np.floor(t_sec / 900))
         _true_zonal_info_over_t(fifteen_min)
         assert self.live_data is not None
+        # reset driver info for the next 15 mins
         return self.live_data
 
     def update_zone_policy(self, t, zones, WARMUP_PHASE):
@@ -277,20 +307,6 @@ class Operator:
                 if zone.id == zid:
                     zone.bonus = bonus
 
-    def optimize_rebalancing(self):
-        """
-        does the rebalancing procedure
-        @return:
-        """
-        pass
-
-    def optimize_driver_information(self):
-        """
-        does the optimization
-        @return:
-        """
-        pass
-
     def disseminated_zonal_demand_info(self, t):
         """
         Drivers will use this function to access the demand data.
@@ -341,3 +357,28 @@ class Operator:
         """
 
         return self.matching_stats_prior_dict
+
+    def get_optimal_si(self, optimal_si):
+        """
+        receives the optimal si as computed by the behavioral optimization unit
+        it is used by  this to adjust demand info, wh
+        @param optimal_si:
+        @return:
+        """
+        self.optimal_si = optimal_si
+
+    def bookkeep_one_days_revenue(self, day, month):
+        if self.revenue_report_dict['total_day_earning'] is None:
+            # first time
+            self.revenue_report_dict['total_day_earning'] = [np.sum(self.revenues)]
+            self.revenue_report_dict['day'] = [day]
+            self.revenue_report_dict['month'] = [month]
+        else:
+            self.revenue_report_dict['total_day_earning'].extend([np.sum(self.revenues)])
+            self.revenue_report_dict['day'].extend([day])
+            self.revenue_report_dict['month'].extend([month])
+            self.revenue_report_dict['name'].extend([self.name])
+
+    def report_final_revenue(self):
+        df = pd.DataFrame(data=self.revenue_report_dict)
+        return df
