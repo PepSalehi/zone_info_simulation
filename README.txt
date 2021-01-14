@@ -22,6 +22,9 @@ for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_day
 for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
 for pros in 0 500 1000 ; do for s in 'yes'; do python run_multiple_days.py -PRO "$pros"  -SURGE "$s" & done;done
 
+for pros in 1500 2000 ; do for do_opt in 'yes' ; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
+
+
 pip install snakeviz
 python -m cProfile -s tottime -o myscript.cprof run.py -f 10 -k 0.2
 python -m cProfile -s tottime -o myscript4.cprof run_parallel_for_avg_fare.py -f 1000 -k 0.2 -r 1
