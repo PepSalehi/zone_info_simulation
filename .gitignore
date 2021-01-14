@@ -13,3 +13,4 @@ Data/taxi_zones/taxi_zones.shp
 /lib/__*
 ./some_dqn_trials/*
 some_dqn_trials
+./.*

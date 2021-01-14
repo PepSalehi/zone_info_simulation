@@ -157,7 +157,6 @@ def main():
                         data_instance.do_behavioral_opt = do_behavioral_opt
                         data_instance.do_surge_pricing = do_surge_pricing
 
-
                         if do_behavioral_opt:
                             st = '/with_behavioral_opt/'
                         else:
@@ -189,8 +188,8 @@ def main():
                         # dispatch the system for T_TOTAL seconds, at the interval of INT_ASSIGN
                         # TODO: every run should in include the policy from the start
                         # TODO: process Feb's month as well.
-                        months = [1,2]
-                        days = [30, 29]
+                        months = [1, 2]
+                        days = [30, 15]
                         stop_month = months[-1]
                         for ix, month in enumerate(months):
                             for d_idx in range(1, days[ix]):
