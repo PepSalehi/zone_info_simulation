@@ -98,7 +98,7 @@ class Model:
         self.zone_ids = ZONE_IDS
         self.zones = []
         self.daily_OD_demand = data_obj.DEMAND_SOURCE  # data_obj.BINNED_DEMAND
-        self.daily_pickup_demand = data_obj.BINNED_DEMAND
+        # self.daily_pickup_demand = data_obj.BINNED_DEMAND
         self.output_path = output_path
         #
 
@@ -545,6 +545,8 @@ class Model:
             print('stopped after reaching {} days of month {}'.format(stop_day, stop_month))
             return
         print("reset_after_one_day_of_operation")
+
+        self.daily_OD_demand = self.data_obj.DEMAND_SOURCE
         # removes caches, except for rebal cost function, which is always fixed
         self._get_supply_per_zone.cache_clear()
         self._get_demand_per_zone.cache_clear()
@@ -569,10 +571,10 @@ class Model:
 
         vs = self.operator.demand_fare_stats_of_the_day.time_of_day_index_15m.values * 15 * 60
         vs = np.vectorize(_convect_time_to_peak_string)(vs)
-        self.operator.demand_fare_stats_of_the_day["time_of_day_label"] = vs
+        self.operator.demand_fare_stats_of_the_day["time_of_day_label"] = vs # this throws the pandas warning
         ports = pd.get_dummies(self.operator.demand_fare_stats_of_the_day.time_of_day_label)
         self.operator.demand_fare_stats_of_the_day = self.operator.demand_fare_stats_of_the_day.join(ports)
-
+        #TODO: self.daily_OD_demand is wrong, and in addition is not updated
         for v in self.vehicles:
             v.reset(self.data_obj.day_of_run, self.data_obj.MONTH)
         for z in self.zones:

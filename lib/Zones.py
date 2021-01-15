@@ -458,13 +458,18 @@ class Zone:
         """
         self.demand = deque([])  # demand maybe should be a time-based dictionary?
         self.denied_requests = []
+        self.served_demand = []
         # self.served_demand = []
         self.idle_vehicles = list()
+        self.reqs = []
         # self.busy_vehicles = list()
         self.incoming_vehicles = list()
         # self.undecided_vehicles = list()
         self.fare = None
-        self.reqs = []
+        self.revenue_generated = 0
+        self.driver_information_count = 0
+        self._n_matched = 0
+        self.this_t_demand = None
         self.N = 0
         self.M = None
         self.daily_destination_demand = None

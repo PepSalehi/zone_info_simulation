@@ -188,8 +188,8 @@ def main():
                         # dispatch the system for T_TOTAL seconds, at the interval of INT_ASSIGN
                         # TODO: every run should in include the policy from the start
                         # TODO: process Feb's month as well.
-                        months = [1, 2]
-                        days = [30, 15]
+                        months = [1]
+                        days = [4, 15]
                         stop_month = months[-1]
                         for ix, month in enumerate(months):
                             for d_idx in range(1, days[ix]):

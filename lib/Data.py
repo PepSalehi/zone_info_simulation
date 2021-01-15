@@ -18,17 +18,17 @@ class Data:
                  path_zones_w_neighbors="./Data/zones_w_neighbors.csv",
                  path_daily_demand="./Data/Daily_demand/",
                  day_of_run=1,
-                 month='Jan',
+                 month=1,
                  bonus_policy="random",
                  budget=0,
-                 PRO_FLEET_SIZE = 10,
-                 NAIVE_FLEET_SIZE = 500, # total fleet of 2500 is good
+                 PRO_FLEET_SIZE = 0,
+                 NAIVE_FLEET_SIZE = 2500, # total fleet of 2500 is good
                  AV_FLEET_SIZE = 0,
                  do_behavioral_opt=False,
                  do_surge_pricing=False,
                  phi=0.25, fleet_size=None, pro_share=0,
                  percent_false_demand=0.0, av_share=0, penalty=0,
-                 perce_know=0, const_fare=6, surge_multiplier=2, bonus=0, constant_speed=8,
+                 perce_know=0, const_fare=6, surge_multiplier=1, bonus=0, constant_speed=8,
                  ini_wait=400, ini_detour=1.25,
                  max_idle=300, int_assign=30, int_rebl=150,
                  fuel_cost=0.033 * 0.01, analysis_time_hour=8, warmup_time_hour=7,
@@ -92,7 +92,10 @@ class Data:
         # print("The number of zones is ", len(self.ZONES_IDS))
 
         # Get demand source
-        self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, path_daily_demand + self.MONTH+"/")
+        if self.MONTH == 1:
+            self.DEMAND_SOURCE = self._filter_data_to_day(self.day_of_run, path_daily_demand + "Jan/")
+        else:
+            raise IndexError
         # self.DEMAND_SOURCE = pd.read_csv(path_daily_demand)
         print(f"The number of requests for day {self.day_of_run} over, all t, is  ", self.DEMAND_SOURCE.shape)
 

@@ -22,7 +22,7 @@ for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_day
 for pros in 0 500 1000 ; do for do_opt in 'yes' 'no'; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
 for pros in 0 500 1000 ; do for s in 'yes'; do python run_multiple_days.py -PRO "$pros"  -SURGE "$s" & done;done
 
-for pros in 1500 2000 ; do for do_opt in 'yes' ; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
+for pros in 0  ; do for do_opt in 'yes' ; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
 
 
 pip install snakeviz
