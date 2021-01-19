@@ -246,7 +246,10 @@ class Data:
         # https://stackoverflow.com/questions/13651117/how-can-i-filter-lines-on-load-in-pandas-read-csv-function
         fname = path_daily_demand
         day = day_of_run
-        iter_csv = pd.read_csv(fname + "demand_for_day_{}.csv".format(day), iterator=True, chunksize=1000)
-        df = pd.concat([chunk[chunk['Day'] == day] for chunk in iter_csv])
+        # iter_csv = pd.read_csv(fname + "demand_for_day_{}.csv".format(day), iterator=True, chunksize=1000)
+        # df = pd.concat([chunk[chunk['Day'] == day] for chunk in iter_csv])
+        df = pd.read_csv(fname + "demand_for_day_{}.csv".format(day))
+        df = df.query('PULocationID!=105')
+        df = df.query('DOLocationID!=105')
         return df
 

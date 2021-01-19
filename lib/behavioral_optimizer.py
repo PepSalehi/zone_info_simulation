@@ -15,7 +15,7 @@ epsilon = 1e-5
 def solve_for_one_zone(origin_id, one_t_ahead_move, dest_attraction, supply_count, t_fifteen):
     """
     https://support.gurobi.com/hc/en-us/articles/360043111231-How-do-I-use-multiprocessing-in-Python-with-Gurobi-
-
+    # TODO: fix distance (rebalancing) cost
     see the Edit in https://or.stackexchange.com/questions/5040/linearizing-a-program-with-multinomial-logit-in-the-objective
     in my case, because I have no intercept, t will be the lower bound value, i.e. 0. in which case, I can't recover
     v. so we arbitrarily set t > 0.
@@ -68,7 +68,7 @@ def solve_for_one_zone(origin_id, one_t_ahead_move, dest_attraction, supply_coun
     m_behavioral.optimize()
 
     if m_behavioral.status == 2:
-        # print(f"obj value is {m_behavioral.objVal}")
+        print(f"obj value is {m_behavioral.objVal}")
         optimal_ws = m_behavioral.getAttr("x", w)
     else:
         print(f"status was {m_behavioral.status}")

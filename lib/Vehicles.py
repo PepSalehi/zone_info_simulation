@@ -24,8 +24,7 @@ import pickle
 
 import logging
 
-logging.basicConfig(filename='drivers_all.log', level=logging.INFO, filemode='w',
-                    format='%(asctime)s - %(message)s')
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -148,6 +147,8 @@ class Veh:
         @param know_fare (bool): whether the driver knows the fare
         @param dist_mat:
         """
+
+
         global driver_id
         driver_id += 1
         self.id = driver_id

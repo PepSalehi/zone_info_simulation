@@ -7,6 +7,8 @@ Created on Tue Mar 19 14:22:13 2019
 """
 # https://realpython.com/python-application-layouts/
 import argparse
+import logging
+
 import numpy as np
 import pandas as pd
 import os
@@ -20,7 +22,6 @@ from lib.Data import Data
 #     PERCENT_FALSE_DEMAND
 # from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, \
 #     WARMUP_TIME_HOUR
-# from lib.Constants import PERCE_KNOW
 from lib.Vehicles import DriverType
 from lib.configs import configs_dict
 from lib.utils import Model
@@ -28,6 +29,7 @@ from lib.utils import Model
 
 def main():
     parser = argparse.ArgumentParser(description="Simulation of drivers' behavior")
+# from lib.Constants import PERCE_KNOW
     parser.add_argument('-f', '--fleet',
                         help='Fleet sizes to simulate, formatted as comma-separated list (i.e. "-f 250,275,300")')
     parser.add_argument('-m', '--multiplier',
@@ -174,6 +176,7 @@ def main():
                         if not os.path.exists(output_path):
                             os.makedirs(output_path)
 
+
                         print("iteration number ", repl)
                         print('Surge is {}'.format(surge))
 
@@ -188,20 +191,20 @@ def main():
                         # dispatch the system for T_TOTAL seconds, at the interval of INT_ASSIGN
                         # TODO: every run should in include the policy from the start
                         # TODO: process Feb's month as well.
-                        months = [1]
-                        days = [4, 15]
+                        months = [1,2]
+                        days = [30, 15]
                         stop_month = months[-1]
                         for ix, month in enumerate(months):
                             for d_idx in range(1, days[ix]):
                                 stop_day = days[ix]
 
-                                # if d_idx >= 15:
+                                if month == 1 and d_idx >= 15:
                                 # NOTE: THIS WILL NOT HAVE THE DESIRED EFFECT, BC OPERATOR has attribute set in the beginning
-                                #     data_instance.do_behavioral_opt = True
-                                #     m.operator.do_behavioral_opt = True
+                                    data_instance.do_behavioral_opt = True
+                                    m.operator.do_behavioral_opt = True
 
-                                # data_instance.do_surge_pricing = True
-                                # m.operator.do_surge_pricing = True
+                                    # data_instance.do_surge_pricing = True
+                                    # m.operator.do_surge_pricing = True
 
                                 for T in range(data_instance.WARMUP_TIME_SECONDS,
                                                data_instance.T_TOTAL_SECONDS,

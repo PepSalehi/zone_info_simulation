@@ -280,7 +280,7 @@ class Zone:
         """
         # check if there is any demand first
         if self.D == 0:  # i.e., no demand
-            print("no demand")
+            # print("no demand")
             return
 
         time_interval = 900.0  # 15 minutes. TODO: make sure this imports from constants.py
@@ -458,7 +458,7 @@ class Zone:
         """
         self.demand = deque([])  # demand maybe should be a time-based dictionary?
         self.denied_requests = []
-        self.served_demand = []
+        # self.served_demand = []
         # self.served_demand = []
         self.idle_vehicles = list()
         self.reqs = []

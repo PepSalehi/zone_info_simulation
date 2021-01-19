@@ -56,6 +56,7 @@ class NaiveDriver(Veh):
         # fh2 = logging.FileHandler(output_path + 'drivers_naive.log', mode='w')
         # fh2.setFormatter(formatter)
         # logger.addHandler(fh2)
+
     def _compute_attractiveness_of_zones(self, t, ozone):
         """
         TODO: inspecting the log, a consequence of considering every zone is that the individual probabilities are very
