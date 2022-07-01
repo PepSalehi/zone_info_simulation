@@ -1,0 +1,514 @@
+2021-12-22 20:29:22,600 - lib.Vehicles - INFO - starting out
+2021-12-22 20:29:22,600 - lib.Vehicles - INFO - initial location is 43
+2021-12-22 20:29:22,825 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 79 from 43 
+
+2021-12-22 20:29:22,826 - lib.Vehicles - INFO - the probabilities were [0.01201989 0.01036403 0.01046617 0.01314309 0.01224085 0.01405331
+ 0.01592991 0.01177041 0.02934934 0.01816577 0.0152809  0.01363807
+ 0.01558269 0.05945412 0.01087909 0.01144524 0.02420111 0.01676058
+ 0.01089286 0.01483108 0.01381154 0.03051856 0.0101837  0.00996026
+ 0.00964834 0.00991943 0.01885709 0.03643911 0.01073915 0.01076711
+ 0.03501338 0.01164343 0.01016516 0.01146786 0.0160407  0.00811437
+ 0.01192528 0.01443494 0.00923818 0.02689619 0.03098443 0.02590567
+ 0.01056187 0.01534068 0.0140265  0.02399733 0.01337085 0.01373793
+ 0.01013332 0.01318958 0.00992126 0.00974966 0.00976963 0.01052944
+ 0.01042062 0.02709324 0.01080085 0.00996234 0.00923818 0.00946847
+ 0.00923818 0.00923818 0.00923818 0.00935496 0.00923818 0.00923818] 
+
+2021-12-22 20:29:22,826 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.03098443455409627
+2021-12-22 20:29:22,826 - lib.Vehicles - INFO - the max probability of a zone was 0.05945412264909845
+2021-12-22 20:29:22,826 - lib.Vehicles - INFO - the sum of all probabilities were 0.9999999999999998
+2021-12-22 20:29:22,826 - lib.Vehicles - INFO - decided to go to zone 79
+2021-12-22 20:29:22,827 - lib.Vehicles - INFO - time to be available is  903.125
+2021-12-22 20:29:23,647 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 79
+2021-12-22 20:29:23,660 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 30 so far
+2021-12-22 20:29:23,671 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 60 so far
+2021-12-22 20:29:23,685 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 90 so far
+2021-12-22 20:29:23,697 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 120 so far
+2021-12-22 20:29:23,708 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 150 so far
+2021-12-22 20:29:23,720 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 180 so far
+2021-12-22 20:29:23,735 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 210 so far
+2021-12-22 20:29:23,748 - lib.Vehicles - INFO - matched with a pax going to zone 224
+2021-12-22 20:29:23,749 - lib.Vehicles - INFO - time to be available is  173.625
+2021-12-22 20:29:23,749 - lib.Vehicles - INFO - request's fare was 6.0
+2021-12-22 20:29:23,827 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 224
+2021-12-22 20:29:23,827 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:23,840 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 4 from 224 
+
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - the probabilities were [0.01315028 0.01367758 0.01726528 0.00958401 0.00917351 0.00913092
+ 0.01874582 0.01323917 0.01215275 0.01678464 0.0458118  0.00937721
+ 0.01357237 0.14718919 0.01297039 0.01400414 0.04208556 0.01557864
+ 0.01442692 0.01772303 0.01173897 0.00793529 0.0078803  0.0111584
+ 0.0057995  0.00523175 0.02720448 0.01776578 0.00809694 0.00890757
+ 0.01378719 0.01073434 0.00809694 0.00875153 0.00826495 0.01079936
+ 0.01483475 0.00982821 0.00994606 0.00963057 0.04689371 0.00912336
+ 0.0087222  0.01146598 0.01029323 0.01593751 0.02666084 0.02440354
+ 0.01107459 0.00991715 0.01103536 0.00854273 0.00869185 0.00937566
+ 0.00809694 0.01580095 0.00856385 0.00858889 0.00809694 0.00809694
+ 0.00809694 0.00809694 0.00809694 0.00809694 0.00809694 0.00809694] 
+
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.00982820933907168
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - the max probability of a zone was 0.14718918832289965
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - decided to go to zone 4
+2021-12-22 20:29:23,841 - lib.Vehicles - INFO - time to be available is  173.75
+2021-12-22 20:29:23,925 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 4
+2021-12-22 20:29:23,938 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 30 so far
+2021-12-22 20:29:23,953 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 60 so far
+2021-12-22 20:29:23,967 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 90 so far
+2021-12-22 20:29:23,996 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 120 so far
+2021-12-22 20:29:24,009 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 150 so far
+2021-12-22 20:29:24,025 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 180 so far
+2021-12-22 20:29:24,039 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 210 so far
+2021-12-22 20:29:24,052 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 240 so far
+2021-12-22 20:29:24,158 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 270 so far
+2021-12-22 20:29:24,175 - lib.Vehicles - INFO - waiting to find a match at zone 4. Have waited 300 so far
+2021-12-22 20:29:24,189 - lib.Vehicles - INFO - matched with a pax going to zone 233
+2021-12-22 20:29:24,189 - lib.Vehicles - INFO - time to be available is  498.5
+2021-12-22 20:29:24,189 - lib.Vehicles - INFO - request's fare was 9.5
+2021-12-22 20:29:24,412 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 233
+2021-12-22 20:29:24,412 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:24,426 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 48 from 233 
+
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - the probabilities were [0.01152154 0.01584733 0.01138048 0.00941154 0.0105221  0.00904165
+ 0.03302224 0.0157801  0.01749609 0.01791611 0.02625478 0.00958076
+ 0.01039421 0.12425297 0.01484382 0.01546186 0.02655995 0.01807355
+ 0.01421927 0.01993006 0.01372653 0.01291291 0.0084808  0.0083508
+ 0.00639766 0.00617735 0.02024015 0.04235903 0.01046654 0.00891162
+ 0.01718534 0.01115195 0.0083508  0.00909322 0.00880805 0.00686915
+ 0.01174011 0.01062039 0.00984165 0.01523442 0.04010983 0.01362692
+ 0.011606   0.01122629 0.00992275 0.0213614  0.01942885 0.01869071
+ 0.00966552 0.00983606 0.0083508  0.01006553 0.00934868 0.01068346
+ 0.01293314 0.01926758 0.00899548 0.00921793 0.00882791 0.00830153
+ 0.0083508  0.0083508  0.0083508  0.0083508  0.0083508  0.0083508 ] 
+
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.12425296569409348
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - the max probability of a zone was 0.12425296569409348
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - the sum of all probabilities were 1.0000000000000002
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - decided to go to zone 48
+2021-12-22 20:29:24,427 - lib.Vehicles - INFO - time to be available is  303.75
+2021-12-22 20:29:24,661 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 48
+2021-12-22 20:29:24,674 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 30 so far
+2021-12-22 20:29:24,688 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 60 so far
+2021-12-22 20:29:24,702 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 90 so far
+2021-12-22 20:29:24,716 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 120 so far
+2021-12-22 20:29:24,729 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 150 so far
+2021-12-22 20:29:24,743 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 180 so far
+2021-12-22 20:29:24,756 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 210 so far
+2021-12-22 20:29:24,770 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 240 so far
+2021-12-22 20:29:24,784 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 270 so far
+2021-12-22 20:29:24,796 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 300 so far
+2021-12-22 20:29:24,812 - lib.Vehicles - INFO - waiting to find a match at zone 48. Have waited 330 so far
+2021-12-22 20:29:24,825 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 261 from 48 
+
+2021-12-22 20:29:24,825 - lib.Vehicles - INFO - the probabilities were [0.01123455 0.01614995 0.01715582 0.01099603 0.01053706 0.01100565
+ 0.01946728 0.02300149 0.03402876 0.02050106 0.03141255 0.00903058
+ 0.01438086 0.03491978 0.01242648 0.01218478 0.02830952 0.02018794
+ 0.01492018 0.02540084 0.0133529  0.01577101 0.00854603 0.00835227
+ 0.00704581 0.00751864 0.01249637 0.01659079 0.00952083 0.01240071
+ 0.04926838 0.01078472 0.00875421 0.01113626 0.0118707  0.00774804
+ 0.01242433 0.01242816 0.00972777 0.01585678 0.05569712 0.01956339
+ 0.0097011  0.0123106  0.00770405 0.01416304 0.0196662  0.03132571
+ 0.00884837 0.00966761 0.00985092 0.0106433  0.00835227 0.01042206
+ 0.00835227 0.03897333 0.00835227 0.01012509 0.00896955 0.00835227
+ 0.00835227 0.00835227 0.00835227 0.00835227 0.00835227 0.00835227] 
+
+2021-12-22 20:29:24,826 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.00985091827165843
+2021-12-22 20:29:24,826 - lib.Vehicles - INFO - the max probability of a zone was 0.055697122024975516
+2021-12-22 20:29:24,826 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:24,826 - lib.Vehicles - INFO - decided to go to zone 261
+2021-12-22 20:29:24,826 - lib.Vehicles - INFO - time to be available is  981.0
+2021-12-22 20:29:25,316 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 261
+2021-12-22 20:29:25,326 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 30 so far
+2021-12-22 20:29:25,339 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 60 so far
+2021-12-22 20:29:25,351 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 90 so far
+2021-12-22 20:29:25,364 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 120 so far
+2021-12-22 20:29:25,376 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 150 so far
+2021-12-22 20:29:25,388 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 180 so far
+2021-12-22 20:29:25,399 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 210 so far
+2021-12-22 20:29:25,409 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 240 so far
+2021-12-22 20:29:25,420 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 270 so far
+2021-12-22 20:29:25,433 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 300 so far
+2021-12-22 20:29:25,445 - lib.Vehicles - INFO - waiting to find a match at zone 261. Have waited 330 so far
+2021-12-22 20:29:25,459 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 236 from 261 
+
+2021-12-22 20:29:25,459 - lib.Vehicles - INFO - the probabilities were [0.01072394 0.03026008 0.02755906 0.00968155 0.00885317 0.0089636
+ 0.0130549  0.05481243 0.01300786 0.016879   0.02348917 0.0095002
+ 0.00952758 0.03264384 0.05275361 0.06320007 0.02084908 0.01553652
+ 0.01635409 0.0251396  0.0167764  0.00529193 0.01137047 0.0111726
+ 0.00446522 0.00390291 0.01507474 0.0126618  0.0097833  0.01087711
+ 0.01538517 0.01285686 0.00961207 0.00991308 0.00910394 0.01058057
+ 0.01433064 0.01028392 0.01077593 0.01415992 0.02756136 0.0099514
+ 0.00961207 0.01468633 0.01083758 0.00731789 0.01830641 0.04016017
+ 0.01106322 0.00961207 0.01001364 0.01129852 0.01026986 0.01098271
+ 0.01016654 0.0104036  0.00993198 0.00976021 0.00961207 0.00961207
+ 0.00961207 0.00961207 0.00961207 0.00961207 0.00961207 0.00961207] 
+
+2021-12-22 20:29:25,459 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.06320006594618331
+2021-12-22 20:29:25,460 - lib.Vehicles - INFO - the max probability of a zone was 0.06320006594618331
+2021-12-22 20:29:25,460 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:25,460 - lib.Vehicles - INFO - decided to go to zone 236
+2021-12-22 20:29:25,460 - lib.Vehicles - INFO - time to be available is  1610.875
+2021-12-22 20:29:26,319 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 236
+2021-12-22 20:29:26,329 - lib.Vehicles - INFO - matched with a pax going to zone 161
+2021-12-22 20:29:26,329 - lib.Vehicles - INFO - time to be available is  401.25
+2021-12-22 20:29:26,329 - lib.Vehicles - INFO - request's fare was 7.0
+2021-12-22 20:29:26,559 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 161
+2021-12-22 20:29:26,559 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:26,571 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 79 from 161 
+
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - the probabilities were [0.00965627 0.0142097  0.01198031 0.01087199 0.01552663 0.0087536
+ 0.04472821 0.01908394 0.03825044 0.02275098 0.03153022 0.00767431
+ 0.01793423 0.06585813 0.01271966 0.01763425 0.02586728 0.01379371
+ 0.02465114 0.03426206 0.01739766 0.01606652 0.00729606 0.00817501
+ 0.00604778 0.00549102 0.0190444  0.04292071 0.00913449 0.0091506
+ 0.02079096 0.01025429 0.00854775 0.01063156 0.00857095 0.00570145
+ 0.0098728  0.00864503 0.01201714 0.01297942 0.02239147 0.02283055
+ 0.01385063 0.01833698 0.00827308 0.03688315 0.01177244 0.01300601
+ 0.00832617 0.01008843 0.01017859 0.00878901 0.00842609 0.00731794
+ 0.00788236 0.01788202 0.01002101 0.00823501 0.0078108  0.00731794
+ 0.00731794 0.00731794 0.00731794 0.00731794 0.00731794 0.00731794] 
+
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.02239147167999127
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - the max probability of a zone was 0.06585813492688905
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - decided to go to zone 79
+2021-12-22 20:29:26,572 - lib.Vehicles - INFO - time to be available is  548.625
+2021-12-22 20:29:26,801 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 79
+2021-12-22 20:29:26,812 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 30 so far
+2021-12-22 20:29:26,823 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 60 so far
+2021-12-22 20:29:26,834 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 90 so far
+2021-12-22 20:29:26,847 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 120 so far
+2021-12-22 20:29:26,948 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 150 so far
+2021-12-22 20:29:26,960 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 180 so far
+2021-12-22 20:29:26,972 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 210 so far
+2021-12-22 20:29:26,987 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 240 so far
+2021-12-22 20:29:26,998 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 270 so far
+2021-12-22 20:29:27,011 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 300 so far
+2021-12-22 20:29:27,023 - lib.Vehicles - INFO - waiting to find a match at zone 79. Have waited 330 so far
+2021-12-22 20:29:27,033 - lib.Vehicles - INFO - matched with a pax going to zone 50
+2021-12-22 20:29:27,033 - lib.Vehicles - INFO - time to be available is  739.75
+2021-12-22 20:29:27,033 - lib.Vehicles - INFO - request's fare was 13.5
+2021-12-22 20:29:27,412 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 50
+2021-12-22 20:29:27,412 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:27,426 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 141 from 50 
+
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - the probabilities were [0.00749393 0.02438611 0.01731735 0.0111237  0.01052932 0.00785674
+ 0.03870073 0.01990454 0.06520383 0.09036511 0.01591136 0.00726887
+ 0.01469195 0.02990402 0.01558444 0.01751609 0.04914195 0.02399287
+ 0.02082995 0.01917687 0.01438291 0.01153678 0.0067508  0.00933972
+ 0.00564847 0.00474714 0.0312268  0.01395993 0.00999645 0.00973954
+ 0.01703895 0.00729269 0.00604312 0.00968523 0.00733804 0.00504095
+ 0.01232271 0.00758936 0.00649789 0.01429605 0.03310615 0.02638266
+ 0.00648195 0.02102533 0.00697911 0.03158587 0.01478044 0.0195831
+ 0.00735592 0.0064787  0.00901354 0.00733381 0.00643861 0.00850551
+ 0.00644182 0.00895358 0.00604312 0.00733975 0.00649596 0.00604312
+ 0.00604312 0.00604312 0.00604312 0.00604312 0.00604312 0.00604312] 
+
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.09036510508919211
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - the max probability of a zone was 0.09036510508919211
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - the sum of all probabilities were 1.0000000000000002
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - decided to go to zone 141
+2021-12-22 20:29:27,427 - lib.Vehicles - INFO - time to be available is  513.0
+2021-12-22 20:29:27,649 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 141
+2021-12-22 20:29:27,660 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 30 so far
+2021-12-22 20:29:27,671 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 60 so far
+2021-12-22 20:29:27,683 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 90 so far
+2021-12-22 20:29:27,695 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 120 so far
+2021-12-22 20:29:27,707 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 150 so far
+2021-12-22 20:29:27,717 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 180 so far
+2021-12-22 20:29:27,729 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 210 so far
+2021-12-22 20:29:27,741 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 240 so far
+2021-12-22 20:29:27,754 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 270 so far
+2021-12-22 20:29:27,853 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 300 so far
+2021-12-22 20:29:27,866 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 330 so far
+2021-12-22 20:29:27,879 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 107 from 141 
+
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - the probabilities were [0.00892248 0.00974683 0.00779518 0.01309019 0.01388328 0.00827445
+ 0.04609537 0.01646041 0.06783472 0.09501118 0.01409455 0.00880799
+ 0.01322103 0.04517496 0.01186912 0.0100943  0.01216073 0.01208897
+ 0.0171409  0.02292479 0.01367317 0.01703318 0.0076833  0.00771293
+ 0.00646389 0.00556443 0.02303275 0.03448448 0.0099754  0.00937076
+ 0.01567173 0.00732108 0.00632518 0.00721832 0.00928223 0.00701325
+ 0.01335451 0.01184346 0.00655822 0.01516013 0.02534602 0.01630287
+ 0.00860229 0.0117191  0.00934589 0.07211427 0.01195071 0.01360898
+ 0.00964565 0.00712478 0.00919687 0.00649204 0.00739002 0.00706102
+ 0.0068182  0.02306833 0.00659425 0.00952039 0.00607269 0.00607269
+ 0.00607269 0.00607269 0.00607269 0.00615567 0.00607269 0.00607269] 
+
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.011950708664663495
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - the max probability of a zone was 0.09501118097050829
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - the sum of all probabilities were 0.9999999999999999
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - decided to go to zone 107
+2021-12-22 20:29:27,880 - lib.Vehicles - INFO - time to be available is  548.5
+2021-12-22 20:29:28,097 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 107
+2021-12-22 20:29:28,107 - lib.Vehicles - INFO - waiting to find a match at zone 107. Have waited 30 so far
+2021-12-22 20:29:28,116 - lib.Vehicles - INFO - matched with a pax going to zone 100
+2021-12-22 20:29:28,117 - lib.Vehicles - INFO - time to be available is  323.375
+2021-12-22 20:29:28,117 - lib.Vehicles - INFO - request's fare was 13.5
+2021-12-22 20:29:28,316 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 100
+2021-12-22 20:29:28,316 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:28,328 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 263 from 100 
+
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - the probabilities were [0.00607571 0.01648309 0.0086832  0.00516826 0.00862606 0.0055158
+ 0.08526101 0.03114095 0.07464611 0.070472   0.01964878 0.00676354
+ 0.0075728  0.04381133 0.00954691 0.01249645 0.04054798 0.0234279
+ 0.01612561 0.02463087 0.01327284 0.0088586  0.00387268 0.00600589
+ 0.00239045 0.00218741 0.09246321 0.01961149 0.00677238 0.00681203
+ 0.01081505 0.00614573 0.00480847 0.00499111 0.004672   0.00199664
+ 0.01534632 0.00519552 0.00441443 0.00703724 0.04649781 0.00881201
+ 0.00611112 0.01110226 0.00028926 0.04051403 0.01725875 0.02459044
+ 0.00687578 0.00471867 0.00782822 0.00408976 0.0051838  0.00648316
+ 0.00441387 0.01710314 0.00468528 0.00605274 0.00408976 0.00404864
+ 0.00408976 0.00408976 0.00408976 0.00426558 0.00408976 0.004313  ] 
+
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.04054797530224127
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - the max probability of a zone was 0.09246321117867085
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - the sum of all probabilities were 1.0000000000000002
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - decided to go to zone 263
+2021-12-22 20:29:28,329 - lib.Vehicles - INFO - time to be available is  698.0
+2021-12-22 20:29:28,601 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 263
+2021-12-22 20:29:28,612 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 30 so far
+2021-12-22 20:29:28,708 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 60 so far
+2021-12-22 20:29:28,722 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 90 so far
+2021-12-22 20:29:28,736 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 120 so far
+2021-12-22 20:29:28,749 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 150 so far
+2021-12-22 20:29:28,762 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 180 so far
+2021-12-22 20:29:28,774 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 210 so far
+2021-12-22 20:29:28,787 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 240 so far
+2021-12-22 20:29:28,799 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 270 so far
+2021-12-22 20:29:28,811 - lib.Vehicles - INFO - waiting to find a match at zone 263. Have waited 300 so far
+2021-12-22 20:29:28,823 - lib.Vehicles - INFO - matched with a pax going to zone 79
+2021-12-22 20:29:28,823 - lib.Vehicles - INFO - time to be available is  931.125
+2021-12-22 20:29:28,823 - lib.Vehicles - INFO - request's fare was 16.0
+2021-12-22 20:29:29,269 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 79
+2021-12-22 20:29:29,269 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:29,282 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 239 from 79 
+
+2021-12-22 20:29:29,282 - lib.Vehicles - INFO - the probabilities were [0.00557882 0.04869417 0.01109788 0.00303037 0.0035566  0.00278616
+ 0.01437299 0.08846036 0.03174394 0.01861196 0.00974198 0.00328697
+ 0.00857144 0.12353754 0.04419612 0.06601241 0.04093291 0.01395693
+ 0.01588674 0.1688506  0.01062612 0.00230853 0.00181578 0.00419208
+ 0.00082717 0.0003055  0.03973672 0.00922507 0.0071178  0.00497386
+ 0.00495643 0.00506308 0.00371272 0.00285867 0.00267599 0.0010082
+ 0.01070268 0.00365733 0.00349141 0.00611754 0.00957924 0.00368794
+ 0.00596475 0.0119554  0.00259421 0.01311513 0.02014089 0.02024696
+ 0.00371125 0.0030511  0.00574311 0.00355015 0.00364291 0.00354725
+ 0.00290098 0.01063204 0.00333571 0.00283374 0.00268596 0.00268596
+ 0.00268596 0.00268596 0.00268596 0.00268596 0.00268596 0.00268596] 
+
+2021-12-22 20:29:29,282 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.04869416997127748
+2021-12-22 20:29:29,283 - lib.Vehicles - INFO - the max probability of a zone was 0.16885060160945592
+2021-12-22 20:29:29,283 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:29,283 - lib.Vehicles - INFO - decided to go to zone 239
+2021-12-22 20:29:29,283 - lib.Vehicles - INFO - time to be available is  1049.25
+2021-12-22 20:29:29,799 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 239
+2021-12-22 20:29:29,811 - lib.Vehicles - INFO - matched with a pax going to zone 143
+2021-12-22 20:29:29,811 - lib.Vehicles - INFO - time to be available is  172.125
+2021-12-22 20:29:29,811 - lib.Vehicles - INFO - request's fare was 5.0
+2021-12-22 20:29:29,872 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 143
+2021-12-22 20:29:29,872 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:29,885 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 140 from 143 
+
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - the probabilities were [0.00421989 0.01667446 0.00771185 0.01113419 0.01508143 0.0058418
+ 0.05760352 0.00959548 0.23812135 0.07390641 0.02089452 0.00413018
+ 0.02005467 0.03337956 0.00940899 0.00903502 0.01486508 0.01144277
+ 0.01319376 0.02832454 0.00624484 0.04319948 0.00381037 0.00426009
+ 0.00388691 0.00335128 0.02975153 0.01148024 0.00754748 0.01284183
+ 0.01004109 0.00491931 0.00342081 0.0041431  0.00423367 0.00257073
+ 0.0081473  0.00385988 0.00438915 0.00922876 0.03251201 0.02466577
+ 0.0044942  0.02196604 0.00388122 0.02985922 0.00551611 0.01457855
+ 0.00423967 0.00334243 0.00657039 0.00366089 0.00361033 0.00374915
+ 0.00389562 0.01245974 0.00361163 0.00619665 0.00313085 0.00313085
+ 0.00313085 0.00313085 0.00313085 0.00332712 0.00313085 0.00313085] 
+
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.01457854893447402
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - the max probability of a zone was 0.238121345133665
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - decided to go to zone 140
+2021-12-22 20:29:29,886 - lib.Vehicles - INFO - time to be available is  474.125
+2021-12-22 20:29:30,184 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 140
+2021-12-22 20:29:30,196 - lib.Vehicles - INFO - matched with a pax going to zone 236
+2021-12-22 20:29:30,196 - lib.Vehicles - INFO - time to be available is  258.0
+2021-12-22 20:29:30,196 - lib.Vehicles - INFO - request's fare was 5.5
+2021-12-22 20:29:30,308 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 236
+2021-12-22 20:29:30,308 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:30,323 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 143 from 236 
+
+2021-12-22 20:29:30,323 - lib.Vehicles - INFO - the probabilities were [0.00354009 0.00369091 0.00258655 0.01212398 0.04143018 0.00615058
+ 0.13894033 0.00564494 0.12806326 0.05101059 0.00910662 0.00366944
+ 0.05070005 0.01855634 0.00470324 0.00392992 0.02077653 0.0121321
+ 0.01076043 0.01802376 0.00540234 0.0713385  0.00475625 0.00319722
+ 0.00409948 0.0025252  0.03564138 0.03967055 0.01236707 0.00480409
+ 0.00607652 0.00381672 0.00278862 0.0045546  0.00461448 0.00199575
+ 0.00709049 0.00514693 0.00343292 0.00747214 0.02215391 0.02705415
+ 0.00509594 0.02003805 0.00317403 0.03664281 0.00436543 0.0069179
+ 0.00435717 0.00317534 0.00377073 0.00263732 0.0032983  0.00292452
+ 0.00318553 0.0440835  0.00415588 0.00588416 0.00258639 0.00262944
+ 0.00258639 0.00258639 0.00258639 0.00260648 0.00258639 0.00258639] 
+
+2021-12-22 20:29:30,323 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.04143017873175385
+2021-12-22 20:29:30,324 - lib.Vehicles - INFO - the max probability of a zone was 0.138940331355797
+2021-12-22 20:29:30,324 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:30,324 - lib.Vehicles - INFO - decided to go to zone 143
+2021-12-22 20:29:30,324 - lib.Vehicles - INFO - time to be available is  460.125
+2021-12-22 20:29:30,629 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 143
+2021-12-22 20:29:30,643 - lib.Vehicles - INFO - matched with a pax going to zone 238
+2021-12-22 20:29:30,643 - lib.Vehicles - INFO - time to be available is  267.875
+2021-12-22 20:29:30,643 - lib.Vehicles - INFO - request's fare was 8.0
+2021-12-22 20:29:30,770 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 238
+2021-12-22 20:29:30,770 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:30,784 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 234 from 238 
+
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - the probabilities were [0.00172091 0.00306139 0.00291362 0.00554435 0.00793133 0.0056746
+ 0.05870909 0.00307156 0.07655568 0.03423601 0.00627764 0.00223833
+ 0.02565451 0.00915325 0.00256428 0.00208053 0.00825393 0.00401746
+ 0.00646343 0.00894058 0.00285625 0.45978413 0.00318759 0.00227766
+ 0.00427597 0.00324839 0.01396661 0.02059812 0.00495724 0.00478165
+ 0.00601071 0.0021411  0.0016774  0.00274271 0.00341048 0.00215182
+ 0.0043701  0.00208055 0.00173407 0.00508911 0.01933515 0.05898873
+ 0.00264785 0.00604162 0.00233139 0.01000725 0.00172874 0.00336644
+ 0.00222088 0.00182194 0.00512002 0.00161524 0.00171445 0.00162058
+ 0.00154445 0.03641008 0.00189089 0.00276766 0.00154445 0.00154445
+ 0.00154445 0.00154445 0.00154445 0.00161137 0.00154445 0.00154445] 
+
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.02565450752578179
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - the max probability of a zone was 0.4597841260688958
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - decided to go to zone 234
+2021-12-22 20:29:30,785 - lib.Vehicles - INFO - time to be available is  926.625
+2021-12-22 20:29:31,352 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 234
+2021-12-22 20:29:31,367 - lib.Vehicles - INFO - matched with a pax going to zone 144
+2021-12-22 20:29:31,367 - lib.Vehicles - INFO - time to be available is  330.125
+2021-12-22 20:29:31,367 - lib.Vehicles - INFO - request's fare was 9.5
+2021-12-22 20:29:31,506 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 144
+2021-12-22 20:29:31,506 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:31,520 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 236 from 144 
+
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - the probabilities were [7.70616415e-04 3.35292387e-02 5.22331916e-03 5.32817058e-04
+ 4.82157264e-04 3.51607513e-04 4.69778657e-03 2.58967004e-01
+ 1.11437929e-02 1.32141081e-02 4.00250196e-03 4.71277708e-04
+ 1.26815141e-03 3.31007242e-01 7.15868111e-02 6.11583288e-02
+ 1.85975426e-02 8.67053291e-03 2.49272442e-03 3.49005523e-02
+ 3.00217749e-03 2.36054789e-04 6.60825581e-04 1.53308226e-03
+ 2.06930011e-05 1.76779791e-03 6.39428845e-02 2.38809949e-03
+ 8.33134867e-04 6.97928690e-04 7.57680001e-04 1.84595333e-03
+ 4.54618104e-04 4.70759117e-04 4.11269507e-04 1.01470847e-04
+ 1.55976857e-03 5.55123124e-04 4.69850206e-04 8.84984326e-04
+ 1.33822775e-02 5.86225621e-04 8.07932030e-04 3.24728043e-03
+ 3.47635297e-04 1.33468413e-03 1.84952336e-02 4.00805568e-03
+ 9.84609518e-04 5.19022240e-04 1.29324874e-03 5.32272903e-04
+ 1.06863556e-03 5.31965126e-04 5.20238486e-04 2.08834786e-03
+ 5.82499621e-04 5.26301338e-04 4.18840397e-04 4.18840397e-04
+ 4.18840397e-04 4.44398079e-04 4.18840397e-04 5.23825144e-04
+ 4.18840397e-04 4.18840397e-04] 
+
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.06115832876811001
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - the max probability of a zone was 0.331007242273162
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - the sum of all probabilities were 0.9999999999999999
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - decided to go to zone 236
+2021-12-22 20:29:31,521 - lib.Vehicles - INFO - time to be available is  1057.125
+2021-12-22 20:29:32,205 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 236
+2021-12-22 20:29:32,218 - lib.Vehicles - INFO - matched with a pax going to zone 116
+2021-12-22 20:29:32,218 - lib.Vehicles - INFO - time to be available is  866.875
+2021-12-22 20:29:32,218 - lib.Vehicles - INFO - request's fare was 14.0
+2021-12-22 20:29:36,455 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 100 from 233 
+
+2021-12-22 20:29:36,456 - lib.Vehicles - INFO - the probabilities were [4.83390147e-04 1.14437680e-03 1.13367935e-03 3.93688460e-04
+ 7.76022942e-04 5.33231938e-04 6.70421750e-03 9.63955365e-03
+ 1.48389697e-02 5.31302479e-02 6.44737587e-03 5.53188430e-04
+ 2.14586730e-03 2.76319169e-01 8.02357352e-04 7.65660295e-03
+ 1.50750763e-02 4.77453413e-03 6.18911192e-03 1.00701218e-02
+ 1.53860045e-03 3.67915389e-03 2.71321940e-04 2.97923245e-04
+ 1.62887550e-04 6.40052099e-05 3.73107096e-02 7.03435362e-03
+ 2.08977835e-03 7.18445094e-04 7.96153881e-04 4.03393812e-04
+ 2.69397419e-04 4.23320377e-04 3.62307785e-04 1.67095597e-04
+ 1.17619894e-03 3.49904579e-04 2.99276437e-04 4.29727843e-04
+ 3.65865504e-03 1.10342260e-03 4.16068240e-04 2.70892860e-03
+ 3.19598425e-04 9.91265773e-04 2.72294280e-03 4.02144466e-03
+ 7.06665964e-04 4.14965791e-04 3.74314025e-04 2.73637896e-04
+ 3.56286821e-04 5.31721090e-04 2.73146446e-04 5.01827887e-01
+ 2.53941033e-04 3.58841105e-04 2.53941033e-04 2.53941033e-04
+ 2.53941033e-04 2.53941033e-04 2.53941033e-04 2.53941033e-04
+ 2.53941033e-04 2.53941033e-04] 
+
+2021-12-22 20:29:36,456 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.5018278867291158
+2021-12-22 20:29:36,457 - lib.Vehicles - INFO - the max probability of a zone was 0.5018278867291158
+2021-12-22 20:29:36,457 - lib.Vehicles - INFO - the sum of all probabilities were 0.9999999999999999
+2021-12-22 20:29:36,457 - lib.Vehicles - INFO - decided to go to zone 100
+2021-12-22 20:29:36,457 - lib.Vehicles - INFO - time to be available is  242.25
+2021-12-22 20:29:36,700 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 100
+2021-12-22 20:29:36,710 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 30 so far
+2021-12-22 20:29:36,719 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 60 so far
+2021-12-22 20:29:36,730 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 90 so far
+2021-12-22 20:29:36,741 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 120 so far
+2021-12-22 20:29:36,750 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 150 so far
+2021-12-22 20:29:36,761 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 180 so far
+2021-12-22 20:29:36,771 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 210 so far
+2021-12-22 20:29:36,782 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 240 so far
+2021-12-22 20:29:36,793 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 270 so far
+2021-12-22 20:29:36,804 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 300 so far
+2021-12-22 20:29:36,817 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 330 so far
+2021-12-22 20:29:36,829 - lib.Vehicles - INFO - matched with a pax going to zone 161
+2021-12-22 20:29:36,829 - lib.Vehicles - INFO - time to be available is  193.75
+2021-12-22 20:29:36,829 - lib.Vehicles - INFO - request's fare was 8.5
+2021-12-22 20:29:36,911 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 161
+2021-12-22 20:29:36,912 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:29:36,922 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 141 from 161 
+
+2021-12-22 20:29:36,922 - lib.Vehicles - INFO - the probabilities were [3.61372781e-04 7.61198876e-04 1.11558439e-03 3.57688558e-04
+ 8.11403820e-04 5.65955616e-04 7.75353431e-03 6.77418307e-03
+ 1.57847894e-02 7.01216071e-02 5.84830795e-03 4.65766138e-04
+ 2.13441367e-03 9.86808968e-02 5.21505624e-04 2.74881519e-03
+ 1.39632766e-02 4.21455487e-03 4.17081883e-03 8.32345789e-03
+ 1.24790879e-03 1.29598741e-02 2.04461166e-04 2.45055143e-04
+ 1.41751859e-04 7.47496447e-05 1.98677930e-02 5.01204382e-03
+ 1.64387520e-03 6.83549899e-04 7.78986300e-04 3.25439462e-04
+ 2.18575930e-04 3.93718292e-04 3.90547679e-04 1.51918176e-04
+ 1.04566221e-03 2.89647208e-04 2.44860549e-04 3.68112817e-04
+ 3.13802487e-03 1.48708344e-03 3.34907796e-04 2.40409415e-03
+ 2.38783494e-04 7.37352346e-04 1.53910854e-03 3.28048862e-03
+ 5.12281797e-04 3.35943859e-04 3.13500219e-04 2.27452280e-04
+ 2.75162012e-04 4.26697725e-04 2.23553925e-04 6.90576240e-01
+ 2.07546219e-04 3.13745974e-04 2.07546219e-04 2.07546219e-04
+ 2.07546219e-04 2.07546219e-04 2.07546219e-04 2.07546219e-04
+ 2.07546219e-04 2.07546219e-04] 
+
+2021-12-22 20:29:36,923 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.07012160714820326
+2021-12-22 20:29:36,923 - lib.Vehicles - INFO - the max probability of a zone was 0.6905762401797916
+2021-12-22 20:29:36,923 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:29:36,923 - lib.Vehicles - INFO - decided to go to zone 141
+2021-12-22 20:29:36,923 - lib.Vehicles - INFO - time to be available is  304.75
+2021-12-22 20:40:17,624 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 141
+2021-12-22 20:40:17,639 - lib.Vehicles - INFO - waiting to find a match at zone 141. Have waited 30 so far
+2021-12-22 20:40:17,656 - lib.Vehicles - INFO - matched with a pax going to zone 162
+2021-12-22 20:40:17,656 - lib.Vehicles - INFO - time to be available is  247.75
+2021-12-22 20:40:17,656 - lib.Vehicles - INFO - request's fare was 4.0
+2021-12-22 20:40:17,774 - lib.Vehicles - INFO - dropped off the passenger. arrived at zone 162
+2021-12-22 20:40:17,774 - lib.Vehicles - INFO - now going to await for a while to get a match. is_waiting_to_be_matched : False
+2021-12-22 20:40:17,788 - lib.Vehicles - INFO - Rebalancing: decided to go to zone 100 from 162 
+
+2021-12-22 20:40:17,789 - lib.Vehicles - INFO - the probabilities were [2.49763394e-04 4.68765970e-04 8.63461444e-04 2.36941019e-04
+ 8.18081894e-04 3.12222429e-04 4.50165167e-03 4.63038291e-03
+ 9.37380666e-02 6.39295162e-02 3.17756623e-03 2.50124213e-04
+ 1.57147264e-03 6.71055778e-02 2.57254649e-04 2.72786859e-03
+ 1.92727228e-02 2.53154444e-03 1.23801460e-03 9.72962707e-03
+ 5.39607512e-04 2.65855560e-03 1.37553378e-04 1.79293414e-04
+ 8.45633406e-05 1.81213399e-05 2.29525413e-03 5.41170699e-03
+ 1.84537031e-03 3.85540115e-04 9.67703604e-04 2.31107379e-04
+ 1.37931067e-04 1.75539493e-04 2.25881618e-04 7.35143957e-05
+ 1.17318042e-03 1.58407630e-04 1.34318393e-04 2.34204355e-04
+ 3.26050068e-03 8.74130822e-04 1.70732371e-04 1.14956311e-03
+ 1.25592036e-04 6.86304939e-04 1.92779713e-03 1.50052938e-03
+ 3.67337280e-04 2.02507727e-04 2.34588015e-04 1.52020024e-04
+ 1.75718002e-04 2.02115162e-04 1.65486968e-04 6.92831461e-01
+ 1.33821102e-04 1.72876254e-04 1.23617145e-04 1.23617145e-04
+ 1.23617145e-04 1.23617145e-04 1.23617145e-04 1.23617145e-04
+ 1.23617145e-04 1.23617145e-04] 
+
+2021-12-22 20:40:17,789 - lib.Vehicles - INFO - the probability of choosing the destination it did was 0.6928314608108245
+2021-12-22 20:40:17,789 - lib.Vehicles - INFO - the max probability of a zone was 0.6928314608108245
+2021-12-22 20:40:17,789 - lib.Vehicles - INFO - the sum of all probabilities were 1.0
+2021-12-22 20:40:17,789 - lib.Vehicles - INFO - decided to go to zone 100
+2021-12-22 20:40:17,790 - lib.Vehicles - INFO - time to be available is  238.25
+2021-12-22 20:40:17,915 - lib.Vehicles - INFO - finished rebalancing. arrived at zone 100
+2021-12-22 20:40:17,930 - lib.Vehicles - INFO - waiting to find a match at zone 100. Have waited 30 so far

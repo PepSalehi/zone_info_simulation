@@ -1,6 +1,7 @@
 import pickle
 from collections import Counter, defaultdict
 from functools import lru_cache
+from joblib import Parallel, delayed
 
 import numpy as np
 import pandas as pd
@@ -27,7 +28,8 @@ from lib.NaiveDriver import NaiveDriver
 from lib.AvDriver import AvDriver
 from lib.InexperiencedDriver import InexperiencedDriver
 from lib.rebalancing_optimizer import RebalancingOpt
-from lib.behavioral_optimizer import solve_for_one_zone
+from lib.behavioral_optimizer import solve_for_one_zone, alternative_solve_for_one_zone, solve_for_personalized_drivers, \
+    solve_for_area_wide_drivers
 
 _get_dist_to_all_zones = Veh._get_dist_to_all_zones
 _get_dist_to_all_zones_as_a_dict = Veh._get_dist_to_all_zones_as_a_dict
@@ -129,9 +131,10 @@ class Model:
                                  bonus_policy=self.BONUS_POLICY,
                                  budget=self.budget,
                                  which_day_numerical=self.data_obj.day_of_run,
-                                 which_month = self.data_obj.MONTH,
+                                 which_month=self.data_obj.MONTH,
                                  do_behavioral_opt=data_obj.do_behavioral_opt,
                                  do_surge_pricing=data_obj.do_surge_pricing,
+                                 data_obj=data_obj,
                                  output_path=self.output_path)
 
         self._create_zones(self.output_path)
@@ -168,7 +171,7 @@ class Model:
         Updates the self.zones attribute in-place.
         """
         for z_id in self.zone_ids:
-            Z = Zone(z_id, self.operator, output_path , rs=self.rs1)
+            Z = Zone(z_id, self.operator, output_path, rs=self.rs1)
             Z.read_daily_demand(self.daily_OD_demand)  # , self.daily_pickup_demand
             self.zones.append(Z)
 
@@ -189,15 +192,17 @@ class Model:
         # ]
 
         self.vehicles = [
-            NaiveDriver(self.rs1, self.operator, day_of_run=self.data_obj.day_of_run, output_path=output_path) for _ in
+            NaiveDriver(self.rs1, self.operator, day_of_run=self.data_obj.day_of_run, output_path=output_path, theta=data_obj.THETA) for _ in
             range(data_obj.NAIVE_FLEET_SIZE)
         ]
         self.vehicles.extend(
-            [ProfessionalDriver(self.rs1, self.operator, day_of_run=self.data_obj.day_of_run, output_path=output_path) for _ in
+            [ProfessionalDriver(self.rs1, self.operator, day_of_run=self.data_obj.day_of_run, output_path=output_path, theta=data_obj.THETA_prof)
+             for _ in
              range(data_obj.PRO_FLEET_SIZE)])
 
-        self.vehicles.extend( # need to add day of run here
-            [AvDriver(self.rs1, self.operator, self.data_obj.day_of_run, output_path, beta) for _ in range(data_obj.AV_FLEET_SIZE)])
+        self.vehicles.extend(  # need to add day of run here
+            [AvDriver(self.rs1, self.operator, self.data_obj.day_of_run, output_path, beta) for _ in
+             range(data_obj.AV_FLEET_SIZE)])
 
     def set_analysis_time(self, t):
         """
@@ -318,13 +323,15 @@ class Model:
         @param action
         @return: None
         """
+        if self.operator.do_surge_pricing:
+            self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
         self.generate_zonal_demand(t)
         self.operator.update_zonal_info(t)
         if self.operator.do_behavioral_opt:
             self.optimize_rebalancing_flows(t)
         self.update_pax_status(t)
-        if self.operator.do_surge_pricing:
-            self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
+        # if self.operator.do_surge_pricing:
+        #     self.operator.update_zone_policy(t, self.zones, self.WARMUP_PHASE)
         self.assign_zone_veh(t, self.WARMUP_PHASE, penalty, self.operator)
         if self.data_obj.AV_FLEET_SIZE > 0:
             self.compute_driver_instructions(t, self.zones)  # set_action of the AV driver
@@ -363,7 +370,7 @@ class Model:
         supply_df["supply"] = supply_df["supply"] / (supply_df["supply"].max() + 1)
         return supply_df
 
-    def optimize_information_design(self, sol_p, sol_d, sol_r, current_supply, incoming_supply):
+    def optimize_information_design(self, sol_p, sol_d, sol_r, current_supply, incoming_supply, source_data):
         """
 
         @param incoming_supply:
@@ -371,6 +378,7 @@ class Model:
         @param sol_p:
         @param sol_d:
         @param sol_r:
+        @param source_data: this is the data MPC used to come up with the rebalancing assignments
         @return:
         """
         print("inside behavioral optimization unit")
@@ -399,15 +407,43 @@ class Model:
             supply[(z_id, t_fifteen)] = current_supply[z_id] + incoming_supply[(z_id, t_fifteen)]
         optimal_si = {}
         start_t = time.time()
-        # can I parallelize this?
+
+
+        # can I parallelize this? yes, but it is even slower. not sure what it has to do with
         for origin_id in self.zone_ids:
             # some optimal si might be empty, maybe because there were no drivers there to begin with
             # print('calling LP model')
-            optimal_si[origin_id] = solve_for_one_zone(origin_id, one_t_ahead_move, dest_attraction[origin_id],
-                                                       supply[(origin_id, t_fifteen)], t_fifteen)
+            # optimal_si[origin_id], obj_value = solve_for_one_zone(origin_id, one_t_ahead_move, dest_attraction[origin_id],
+            #                                            supply[(origin_id, t_fifteen)], t_fifteen)
+            if self.data_obj.info_policy == 'personalized':
+                optimal_si[origin_id] = solve_for_personalized_drivers(origin_id, one_t_ahead_move,
+                                                                       dest_attraction[origin_id],
+                                                                       supply[(origin_id, t_fifteen)],
+                                                                       t_fifteen,
+                                                                       self.data_obj.LOWER_BOUND_SI,
+                                                                       self.data_obj.UPPER_BOUND_SI )
+            if self.data_obj.info_policy == 'area_wide':
+                optimal_si[origin_id] = solve_for_area_wide_drivers(origin_id, one_t_ahead_move,
+                                                                       dest_attraction[origin_id],
+                                                                       supply[(origin_id, t_fifteen)],
+                                                                       t_fifteen,
+                                                                       self.data_obj.LOWER_BOUND_SI,
+                                                                       self.data_obj.UPPER_BOUND_SI )
+            # optimal_si[origin_id] = alternative_solve_for_one_zone(origin_id, one_t_ahead_move,
+            #                                                                   dest_attraction[origin_id],
+            #                                                                   supply[(origin_id, t_fifteen)],
+            #                                                                   t_fifteen)
+
+        # a = Parallel(n_jobs=10)(
+        #     delayed(alternative_solve_for_one_zone)(origin_id, one_t_ahead_move,
+        #                                                                       dest_attraction[origin_id],
+        #                                                                       supply[(origin_id, t_fifteen)], t_fifteen)
+        #     for origin_id in self.zone_ids)
 
         print(f"it took {(time.time() - start_t) / 60} minutes to optimize all zones")
-
+        #
+        # for idx, origin_id in enumerate(self.zone_ids):
+        #     optimal_si[origin_id] = a[idx][1][1] # ok so this is a tuple actually due to how joblib works
         # pass the optimal si to the operator
         self.operator.get_optimal_si(optimal_si)
 
@@ -465,12 +501,13 @@ class Model:
                 else:
                     predicted_demand[key] = value
 
-            sol_p, sol_d, sol_r = self.rebalancing_engine.MPC(prediction_times, predicted_demand, current_supply,
-                                                              incoming_supply)
+            sol_p, sol_d, sol_r, m_obj_val, source_data = self.rebalancing_engine.MPC(prediction_times, predicted_demand,
+                                                                         current_supply,
+                                                                         incoming_supply)
             self.sol_p = sol_p
             self.sol_r = sol_r
             self.sol_d = sol_d
-            self.optimize_information_design(sol_p, sol_d, sol_r, current_supply, incoming_supply)
+            self.optimize_information_design(sol_p, sol_d, sol_r, current_supply, incoming_supply, source_data)
 
     @lru_cache(maxsize=None)
     def _calc_rebl_cost(self, ozone, max_cost=7):
@@ -562,7 +599,8 @@ class Model:
             print('operator month is ', self.operator.month)
             print('switching')
             self.operator.month = self.data_obj.MONTH
-            self.operator.demand_fare_stats_of_the_month = pd.read_csv('./Data/stats_for_{}_18.csv'.format(self.operator.month))
+            self.operator.demand_fare_stats_of_the_month = pd.read_csv(
+                './Data/stats_for_{}_18.csv'.format(self.operator.month))
             self.operator.demand_fare_stats_of_the_day = self.operator.demand_fare_stats_of_the_month.query(
                 'Day=={}'.format(self.data_obj.day_of_run))
         else:
@@ -571,10 +609,10 @@ class Model:
 
         vs = self.operator.demand_fare_stats_of_the_day.time_of_day_index_15m.values * 15 * 60
         vs = np.vectorize(_convect_time_to_peak_string)(vs)
-        self.operator.demand_fare_stats_of_the_day["time_of_day_label"] = vs # this throws the pandas warning
+        self.operator.demand_fare_stats_of_the_day["time_of_day_label"] = vs  # this throws the pandas warning
         ports = pd.get_dummies(self.operator.demand_fare_stats_of_the_day.time_of_day_label)
         self.operator.demand_fare_stats_of_the_day = self.operator.demand_fare_stats_of_the_day.join(ports)
-        #TODO: self.daily_OD_demand is wrong, and in addition is not updated
+        # TODO: self.daily_OD_demand is wrong, and in addition is not updated
         for v in self.vehicles:
             v.reset(self.data_obj.day_of_run, self.data_obj.MONTH)
         for z in self.zones:
@@ -622,6 +660,11 @@ class Model:
 
     def get_operators_earnings_for_one_day(self, d_idx, month):
         self.operator.bookkeep_one_days_revenue(d_idx, month)
+
+    # def get_learnings_for_one_day(self, d_idx, month):
+    #     for veh in self.vehicles:
+    #         if veh.driver_type == DriverType.PROFESSIONAL:
+    #             veh.record_daily_all_lr_rates(d_idx, month)
 
 
 if __name__ == "__main__":

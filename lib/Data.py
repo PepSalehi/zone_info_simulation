@@ -21,9 +21,9 @@ class Data:
                  month=1,
                  bonus_policy="random",
                  budget=0,
-                 PRO_FLEET_SIZE = 0,
-                 NAIVE_FLEET_SIZE = 2500, # total fleet of 2500 is good
-                 AV_FLEET_SIZE = 0,
+                 PRO_FLEET_SIZE=0,  # TODO change back to zero after debugging
+                 NAIVE_FLEET_SIZE=2500,  # total fleet of 2500 is good
+                 AV_FLEET_SIZE=0,
                  do_behavioral_opt=False,
                  do_surge_pricing=False,
                  phi=0.25, fleet_size=None, pro_share=0,
@@ -97,7 +97,7 @@ class Data:
         else:
             raise IndexError
         # self.DEMAND_SOURCE = pd.read_csv(path_daily_demand)
-        print(f"The number of requests for day {self.day_of_run} over, all t, is  ", self.DEMAND_SOURCE.shape)
+        # print(f"The number of requests for day {self.day_of_run} over, all t, is  ", self.DEMAND_SOURCE.shape)
 
         # Bins demand into 15 minute periods, populates variable
         self.BINNED_DEMAND = None
@@ -144,15 +144,37 @@ class Data:
         self.MIN_DEMAND = min_demand  # min demand to have surge
         self.ANALYSIS_DURATION = analysis_duration  # hours
         # TODO: check this makes sense or not
-        # warm-up time, study time and cool-down time of the simulation (in seconds)
+        # warm-up time, study time and cool-down time of t
+        # he simulation (in seconds)
         # start_time_offset + 1 hour warm up + 1 hour analysis
         self.T_TOTAL_SECONDS = self.WARMUP_TIME_SECONDS + 3600 + self.ANALYSIS_DURATION
-
+        self.output_path = None
+        self.logger = None
         # TODO: what to do with this?
         # T_WARM_UP = 60*30
         # T_STUDY = 60*60
         # T_COOL_DOWN = 60*30
         # T_TOTAL = (T_WARM_UP + T_STUDY + T_COOL_DOWN)
+
+    def get_logger(self):
+        """
+        case for making a singleton class
+        @param output_path:
+        @return:
+        """
+        if self.logger is None:
+
+            import logging
+            self.logger = logging.getLogger(__name__)
+            self.logger.setLevel(logging.INFO)
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            fh3 = logging.FileHandler(self.output_path + 'data_driver.log', mode='a')
+            fh3.setFormatter(formatter)
+            self.logger.addHandler(fh3)
+            return self.logger
+        else:
+            return self.logger
+
     def start_the_next_day(self):
         """
         Update the demand file
@@ -252,4 +274,3 @@ class Data:
         df = df.query('PULocationID!=105')
         df = df.query('DOLocationID!=105')
         return df
-

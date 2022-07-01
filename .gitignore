@@ -1,8 +1,10 @@
 Data/
 Outputs/
+Outputs/*
 *.csv
 ./Data/
 ./Outputs/
+./Outputs/*
 ./*.csv
 ./*.pyc
 ./lib/*.pyc
@@ -14,3 +16,4 @@ Data/taxi_zones/taxi_zones.shp
 ./some_dqn_trials/*
 some_dqn_trials
 ./.*
+.Rproj.user

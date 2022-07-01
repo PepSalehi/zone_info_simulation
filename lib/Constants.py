@@ -11,6 +11,7 @@ with open("./Data/zones_neighbors.json", "r") as f:
 zones_neighbors['153'] = [127, 128]
 zones_neighbors['202'] = [262, 140, 229, 233]
 # distance matrix
+# TODO: verify these, especially when it is set to 10k for missing ones
 DIST_MAT = pd.read_csv("./Data/dist_mat_2.csv")
 # I know, from Taxi_data_new_iteration.ipynb, that zone 105 does not exist in the demand files.
 # remove it
@@ -35,7 +36,9 @@ print(" is zone 105 in the list?:", (105 in ZONE_IDS))
 print(f"zone_ids are {ZONE_IDS}")
 
 # print( (202 in ZONE_IDS))
-
+#0.02. 0.08, 0.05
+THETA = 1 # 0.001
+THETA_prof = 4
 # FNAME = 'raw_transactions_with_time_index.csv'      #"daily_demand_day_2.csv"
 # day_of_run = 2
 # DEMAND_SOURCE = pd.read_csv("./Data/{demand}".format(demand=FNAME))

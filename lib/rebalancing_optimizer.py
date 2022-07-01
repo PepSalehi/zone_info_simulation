@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd
 import copy
-from lib.Constants import ZONE_IDS, my_dist_class, my_travel_time_class, convert_seconds_to_15_min
+from lib.Constants import ZONE_IDS, my_dist_class, my_travel_time_class, convert_seconds_to_15_min, FUEL_COST
 import gurobipy as gb
 from gurobipy import GRB
 
-
 import logging
+import pickle
+
+c_counter = 0
 
 
 class RebalancingOpt:
@@ -19,9 +21,9 @@ class RebalancingOpt:
         self.ongoing_pickups = []
         self.ongoing_rebalancing = []
 
-        self.rebalancing_cost = -1
+        self.rebalancing_cost = - 0.33 / 1000  # per meter
         self.denied_cost = -10
-        self.pickup_revenue = 8  # these could be also the avg fare per origin.
+        self.pickup_revenue = 6  # these could be also the avg fare per origin.
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
@@ -41,7 +43,17 @@ class RebalancingOpt:
         @param incoming_supply:
         @return:
         """
+        # save the data for experimentation
 
+        source_data = {'prediction_times': prediction_times,
+                       'predicted_demand': predicted_demand,
+                       'current_supply': current_supply,
+                       'incoming_supply': incoming_supply}
+        # # save as pickle
+        # global c_counter
+        # with open(f'data_{c_counter}.pickle', 'wb') as handle:
+        #     pickle.dump(data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        # c_counter += 1
 
         print("Running the Gurobi code")
         reb_cost = gb.tupledict()
@@ -51,7 +63,9 @@ class RebalancingOpt:
         for i in ZONE_IDS:
             for j in ZONE_IDS:
                 for t in prediction_times:
-                    reb_cost[(i, j, t)] = self.rebalancing_cost
+                    ds = my_dist_class.return_distance(i, j)
+                    reb_cost[(i, j, t)] = self.rebalancing_cost * my_dist_class.return_distance(i,
+                                                                                                j)  # ds * FUEL_COST # # distance * fuel
                     pic_cost[(i, j, t)] = self.pickup_revenue
                     den_cost[(i, j, t)] = self.denied_cost
 
@@ -84,16 +98,26 @@ class RebalancingOpt:
         # construct veh_to_be_available list
         pickup_to_be_avail = {}
         for t_end in prediction_times:
-            for dest in ZONE_IDS:
+            for zone in ZONE_IDS:
+                add_ct = False
+                pickup_to_be_avail[(zone, t_end)] = 0  # initialize
                 ct = gb.LinExpr()
-                for i, j, t in pickup.keys():
-                    if (t + (my_travel_time_class.return_travel_time_15_min_bin(i, j)) == t_end) \
-                            and \
-                            (dest == j):
+                for origin, destination, pickup_time in pickup.keys():
+                    if (pickup_time + (
+                            my_travel_time_class.return_travel_time_15_min_bin(origin, destination)) == t_end) \
+                            and (destination == zone):
                         # bingo
-                        ct.add(pickup[(j, i, t)])
-                        ct.add(rebal[(j, i, t)])
-                pickup_to_be_avail[(dest, t_end)] = ct
+                        ct.add(pickup[(origin, destination, pickup_time)])
+                        add_ct = True
+                #                 ct.add(rebal[(j, i, t)])
+                for origin, destination, move_time in rebal.keys():
+                    if (move_time + (my_travel_time_class.return_travel_time_15_min_bin(origin, destination)) == t_end) \
+                            and (destination == zone):
+                        # bingo
+                        ct.add(rebal[(origin, destination, move_time)])
+                        add_ct = True
+                if add_ct:
+                    pickup_to_be_avail[(zone, t_end)] = ct
 
         m.addConstrs(
             (pickup.sum(i, '*', t) + rebal.sum(i, '*', t) - pickup_to_be_avail[(i, t)] == supply[(i, t)]
@@ -128,7 +152,7 @@ class RebalancingOpt:
             # self.logger.info(f"total rebal loss:  {np.sum([v * self.rebalancing_cost for k, v in sol_r.items() if v > 0])}")
             # self.logger.info(f"total denied loss:  {np.sum([v * self.denied_cost for k, v in sol_d.items() if v > 0])}")
             # self.logger.info("*" * 10)
-            return sol_p, sol_d, sol_r
+            return sol_p, sol_d, sol_r, m.objVal, source_data
         else:
             print("Gurobi's status is NOT 2, instead is ", m.status)
-            return None, None, None
+            return None, None, None, None, None

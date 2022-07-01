@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 # from numba import jit
+from typing import Dict
 from collections import defaultdict
 # all these should be moved to the data class. Or maybe shouldn't
 from lib.Constants import (
@@ -22,16 +23,14 @@ from functools import lru_cache
 from enum import Enum, unique, auto
 import pickle
 
-import logging
-
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh3 = logging.FileHandler('one_naive_driver.log', mode='w')
-fh3.setFormatter(formatter)
-logger.addHandler(fh3)
+# import logging
+#
+# logger = logging.getLogger(__name__)
+# logger.setLevel(logging.INFO)
+# formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# fh3 = logging.FileHandler('driver.log', mode='a')
+# fh3.setFormatter(formatter)
+# logger.addHandler(fh3)
 
 # from lib.rl_policy import DQNAgent
 driver_id = 0
@@ -80,6 +79,9 @@ def _choice(options, probs):
     @param probs:
     @return:
     """
+    # rs = np.random.RandomState(10)
+    # x = rs.rand()  # np.random.rand()
+    # I think I should NOT use seeding here. bc then every driver will receive the same probability and make the same choice
     x = np.random.rand()
     cum = 0
     for i, p in enumerate(probs):
@@ -148,7 +150,6 @@ class Veh:
         @param dist_mat:
         """
 
-
         global driver_id
         driver_id += 1
         self.id = driver_id
@@ -172,10 +173,20 @@ class Veh:
             self.locations.append(self.ozone)
             self._state = VehState.DECISION
 
+        # self.logger = logging.getLogger(__name__)
+        # self.logger.setLevel(logging.INFO)
+        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        # fh = logging.FileHandler(self.output_path + 'driver_' + str(self.id) + '.log')
+        # fh.setFormatter(formatter)
+        # self.logger.addHandler(fh)
         ######
-        if self.id == 1:
-            logger.info("starting out")
-            logger.info(f"initial location is {self.ozone}")
+        # fh3 = logging.FileHandler(output_path + 'driver.log', mode='a')
+        # fh3.setFormatter(formatter)
+        # logger.addHandler(fh3)
+        #
+        # if self.id == 1:
+        #     logger.info("starting out")
+        #     logger.info(f"initial location is {self.ozone}")
         ######
         self.IDLE_COST = 0  # should be based on the waiting time
         self.unit_rebalancing_cost = FUEL_COST  # should be based on dist to the destination zone
@@ -258,7 +269,7 @@ class Veh:
 
     @staticmethod
     @lru_cache(maxsize=None)
-    def _get_dist_to_all_zones(ozone):
+    def _get_dist_to_all_zones(ozone) -> pd.DataFrame:
         """
         @param ozone (int): current zone
         @return: df of distance to each zone. (show an example of the output)
@@ -384,8 +395,8 @@ class Veh:
             if not WARMUP_PHASE:
                 self.number_of_times_moved += 1
             #####
-            if self.id == 1:
-                logger.info(f"finished rebalancing. arrived at zone {self.ozone}")
+            # if self.id == 1:
+            #     logger.info(f"finished rebalancing. arrived at zone {self.ozone}")
             #####
 
     def keep_waiting(self):
@@ -397,8 +408,8 @@ class Veh:
         # self.total_waited += INT_ASSIGN
         #
         #####
-        if self.id == 1:
-            logger.info(f"waiting to find a match at zone {self.ozone}. Have waited {self.time_idled} so far")
+        # if self.id == 1:
+        #     logger.info(f"waiting to find a match at zone {self.ozone}. Have waited {self.time_idled} so far")
         #####
 
     def keep_serving(self):
@@ -416,9 +427,10 @@ class Veh:
             # self.time_idled = 0
 
             #####
-            if self.id == 1:
-                logger.info(f"dropped off the passenger. arrived at zone {self.ozone}")
-                logger.info(f"now going to await for a while to get a match. is_waiting_to_be_matched : {self.is_waiting_to_be_matched}")
+            # if self.id == 1:
+            #     logger.info(f"dropped off the passenger. arrived at zone {self.ozone}")
+            #     logger.info(
+            #         f"now going to await for a while to get a match. is_waiting_to_be_matched : {self.is_waiting_to_be_matched}")
             #####
 
     @property
@@ -506,9 +518,9 @@ class Veh:
                     self.ozone = z.id  # added Nov 27 2020, I think it's correct but maybe I missed sth
 
                     #####
-                    if self.id == 1:
-                        logger.info(f"decided to go to zone {self.ozone}")
-                        logger.info(f"time to be available is  {self.time_to_be_available}")
+                    # if self.id == 1:
+                    #     logger.info(f"decided to go to zone {self.ozone}")
+                    #     logger.info(f"time to be available is  {self.time_to_be_available}")
                     #####
 
                     break
@@ -561,7 +573,13 @@ class Veh:
         @return: bool (matched or not)
         """
         if self.driver_type != DriverType.AV:
-            assert self._state == VehState.IDLE
+            if self._state != VehState.IDLE:
+                print('agh, state should be idle, but is ', self._state)
+                # self.logger.info("agh, state should be idle")
+                # self.logger.info(self._state)
+                # self.logger.info(self.time_to_be_available)
+
+            # assert self._state == VehState.IDLE
         self.time_idled = 0
         dest = req.dzone
         matched = False
@@ -586,10 +604,10 @@ class Veh:
                 )
                 self.req = req
                 #####
-                if self.id == 1:
-                    logger.info(f"matched with a pax going to zone {dest}")
-                    logger.info(f"time to be available is  {self.time_to_be_available}")
-                    logger.info(f"request's fare was {req.fare}")
+                # if self.id == 1:
+                #     logger.info(f"matched with a pax going to zone {dest}")
+                #     logger.info(f"time to be available is  {self.time_to_be_available}")
+                #     logger.info(f"request's fare was {req.fare}")
                 #####
 
                 return True
@@ -639,8 +657,17 @@ class Veh:
         @return
         """
         # zone_ids and prob are numpy arrays
-        zone_ids, prob, info_dict = self._compute_attractiveness_of_zones(t, self.ozone)
-        selected_destination = self._choose_based_on_prob(zone_ids, prob, info_dict)
+        zone_ids, prob, _profits = self._compute_attractiveness_of_zones(t, self.ozone)
+        selected_destination = self._choose_based_on_prob(zone_ids, prob, _profits)
+        # if int(selected_destination) in [120, 153]:
+        #     if self.day_of_run == 2:
+        #         logger = self.operator.data_obj.get_logger()
+        #         logger.info(f"decided to go to zone {selected_destination}")
+        #         logger.info(f"the zones were {list(zip(zone_ids, prob))}")
+        #         logger.info(f"the profits were { list(zip(zone_ids, _profits))}")
+                # print("###logging###")
+
+            # logger.info(f"time to be available is  {self.time_to_be_available}")
 
         ###
         # TODO: limiting to just the neighboring zones requires changing the optimization model, info model, and info
@@ -659,22 +686,22 @@ class Veh:
         #     #
         #     selected_destination = self._choose_based_on_prob(candidate_zones, candidate_probs_normalized, info_dict)
         #     #####
-        if self.id == 1:
-            # logger.info(f"Rebalancing: decided to go to zone {selected_destination} from {self.ozone} \n")
-            # logger.info(f"the probabilities were {candidate_probs_normalized} \n")
-            # ca_idx = np.where(candidate_zones == selected_destination)[0][0]
-            # chosen_prob = candidate_probs_normalized[ca_idx]
-            # logger.info(f"the probability of choosing the destination it did was {chosen_prob}")
-            # logger.info(f"the max probability of a zone was {np.max(candidate_probs_normalized)}")
-            # logger.info(f"the sum of all probabilities were {np.sum(candidate_probs_normalized)}")
-
-            logger.info(f"Rebalancing: decided to go to zone {selected_destination} from {self.ozone} \n")
-            logger.info(f"the probabilities were {prob} \n")
-            ca_idx = np.where(zone_ids == selected_destination)[0][0]
-            chosen_prob = prob[ca_idx]
-            logger.info(f"the probability of choosing the destination it did was {chosen_prob}")
-            logger.info(f"the max probability of a zone was {np.max(prob)}")
-            logger.info(f"the sum of all probabilities were {np.sum(prob)}")
+        # if self.id == 1:
+        #     # logger.info(f"Rebalancing: decided to go to zone {selected_destination} from {self.ozone} \n")
+        #     # logger.info(f"the probabilities were {candidate_probs_normalized} \n")
+        #     # ca_idx = np.where(candidate_zones == selected_destination)[0][0]
+        #     # chosen_prob = candidate_probs_normalized[ca_idx]
+        #     # logger.info(f"the probability of choosing the destination it did was {chosen_prob}")
+        #     # logger.info(f"the max probability of a zone was {np.max(candidate_probs_normalized)}")
+        #     # logger.info(f"the sum of all probabilities were {np.sum(candidate_probs_normalized)}")
+        #
+        #     logger.info(f"Rebalancing: decided to go to zone {selected_destination} from {self.ozone} \n")
+        #     logger.info(f"the probabilities were {prob} \n")
+        #     ca_idx = np.where(zone_ids == selected_destination)[0][0]
+        #     chosen_prob = prob[ca_idx]
+        #     logger.info(f"the probability of choosing the destination it did was {chosen_prob}")
+        #     logger.info(f"the max probability of a zone was {np.max(prob)}")
+        #     logger.info(f"the sum of all probabilities were {np.sum(prob)}")
 
         #####
 

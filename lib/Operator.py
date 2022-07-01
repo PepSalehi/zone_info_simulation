@@ -34,6 +34,7 @@ class Operator:
             do_behavioral_opt,
             do_surge_pricing,
             output_path,
+            data_obj=None,
             name="Uber",
 
     ):
@@ -51,7 +52,7 @@ class Operator:
         self.month = which_month
         self.do_behavioral_opt = do_behavioral_opt
         self.output_path = output_path
-
+        self.data_obj = data_obj
         fh3 = logging.FileHandler(output_path + 'operators_log.log', mode='w')
         fh3.setFormatter(formatter)
         logger.addHandler(fh3)
@@ -76,7 +77,8 @@ class Operator:
             for _, row in self.demand_fare_stats_prior_naive.iterrows()}
 
         self.demand_fare_stats_of_the_month = pd.read_csv('./Data/stats_for_{}_18.csv'.format(self.month))
-        self.demand_fare_stats_of_the_day = self.demand_fare_stats_of_the_month.query('Day=={}'.format(which_day_numerical))
+        self.demand_fare_stats_of_the_day = self.demand_fare_stats_of_the_month.query(
+            'Day=={}'.format(which_day_numerical))
 
         vs = self.demand_fare_stats_of_the_day.time_of_day_index_15m.values * 15 * 60
         vs = np.vectorize(_convect_time_to_peak_string)(vs)
@@ -183,20 +185,30 @@ class Operator:
             raise AssertionError
 
         info_adjustments = self.optimal_si[zone_id]
+        # print(f"zonal info requested for zone {zone_id}")
+        # print(f"driver_information count is {driver_information_count}")
+        # print(f"info adjustment is {info_adjustments}")
+        # logger.info("####################")
         # logger.info(f"zonal info requested for zone {zone_id}")
         # logger.info(f"driver_information count is {driver_information_count}")
         # logger.info(f"info adjustment is {info_adjustments}")
         # logger.info("####################")
 
         # info_adjustments is {(dest, driver_id): adj}
-        driver_adjustments = {k[0]: v for k, v in info_adjustments.items() if k[1] == driver_information_count}
-        if len(driver_adjustments) == 0:
+        try:
+            driver_adjustments = {k[0]: v for k, v in info_adjustments.items() if k[1] == driver_information_count}
+        except:
+            # print("get_zonal_info_for_veh")
+            # print(driver_information_count)
+            # print(info_adjustments)
+
+            # if len(driver_adjustments) == 0:
             # all optimized information has already been given. return the raw data
             # logger.info(f"all optimized information has already been given. return the raw data at time {t_seconds} ")
-            num_expected_drivers = len(info_adjustments) / 66
-            logger.info(f'num_expected_drivers {num_expected_drivers}')
-            logger.info(f'driver_information_count:  {driver_information_count}')
-            logger.info(f'difference is {num_expected_drivers - driver_information_count}')
+            # num_expected_drivers = len(info_adjustments) / 66 # emm, what??
+            # logger.info(f'num_expected_drivers {num_expected_drivers}')
+            # logger.info(f'driver_information_count:  {driver_information_count}')
+            # logger.info(f'difference is {num_expected_drivers - driver_information_count}')
             # print('all optimized information has already been given. return the raw data')
             return self.live_data
 
@@ -227,7 +239,7 @@ class Operator:
             df = df.assign(bonus=0)
             df = df.assign(match_prob=1)
             df.index = df.PULocationID.values  # this  must be done for information manipulation to work
-
+            df = df.sort_index()
             self.live_data = df
             return df
 

@@ -22,14 +22,20 @@ from lib.Data import Data
 #     PERCENT_FALSE_DEMAND
 # from lib.Constants import T_TOTAL_SECONDS, WARMUP_TIME_SECONDS, ANALYSIS_TIME_SECONDS, ANALYSIS_TIME_HOUR, \
 #     WARMUP_TIME_HOUR
+
+from lib.Constants import THETA as theta
+from lib.Constants import THETA_prof as theta_prof
 from lib.Vehicles import DriverType
 from lib.configs import configs_dict
 from lib.utils import Model
+import warnings
+warnings.filterwarnings("ignore")
+
 
 
 def main():
     parser = argparse.ArgumentParser(description="Simulation of drivers' behavior")
-# from lib.Constants import PERCE_KNOW
+    # from lib.Constants import PERCE_KNOW
     parser.add_argument('-f', '--fleet',
                         help='Fleet sizes to simulate, formatted as comma-separated list (i.e. "-f 250,275,300")')
     parser.add_argument('-m', '--multiplier',
@@ -49,6 +55,12 @@ def main():
     parser.add_argument('-SURGE', '--surge_pricing',
                         help="should do surge pricing, pass 'yes' or 'no' ")
 
+    parser.add_argument('-THETA', '--THETA',
+                        help="choice param ")
+
+    parser.add_argument('-THETA_prof', '--THETA_prof',
+                        help="choice param ")
+
     parser.add_argument('-k', '--know',
                         help='Percent knowing fare, formatted as comma-separated list (i.e. "-m 1,1.5,2") ')
     parser.add_argument('-p', '--pro',
@@ -61,9 +73,30 @@ def main():
                         help='bonus per zone ')
     parser.add_argument('-budget', '--budget',
                         help='budget ')
+    parser.add_argument('-lb', '--LOWER_BOUND_SI',
+                        help='LOWER_BOUND_SI ')
+    parser.add_argument('-ub', '--UPPER_BOUND_SI',
+                        help='UPPER_BOUND_SI ')
+    parser.add_argument('-info', '--info_policy',
+                        help='info_policy ')
     args = parser.parse_args()
     # TODO: argpars should get the bonus policy as input
     data_instance = Data()
+
+    if args.LOWER_BOUND_SI:
+        LOWER_BOUND_SI = args.LOWER_BOUND_SI
+    else:
+        LOWER_BOUND_SI = 0
+
+    if args.UPPER_BOUND_SI:
+        UPPER_BOUND_SI = args.UPPER_BOUND_SI
+    else:
+        UPPER_BOUND_SI = 2
+
+    if args.info_policy:
+        info_policy = args.info_policy
+    else:
+        info_policy = 'personalized'
 
     if args.fleet:
         fleet_sizes = [int(args.fleet)]
@@ -117,9 +150,23 @@ def main():
     else:
         bonus = data_instance.BONUS
     if args.beta:
-        beta = float(args.beta)
+        beta =  (args.beta)
     else:
         beta = configs_dict["BETA"]
+
+    if args.THETA:
+        THETA = float(args.THETA)
+        print("THETA: ", THETA)
+    else:
+        THETA = theta
+        print("no change THETA: ", THETA)
+
+    if args.THETA_prof:
+        THETA_prof = float(args.THETA_prof)
+        print("THETA_prof: ", THETA_prof)
+    else:
+        THETA_prof = theta_prof
+        print("no change THETA_prof: ", THETA_prof)
 
     if args.pro:
         pro_share = [float(x) for x in args.pro.split(',')]
@@ -151,38 +198,58 @@ def main():
             for num_avs in set_of_NUM_OF_AV_DRIVERS:
                 for surge in surges:
                     for repl in range(n_rep):
-                        TOTAL_FLEET_SIZE = 2500
+                        ## for some reason this jumps up by 1 day for each run. temp fix
+                        data_instance = Data()
+                        TOTAL_FLEET_SIZE = 4000
                         num_naives = TOTAL_FLEET_SIZE - num_pros
                         data_instance.AV_FLEET_SIZE = num_avs
                         data_instance.NAIVE_FLEET_SIZE = num_naives
                         data_instance.PRO_FLEET_SIZE = num_pros
-                        data_instance.do_behavioral_opt = do_behavioral_opt
-                        data_instance.do_surge_pricing = do_surge_pricing
 
+                        # data_instance.do_behavioral_opt = do_behavioral_opt
+                        # data_instance.do_surge_pricing = do_surge_pricing
+                        do_surge_pricing = False
+                        # do_behavioral_opt = True
+                        print("######")
+                        print ("do_behavioral_opt", do_behavioral_opt)
+                        print("######")
                         if do_behavioral_opt:
                             st = '/with_behavioral_opt/'
+                        elif do_surge_pricing:
+                            st = '/with_surge_pricing/'
                         else:
-                            st = '/no_behavioral_opt/'
+                            st = '/no_intervention/'
                         output_path = "./Outputs/" + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M") + \
                                       st + str('Pro_') + str(num_pros) \
                                       + str('NAIVE_') + str(num_naives) \
                                       + str('AV_') + str(num_avs) \
+                                      + str('THETA ') + str(THETA) \
+                                      + str('THETA_prof ') + str(THETA_prof) \
                                       + str('budget_') + str(budget) + "_" \
                                       + str("bonus_policy") + "_" + str(bonus_policy) + "_" \
-                                      + str('do_surge') + "_" + str(data_instance.do_surge_pricing) + "_" \
-                                      + str('do_opt') + "_" + str(data_instance.do_behavioral_opt) + "_" \
+                                      + str('do_surge') + "_" + str(do_surge_pricing) + "_" \
+                                      + str('do_opt') + "_" + str(do_behavioral_opt) + "_" \
+                                      + str('UPPER_BOUND_SI') + "_" + str(UPPER_BOUND_SI) + "_" \
+                                      + str('LOWER_BOUND_SI') + "_" + str(LOWER_BOUND_SI) + "_" \
+                                      + str('info_policy') + "_" + str(info_policy) + "_" \
                                       + str(datetime.datetime.now()).split('.')[0] + "/"
 
                         if not os.path.exists(output_path):
                             os.makedirs(output_path)
 
-
                         print("iteration number ", repl)
                         print('Surge is {}'.format(surge))
+                        print(f'lb is {LOWER_BOUND_SI}')
+                        print(f'policy is {info_policy}')
 
                         data_instance.SURGE_MULTIPLIER = surge
                         data_instance.BONUS = bonus
                         data_instance.output_path = output_path
+                        data_instance.LOWER_BOUND_SI = float(LOWER_BOUND_SI)
+                        data_instance.UPPER_BOUND_SI = float(UPPER_BOUND_SI)
+                        data_instance.info_policy = info_policy
+                        data_instance.THETA = THETA
+                        data_instance.THETA_prof = THETA_prof
 
                         # data_instance.do_behavioral_opt = False
                         m = Model(data_instance, configs_dict, beta, output_path)
@@ -191,20 +258,34 @@ def main():
                         # dispatch the system for T_TOTAL seconds, at the interval of INT_ASSIGN
                         # TODO: every run should in include the policy from the start
                         # TODO: process Feb's month as well.
-                        months = [1,2]
+                        months = [1, 2]
                         days = [30, 15]
-                        stop_month = months[-1]
+                        # days = [30, 25]
+
+                        # debug only
+                        months = [1]
+                        days = [10]
+                        stop_month =  months[-1]
                         for ix, month in enumerate(months):
                             for d_idx in range(1, days[ix]):
+                                # print(f"day index {d_idx}")
                                 stop_day = days[ix]
 
-                                if month == 1 and d_idx >= 15:
-                                # NOTE: THIS WILL NOT HAVE THE DESIRED EFFECT, BC OPERATOR has attribute set in the beginning
-                                    data_instance.do_behavioral_opt = True
-                                    m.operator.do_behavioral_opt = True
+                                if month == 1 and d_idx >= 2:
+                                    # NOTE: THIS WILL NOT HAVE THE DESIRED EFFECT, BC OPERATOR has attribute set in the beginning
+                                    if do_behavioral_opt:
+                                        data_instance.do_behavioral_opt = True
+                                        m.operator.do_behavioral_opt = True
+                                    elif do_surge_pricing:
 
-                                    # data_instance.do_surge_pricing = True
-                                    # m.operator.do_surge_pricing = True
+                                        #     pass
+                                        data_instance.do_surge_pricing = True
+                                        m.operator.do_surge_pricing = True
+                                    else:
+                                        data_instance.do_surge_pricing = False
+                                        m.operator.do_surge_pricing = False
+                                        data_instance.do_behavioral_opt = False
+                                        m.operator.do_behavioral_opt = False
 
                                 for T in range(data_instance.WARMUP_TIME_SECONDS,
                                                data_instance.T_TOTAL_SECONDS,
@@ -222,7 +303,30 @@ def main():
                                                  if v.driver_type == DriverType.PROFESSIONAL
                                                  ], ignore_index=True)
                             all_dfs.to_csv(output_path + "fmean for all drivers.csv")
+                            # TODO: experimental
+                            all_dfs2 = pd.concat([v.report_m_learning_rates() for v in m.vehicles
+                                                  if v.driver_type == DriverType.PROFESSIONAL
+                                                  ], ignore_index=True)
+                            all_dfs2.to_csv(output_path + "matching learning for all drivers.csv")
 
+                            all_dfs2 = pd.concat([v.report_sd_learning_rates() for v in m.vehicles
+                                                  if v.driver_type == DriverType.PROFESSIONAL
+                                                  ], ignore_index=True)
+                            all_dfs2.to_csv(output_path + "fsd for all drivers.csv")
+
+                            drivers_folder_path = output_path + "drivers/"
+                            if not os.path.exists(drivers_folder_path):
+                                os.makedirs(drivers_folder_path)
+                            # only save a handful of logs tho
+                            max_save_info = 10
+                            for v in m.vehicles:
+                                if v.driver_type == DriverType.PROFESSIONAL:
+                                    max_save_info -= 1
+                                    if max_save_info > 0:
+                                        print('save data')
+                                        v.dump_lr_data(drivers_folder_path)
+
+                            ##
                             all_fare_reliability_dfs = pd.concat(
                                 [v.report_fare_reliability_evolution() for v in m.vehicles
                                  if v.driver_type == DriverType.PROFESSIONAL

@@ -24,6 +24,12 @@ for pros in 0 500 1000 ; do for s in 'yes'; do python run_multiple_days.py -PRO 
 
 for pros in 0  ; do for do_opt in 'yes' ; do python run_multiple_days.py -PRO "$pros"  -BH "$do_opt" & done;done
 
+for pros in 0 1000 2000 3000 4000 5000; do python run_multiple_days.py -PRO "$pros"  & done
+for pros in 0 ; do for LOWER_BOUND_SI in 0.1 0.3 0.5 ; do python run_multiple_days.py -PRO "$pros" -lb "$LOWER_BOUND_SI" & done;done
+
+for pros in 0 1000 2000 3000 4000 5000; do python run_multiple_days.py -PRO "$pros" -info "area_wide" & done
+
+for pros in 1000 ; do for theta in 0.5 1 1.5 ; do python run_multiple_days.py -PRO "$pros" -BH "False" --THETA_prof "$theta"  & done;done
 
 pip install snakeviz
 python -m cProfile -s tottime -o myscript.cprof run.py -f 10 -k 0.2

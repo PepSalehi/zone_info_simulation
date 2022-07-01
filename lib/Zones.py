@@ -14,7 +14,6 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
-
 class Zone:
     """
     Attributes:
@@ -81,10 +80,15 @@ class Zone:
         self._time_demand = []
         self.driver_information_count = 0  # how many times drivers, in a 15 min time interval, have asked for information
         self.available_AV_vehicles = []
+        self.this_t_demand = None
 
-        fh = logging.FileHandler(output_path + 'zones.log')
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
+        # self.logger = logging.getLogger(__name__ + str(self.id))
+        # self.logger.setLevel(logging.INFO)
+        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        # fh = logging.FileHandler(output_path + 'zone_' + str(self.id) + '.log')
+        # fh.setFormatter(formatter)
+        # self.logger.addHandler(fh)
 
     def give_info_to_drivers(self, t_seconds):
         """
@@ -104,6 +108,7 @@ class Zone:
         """
         # self.daily_destination_demand = demand_df.query("PULocationID == {zone_id}".format(zone_id=self.id))
         self.daily_destination_demand = demand_df[demand_df["PULocationID"] == self.id]  ## OD data
+        # self.logger.info(f"daily dest demand df shape for zone {self.id} is {self.daily_destination_demand.shape[0]}")
         # self.pickup_binned = pickup_df[pickup_df["PULocationID"] == self.id]
 
     def calculate_demand_function(self, demand, surge):
@@ -125,7 +130,7 @@ class Zone:
         @return (float): new demand according to surge
         """
         base_demand = demand
-        new_demand = self.DEMAND_ELASTICITY * (surge-1) * base_demand + base_demand
+        new_demand = self.DEMAND_ELASTICITY * (surge - 1) * base_demand + base_demand
         # change = self.DEMAND_ELASTICITY * (
         #         surge - 1
         # )  # percent change in price * elascticity
@@ -157,8 +162,8 @@ class Zone:
             print(veh.locations)
             print(veh.zone.id)
             print(veh.ozone)
-            print(veh.rebalancing)
             print(veh.time_to_be_available)
+            return
             # should raise an error
 
         self.incoming_vehicles.append(veh)
@@ -255,7 +260,9 @@ class Zone:
         # TODO all these operations could've been simplified if I had used demand stats .csv instead of the actual demand
         self.this_t_demand = self.daily_destination_demand[
             self.daily_destination_demand['time_of_day_index_15m'] == t_15_min]
-        self.D = self.this_t_demand.shape[0]  # number of rows, i.e., transactions
+        self.D = self.this_t_demand.shape[0]  # number of rows, i.e., transactions # this actually should be sum of pax_count column
+        # self.logger.info(f'setting demand for t {t} (seconds) or  {t_15_min} for zone {self.id} to {self.D}')
+
         # print(self.D, "inside set demand")
         # self.D = self.pickup_binned[self.pickup_binned["total_seconds"] == t].shape[0]
         self.mid = 0
@@ -293,6 +300,9 @@ class Zone:
         y = np.cumsum(self.rs1.exponential(scale,
                                            size=int(rate)))
         y += t_15_start
+
+        # self.logger.info(f'total demand for time {t_15} is {rate}')
+        # self.logger.info(f'request generated for times {y}')
         # print("arrival times are :", y)
         self.__generate_exact_req_object2(y)
 
@@ -366,7 +376,9 @@ class Zone:
         self.driver_information_count = 0
         # print("self.D", self.D)
         # print("demand after surge computation", demand)
-        self._generate_request(self.D, t_15_min)
+        # self._generate_request(self.D, t_15_min)
+        # self.logger.info(f'request to generate demand for time {t} (seconds) or  {t_15_min} for zone {self.id}')
+        self._generate_request(demand, t_15_min)
 
     def instruct_drivers(self, t, zones, sol_p, sol_r, sol_d):
         """
@@ -458,7 +470,7 @@ class Zone:
         """
         self.demand = deque([])  # demand maybe should be a time-based dictionary?
         self.denied_requests = []
-        # self.served_demand = []
+        self.served_demand = []
         # self.served_demand = []
         self.idle_vehicles = list()
         self.reqs = []

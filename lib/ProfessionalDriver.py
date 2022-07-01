@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+import os
 from collections import defaultdict
 # all these should be moved to the data class. Or maybe shouldn't
 from lib.Constants import (
@@ -14,7 +14,8 @@ from lib.Constants import (
     CONST_FARE,
     zones_neighbors,
     PENALTY,
-    my_dist_class
+    my_dist_class,
+    THETA_prof
 )
 
 from lib.Requests import Req
@@ -25,15 +26,17 @@ from enum import Enum, unique, auto
 import pickle
 # import dill
 from sklearn import preprocessing
+from sklearn.metrics import log_loss, accuracy_score  # i.e. CE
 from sklearn.linear_model import LogisticRegression
 import logging
+
 
 # logger = logging.getLogger(__name__)
 # logger.setLevel(logging.INFO)
 # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-# fh = logging.FileHandler('drivers_pro.log', mode='w')
-# fh.setFormatter(formatter)
-# logger.addHandler(fh)
+# fh3 = logging.FileHandler( 'pro_drivers.log', mode='w')
+
+
 #
 # logger_2 = logging.getLogger('d.e')
 
@@ -52,11 +55,22 @@ def update_avg_incrementally(prev_est, prev_n, new_val):
 
 
 def CrossEntropy(yHat, y):
+    """
+
+    @param yHat:
+    @param y:
+    @return:
+    """
     epsilon = 1e-10;
     if y == 1:
         return -np.log(yHat + epsilon)
     else:
         return -np.log(1 - yHat + epsilon)
+
+
+def cross_entropy(y, p):
+    epsilon = 1e-10
+    return np.sum([-(y[i] * np.log(p[i] + epsilon) + (1 - y[i]) * np.log(1 - p[i] + epsilon)) for i in range(len(p))])
 
 
 class ProfessionalDriver(Veh):
@@ -65,7 +79,8 @@ class ProfessionalDriver(Veh):
     """
 
     def __init__(self, rs, operator, day_of_run, output_path, beta=1, driver_type=DriverType.PROFESSIONAL,
-                 ini_loc=None, training_days=5,
+                 ini_loc=None, training_days=15,
+                 theta=THETA_prof,
                  dist_mat=DIST_MAT):
         """
         Creates a Vehicle object.
@@ -80,6 +95,7 @@ class ProfessionalDriver(Veh):
         """
         super().__init__(rs, operator, day_of_run, output_path, beta, driver_type, ini_loc, dist_mat)
 
+        self.theta = theta
         self.day_of_run = day_of_run
         self._skipped_recording = 0
         self._prior_fare_reliability_history = []
@@ -105,12 +121,15 @@ class ProfessionalDriver(Veh):
         self.experienced_fares_history = []
         self.experienced_matching_history = []
         self.clf = None
-
+        self.month = 1
         self._app_matching_reliability_history = []
         self._app_fare_reliability_history = []
         self._prior_fare_reliability_history = []
         self._prior_matching_reliability_history = []
 
+        # fh = logging.FileHandler(output_path + 'drivers_pro.log', mode='a')
+        # fh.setFormatter(formatter)
+        # logger.addHandler(fh)
         # bookkeeping
 
         # def dd():
@@ -122,10 +141,22 @@ class ProfessionalDriver(Veh):
         self._learning_day_to_day_m = defaultdict(lambda: defaultdict(list))
         self._learning_day_to_day_m_obs = defaultdict(lambda: defaultdict(list))
 
+        # fh = logging.FileHandler(output_path + 'drivers_pro_experiences.log', mode='a')
+        # fh.setFormatter(formatter)
         # eh = logging.FileHandler(output_path + 'drivers_pro_experiences.log', mode='w')
         # eh.setLevel(logging.INFO)
         # eh.setFormatter(formatter)
-        # logger_2.addHandler(eh)
+        # logger.addHandler(fh)
+
+        # log_filepath = output_path + "logs/"
+        # os.makedirs(os.path.dirname(log_filepath), exist_ok=True)
+        # self.logger = logging.getLogger(__name__ + str(self.id))
+        # self.logger.setLevel(logging.INFO)
+        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        #
+        # fh = logging.FileHandler(log_filepath + 'drivers_pro_' + str(self.id) + '.log', mode='a')
+        # fh.setFormatter(formatter)
+        # self.logger.addHandler(fh)
 
     def report_learning_rates(self):
         def __convert_defaultdict_to_dict(a):
@@ -145,9 +176,34 @@ class ProfessionalDriver(Veh):
                 data["z_ids"].extend(np.repeat(k[0], len(fms)))
                 data["t_strings"].extend(np.repeat(k[1], len(fms)))
                 data["fms"].extend(fms)
+
         df = pd.DataFrame(data=data)
         return df
         # merge all dfs at the end. Note: should remove lines with incomplete trips
+
+    def report_m_learning_rates(self):
+        # want a df with columns : zone_id, time, fm, fsd, m, n
+        data = defaultdict(list)
+        for d_id, v in self._learning_day_to_day_m.items():
+            for k, fms in v.items():  # k: (zone, time) v2: [fm]
+                data["driver_id"].extend(np.repeat(self.id, len(fms)))
+                data["z_ids"].extend(np.repeat(k[0], len(fms)))
+                data["t_strings"].extend(np.repeat(k[1], len(fms)))
+                data["m"].extend(fms)
+        df = pd.DataFrame(data=data)
+        return df
+
+    def report_sd_learning_rates(self):
+        # want a df with columns : zone_id, time, fm, fsd, m, n
+        data = defaultdict(list)
+        for d_id, v in self._learning_day_to_day_fare_sd.items():
+            for k, fms in v.items():  # k: (zone, time) v2: [fm]
+                data["driver_id"].extend(np.repeat(self.id, len(fms)))
+                data["z_ids"].extend(np.repeat(k[0], len(fms)))
+                data["t_strings"].extend(np.repeat(k[1], len(fms)))
+                data["m"].extend(fms)
+        df = pd.DataFrame(data=data)
+        return df
 
     def report_surge_bonus_behavior(self):
         '''
@@ -224,7 +280,6 @@ class ProfessionalDriver(Veh):
             self.evening_peak_history.pop()
             self.off_peak_history.pop()
 
-
     @lru_cache(maxsize=None)
     def _compute_attractiveness_of_zones(self, t, ozone):
         """
@@ -269,11 +324,21 @@ class ProfessionalDriver(Veh):
         # 5.2) get m reliability of prior experience
         w_match_p = self.get_reliability_of_prior_matching_info(status)
         epsilon = 1e-6
-        w_match_sum = w_match_a + w_match_p
-        # Note: it SHOULD be that w app uses w prior is numerator and vice versa.
-        w_match_prior = w_match_a / w_match_sum
-        w_match_app = w_match_p / w_match_sum
 
+        w_match_sum = w_match_a + w_match_p
+        ####
+        # the following 3 lines is for using cross entropy as a measure
+        # # Note: it SHOULD be that w app uses w prior is numerator and vice versa.
+        # w_match_prior = w_match_a / w_match_sum
+        # w_match_app = w_match_p / w_match_sum
+        ####
+        # these two lines use acc as the measure
+        w_match_prior = w_match_p / w_match_sum
+        w_match_app = w_match_a / w_match_sum
+
+        # logger.info(f'driver {self.id} get reliability estimates ')
+        # logger.info(f'w_match_app is {w_match_a}, w_match_prior is {w_match_p}, their weights are {w_match_app} '
+        #             f'and {w_match_prior}, respectively')
         self._prior_matching_reliability_history.append(w_match_prior)
         self._app_matching_reliability_history.append(w_match_app)
 
@@ -283,7 +348,7 @@ class ProfessionalDriver(Veh):
         # Pro: revenue * match_prob
         predicted_utility = {}
         for z_id, fare in weighted_income.items():
-            predicted_utility[z_id] = np.exp(fare * weighted_matching_prob[z_id])
+            predicted_utility[z_id] = np.exp(self.theta * fare * weighted_matching_prob[z_id])
 
         # predicted_utility = {z_id: np.exp(fare * weighted_matching_prob[z_id])
         #                      for z_id, fare in weighted_income.items()
@@ -291,7 +356,9 @@ class ProfessionalDriver(Veh):
         # https://stackoverflow.com/a/21870021/2005352
         location_ids, utilities = zip(*predicted_utility.items())
         utilities = np.array(utilities)
-        utilities = np.clip(utilities, a_min=0, a_max=None)
+        # utilities = np.clip(utilities, a_min=0, a_max=None)
+        C = np.max(utilities)
+        utilities = utilities - C
         # 7) compute the probability of moving to each zone
         prob = utilities / utilities.sum()
         # return a.index.get_level_values(1).values, prob
@@ -415,15 +482,15 @@ class ProfessionalDriver(Veh):
         t_string = _convect_time_to_peak_string(t)
         # returns {zone_id: matching_prob}
         #
-        if self.day_of_run >= self.training_days:
+        if self.day_of_run < self.training_days and self.month == 1:
+            return {k[0]: 1 for k, v in self.prior_fare_dict.items() if k[1] == t_string}
             # if len(self.experienced_matching_history) > 10:
             # train LR
             # logger_2.info(f'Driver {self.id} has started to train LR')
             # then predict based on the current demand
-            m_preds_dict = self.predict_m_using_trained_LR(app_demand_df, t_string)
-            # logger_2.info(f'and the predicted dict is {m_preds_dict}')
-            return m_preds_dict
-        return {k[0]: 1 for k, v in self.prior_fare_dict.items() if k[1] == t_string}
+        m_preds_dict = self.predict_m_using_trained_LR(app_demand_df, t_string)
+        # logger_2.info(f'and the predicted dict is {m_preds_dict}')
+        return m_preds_dict
 
     # @profile
     def _compute_apps_expected_income(self, fare_df, dist, unit_rebalancing_cost=None):
@@ -475,7 +542,12 @@ class ProfessionalDriver(Veh):
         @param WARMUP_PHASE: bool
         @return: bool (matched or not)
         """
-        assert self._state == VehState.IDLE
+        # assert self._state == VehState.IDLE
+        if self._state != VehState.IDLE:
+            print(f"veh status should've been IDLE, instead it is {self._state}")
+            logger.info(f"veh status for driver {self.id} should've been IDLE, instead it is {self._state}")
+            logger.info(f"time to be available is {self.time_to_be_available}")
+
         self.time_idled = 0
         dest = req.dzone
         matched = False
@@ -545,7 +617,7 @@ class ProfessionalDriver(Veh):
         this is reading it from the operator. Can be tricky when working with multi day operations
         @return (df): prior {(z_id, t_string) : (avg_fare, std_fare))}
         """
-        #TODO: make it start blank
+        # TODO: make it start blank
         self.prior_fare_dict = self.operator.expected_fare_total_demand_per_zone_over_days(self.driver_type)
 
     def initialize_prior_matching_info(self):
@@ -661,14 +733,28 @@ class ProfessionalDriver(Veh):
         # first check and see 1) there has been a finished trip
         if len(self.experienced_fares_history) < 10:
             return 0.5
-        if self.day_of_run < self.training_days:
+        if self.day_of_run < self.training_days and self.month == 1:
             return 0.5
         prior_m = np.array(self.prior_matching_estimates_history)
         true_m = np.array(self.experienced_matching_history)
         assert prior_m.shape == true_m.shape
         # CE is not btw 0-1. So, we find the max value, and normalize it that way
-        CE = [CrossEntropy(yh, y) for yh, y in zip(prior_m, true_m)]
-        acc = np.sum(CE)
+        # CE = [CrossEntropy(yh, y) for yh, y in zip(prior_m, true_m)]
+        # acc = np.sum(CE)
+
+        try:
+            prior_m[prior_m <= 0.5] = 0
+            prior_m[prior_m > 0.5] = 1
+            acc = accuracy_score(prior_m, true_m)
+        except ValueError:
+            print('Agh')
+            prior_m[prior_m <= 0.5] = 0
+            prior_m[prior_m > 0.5] = 1
+            raise ValueError
+        # logger.info(f"acc of EXPERIENCE is {acc}")
+
+        # CE = cross_entropy(p=prior_m, y=true_m)
+        # logger.info(f"CE of EXPERIENCE is {CE}")
         # acc = (np.sum(true_m == prior_m)) / len(self.experienced_matching_history)
         # if not skip_recording:
         # self._prior_matching_reliability_history.append(acc)
@@ -679,23 +765,32 @@ class ProfessionalDriver(Veh):
         #     logger_2.info("true_m")
         #     logger_2.info(true_m)
         return acc
+        # return CE
 
     def get_reliability_of_apps_matching_info(self, skip_recording):
         # first check and see 1) there has been a finished trip
         if len(self.experienced_fares_history) < 10:
             return 0.5
-        if self.day_of_run < self.training_days:
+        if self.day_of_run < self.training_days and self.month == 1:
             return 0.5
-        app_m = np.array(self.app_matching_history)
-        true_m = np.array(self.experienced_matching_history)
+        app_m = np.array(self.app_matching_history)  # probability
+        true_m = np.array(self.experienced_matching_history)  # zero one
         assert app_m.shape == true_m.shape
         # acc = (np.sum(true_m == app_m)) / len(self.experienced_matching_history)
-        CE = [CrossEntropy(yh, y) for yh, y in zip(app_m, true_m)]
-        acc = np.sum(CE)
+        # CE = [CrossEntropy(yh, y) for yh, y in zip(app_m, true_m)]
+        # acc = np.sum(CE)
+        # ONLY for accuracy
+        app_m[app_m <= 0.5] = 0
+        app_m[app_m > 0.5] = 1
+        acc = accuracy_score(app_m, true_m)
+        # logger.info(f"acc of the APP is {acc}")
+        # CE = cross_entropy(p=app_m, y=true_m) # the lower, the better
+        # logger.info(f"CE of the APP is {CE}")
         if not skip_recording:
             self._skipped_recording += 1
         # self._app_matching_reliability_history.append(acc)
         return acc
+        # return CE
 
     def get_reliability_of_apps_and_prior_fare_info(self):
         """
@@ -779,6 +874,9 @@ class ProfessionalDriver(Veh):
         weighted = {}
         for z_id, app_fare in estimated_from_app.items():
             weighted[z_id] = prior_estimates_dict[z_id] * w_prior + app_fare * w_app
+            # logger.info(f'the weighted, final estimate for zone {z_id} is  {weighted[z_id]}, where'
+            #             f'w_prior is {w_prior}, w_app is {w_app}, prior_m is {prior_estimates_dict[z_id]}, and app_m is {app_fare}')
+
         # for z_id, app_fare in estimated_from_app.items():
         #     weighted[z_id] = (prior_estimates_dict[z_id] * w_prior / total_w +
         #                       app_fare * w_app / total_w)
@@ -796,7 +894,13 @@ class ProfessionalDriver(Veh):
         @return:
         """
         y_train = self.experienced_matching_history
+        #
         if len((y_train)) <= 5: return None
+        # when only 1 observation exists, then LR won't work
+        if len(set(y_train)) == 1:
+            logger.info(f"driver {self.id} couldn't use LR. the y_train is {y_train}")
+            logger.info(f"and his set is {set(y_train)}")
+            return None
         x1 = np.array(self.app_demand_history)
         x2 = np.array(self.off_peak_history)
         x3 = np.array(self.evening_peak_history)
@@ -804,7 +908,14 @@ class ProfessionalDriver(Veh):
         x5 = np.array(self.app_bonus_history)
         x6 = np.array(self.app_surge_history)
         x7 = np.array(self.app_advertised_fare_history)
-        x_train = np.concatenate((x1, x2, x3, x4, x5, x6, x7), axis=1)
+        x8 = np.array(self.visited_zones_history).reshape(-1, 1)
+        try:
+            x_train = np.concatenate((x1, x2, x3, x4, x5, x6, x7, x8), axis=1)
+        except ValueError:
+            print('error')
+            print(x8.shape, ' x8 shape')
+            print(x1.shape, ' x1 shape')
+            raise ValueError
         x_scaled = preprocessing.scale(x_train)
         # x_scaled = x_scaled.reshape(-1, 1)
         self.clf = LogisticRegression(random_state=0).fit(x_scaled, y_train)
@@ -822,9 +933,29 @@ class ProfessionalDriver(Veh):
         if status is None:
             return {k: 1 for k in z_ids}
         assert self.clf is not None
-        x = demand_df["total_pickup"].values
-        x = demand_df[['total_pickup', 'off_peak', 'evening_peak', 'morning_peak', 'bonus', 'avg_fare', 'PULocationID']]
-        x_scaled = preprocessing.scale(x);
+        # x = demand_df["total_pickup"].values
+        x = demand_df[
+            ['total_pickup', 'off_peak', 'evening_peak', 'morning_peak', 'bonus', 'surge', 'avg_fare', 'PULocationID']]
+        x_scaled = preprocessing.scale(x)
         # x_scaled = x_scaled.reshape(-1, 1);
         probs = self.clf.predict_proba(x_scaled)[:, 1]
         return {k: v for k, v in zip(z_ids, probs)}
+
+    def dump_lr_data(self, f_path):
+        y_train = self.experienced_matching_history
+        # should I add zone id?
+        x1 = np.array(self.app_demand_history)
+        x2 = np.array(self.off_peak_history)
+        x3 = np.array(self.evening_peak_history)
+        x4 = np.array(self.morning_peak_history)
+        x5 = np.array(self.app_bonus_history)
+        x6 = np.array(self.app_surge_history)
+        x7 = np.array(self.app_advertised_fare_history)
+        x8 = np.array(self.visited_zones_history).reshape(-1, 1)
+        x_train = np.concatenate((x1, x2, x3, x4, x5, x6, x7, x8), axis=1)
+        # x_scaled = preprocessing.scale(x_train)
+
+        np.savetxt(f_path + str(self.id) + " experienced_matching_history.csv", y_train, delimiter=",")
+        np.savetxt(f_path + str(self.id) + " x_train.csv", x_train, delimiter=",")
+        # np.savetxt(f_path + str(self.id) + " x_scaled.csv", x_scaled, delimiter=",")
+        print('saving_driver_data')

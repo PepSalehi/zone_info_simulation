@@ -1,0 +1,65 @@
+2020-11-26 20:25:49,958 - DriverType.PROFESSIONAL DRIVER 1589 is updating their belief
+2020-11-26 20:25:49,958 - driver 1589 is updating their belief
+2020-11-26 20:25:49,959 -       p_mu = 12 and p_sigma =6
+2020-11-26 20:25:49,959 -       d_mu = 16.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:49,959 -       post_mu = 14.36065573770492 and post_sigma =3.8411063979868794
+2020-11-26 20:25:50,421 - DriverType.PROFESSIONAL DRIVER 1510 is updating their belief
+2020-11-26 20:25:50,421 - driver 1510 is updating their belief
+2020-11-26 20:25:50,422 -       p_mu = 14.36065573770492 and p_sigma =3.8411063979868794
+2020-11-26 20:25:50,422 -       d_mu = 12.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:50,422 -       post_mu = 13.484536082474227 and post_sigma =3.0460384954008575
+2020-11-26 20:25:50,862 - DriverType.PROFESSIONAL DRIVER 1542 is updating their belief
+2020-11-26 20:25:50,862 - driver 1542 is updating their belief
+2020-11-26 20:25:50,862 -       p_mu = 13.484536082474227 and p_sigma =3.0460384954008575
+2020-11-26 20:25:50,863 -       d_mu = 5.25 , d_sigma =0.25 and n_trips=2
+2020-11-26 20:25:50,863 -       post_mu = 5.277641277641277 and post_sigma =0.17647974832154759
+2020-11-26 20:25:51,807 - DriverType.PROFESSIONAL DRIVER 1591 is updating their belief
+2020-11-26 20:25:51,808 - driver 1591 is updating their belief
+2020-11-26 20:25:51,808 -       p_mu = 5.277641277641277 and p_sigma =0.17647974832154759
+2020-11-26 20:25:51,808 -       d_mu = 22.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:51,808 -       post_mu = 5.298448138803442 and post_sigma =0.17636992133435883
+2020-11-26 20:25:53,553 - DriverType.PROFESSIONAL DRIVER 1545 is updating their belief
+2020-11-26 20:25:53,554 - driver 1545 is updating their belief
+2020-11-26 20:25:53,554 -       p_mu = 5.298448138803442 and p_sigma =0.17636992133435883
+2020-11-26 20:25:53,554 -       d_mu = 4.5 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:53,554 -       post_mu = 5.297455901135697 and post_sigma =0.17626029913509356
+2020-11-26 20:25:54,094 - DriverType.PROFESSIONAL DRIVER 1561 is updating their belief
+2020-11-26 20:25:54,094 - driver 1561 is updating their belief
+2020-11-26 20:25:54,094 -       p_mu = 5.297455901135697 and p_sigma =0.17626029913509356
+2020-11-26 20:25:54,095 -       d_mu = 15.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:54,095 -       post_mu = 5.309498362351319 and post_sigma =0.1761508810881152
+2020-11-26 20:25:55,344 - DriverType.PROFESSIONAL DRIVER 1521 is updating their belief
+2020-11-26 20:25:55,345 - driver 1521 is updating their belief
+2020-11-26 20:25:55,345 -       p_mu = 5.309498362351319 and p_sigma =0.1761508810881152
+2020-11-26 20:25:55,345 -       d_mu = 15.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:55,345 -       post_mu = 5.321510967253194 and post_sigma =0.1760416665605459
+2020-11-26 20:25:55,522 - DriverType.PROFESSIONAL DRIVER 1531 is updating their belief
+2020-11-26 20:25:55,522 - driver 1531 is updating their belief
+2020-11-26 20:25:55,522 -       p_mu = 5.321510967253194 and p_sigma =0.1760416665605459
+2020-11-26 20:25:55,522 -       d_mu = 21.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:55,522 -       post_mu = 5.340922378512227 and post_sigma =0.17593265492225113
+2020-11-26 20:25:55,961 - DriverType.PROFESSIONAL DRIVER 1560 is updating their belief
+2020-11-26 20:25:55,961 - driver 1560 is updating their belief
+2020-11-26 20:25:55,961 -       p_mu = 5.340922378512227 and p_sigma =0.17593265492225113
+2020-11-26 20:25:55,961 -       d_mu = 16.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:55,961 -       post_mu = 5.354102978051043 and post_sigma =0.1758238455458244
+2020-11-26 20:25:56,321 - DriverType.PROFESSIONAL DRIVER 1521 is updating their belief
+2020-11-26 20:25:56,321 - driver 1521 is updating their belief
+2020-11-26 20:25:56,321 -       p_mu = 5.354102978051043 and p_sigma =0.1758238455458244
+2020-11-26 20:25:56,321 -       d_mu = 15.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:56,321 -       post_mu = 5.366015986826307 and post_sigma =0.17571523780657203
+2020-11-26 20:25:57,087 - DriverType.PROFESSIONAL DRIVER 1561 is updating their belief
+2020-11-26 20:25:57,087 - driver 1561 is updating their belief
+2020-11-26 20:25:57,087 -       p_mu = 10 and p_sigma =4
+2020-11-26 20:25:57,088 -       d_mu = 4.5 , d_sigma =5 and n_trips=1
+2020-11-26 20:25:57,088 -       post_mu = 7.853658536585365 and post_sigma =3.123475237772121
+2020-11-26 20:26:07,978 - DriverType.PROFESSIONAL DRIVER 1564 is updating their belief
+2020-11-26 20:26:07,978 - driver 1564 is updating their belief
+2020-11-26 20:26:07,978 -       p_mu = 12 and p_sigma =6
+2020-11-26 20:26:07,978 -       d_mu = 13.75 , d_sigma =5 and n_trips=1
+2020-11-26 20:26:07,978 -       post_mu = 13.032786885245903 and post_sigma =3.8411063979868794
+2020-11-26 20:26:09,707 - DriverType.PROFESSIONAL DRIVER 1570 is updating their belief
+2020-11-26 20:26:09,707 - driver 1570 is updating their belief
+2020-11-26 20:26:09,707 -       p_mu = 10 and p_sigma =4
+2020-11-26 20:26:09,707 -       d_mu = 7.0 , d_sigma =5 and n_trips=1
+2020-11-26 20:26:09,707 -       post_mu = 8.829268292682926 and post_sigma =3.123475237772121

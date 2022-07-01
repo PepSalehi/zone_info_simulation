@@ -2,12 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="98c8cf38-1ca2-4d5a-ae9b-3a0c8f9f6f7a" name="Default" comment="Pro driver is pretty complete">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.txt" beforeDir="false" afterPath="$PROJECT_DIR$/README.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/interactive_analysis.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/interactive_analysis.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Data.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/NaiveDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/NaiveDriver.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/Operator.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Operator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/ProfessionalDriver.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/ProfessionalDriver.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Vehicles.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Vehicles.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/Zones.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/Zones.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/behavioral_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/behavioral_optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/rebalancing_optimizer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/lib/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myscript.cprof" beforeDir="false" afterPath="$PROJECT_DIR$/myscript.cprof" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run_multiple_days.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_multiple_days.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -68,7 +77,7 @@
     <property name="js.eslint.eslintPackage" value="" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/lib" />
     <property name="nodejs_interpreter_path" value="/usr/local/bin/node" />
-    <property name="settings.editor.selected.configurable" value="reference.idesettings.debugger.python" />
+    <property name="settings.editor.selected.configurable" value="web.server" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -192,6 +201,9 @@
       <module name="Simulation" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -317,6 +329,15 @@
       <workItem from="1610580720600" duration="324000" />
       <workItem from="1610581230657" duration="1606000" />
       <workItem from="1610656242911" duration="10342000" />
+      <workItem from="1612201125313" duration="13381000" />
+      <workItem from="1612623072006" duration="66466000" />
+      <workItem from="1617025761793" duration="62534000" />
+      <workItem from="1620012778606" duration="14219000" />
+      <workItem from="1621905501940" duration="544000" />
+      <workItem from="1624294071988" duration="1318000" />
+      <workItem from="1640036984802" duration="37812000" />
+      <workItem from="1640469417785" duration="35489000" />
+      <workItem from="1655303641369" duration="101078000" />
     </task>
     <task id="LOCAL-00001" summary="tidy up">
       <created>1606330736701</created>
@@ -364,30 +385,35 @@
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <condition expression="'morning_peak' not in app_demand_df.columns" language="Python" />
           <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
-          <line>295</line>
-          <option name="timeStamp" value="74" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
-          <line>718</line>
+          <line>813</line>
           <option name="timeStamp" value="82" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/lib/Operator.py</url>
-          <line>181</line>
-          <option name="timeStamp" value="83" />
+          <condition expression="if self.month == 2" language="Python" />
+          <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
+          <line>755</line>
+          <option name="timeStamp" value="97" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
-          <line>422</line>
-          <option name="timeStamp" value="84" />
+          <line>912</line>
+          <option name="timeStamp" value="103" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/lib/ProfessionalDriver.py</url>
-          <line>172</line>
-          <option name="timeStamp" value="94" />
+          <line>749</line>
+          <option name="timeStamp" value="104" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/behavioral_optimizer.py</url>
+          <line>496</line>
+          <option name="timeStamp" value="105" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/lib/Vehicles.py</url>
+          <line>664</line>
+          <option name="timeStamp" value="120" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -401,7 +427,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Simulation$run_parallel_for_avg_fare.coverage" NAME="run_multiple Coverage Results" MODIFIED="1606766417497" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Simulation$run_multiple.coverage" NAME="run_multiple Coverage Results" MODIFIED="1610759356508" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Simulation$run_multiple.coverage" NAME="run_multiple Coverage Results" MODIFIED="1655908592825" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Simulation$Data.coverage" NAME="Data Coverage Results" MODIFIED="1574709682627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/lib" />
   </component>
 </project>
